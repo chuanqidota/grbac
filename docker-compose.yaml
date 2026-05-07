@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: grbac-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: grbac
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - grbac-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: grbac-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - grbac-network
+
+  rbac-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: grbac-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=grbac
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - grbac-network
+
+  rbac-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: grbac-web
+    ports:
+      - "80:80"
+    depends_on:
+      - rbac-server
+    networks:
+      - grbac-network
+
+volumes:
+  mysql_data:
+
+networks:
+  grbac-network:
+    driver: bridge
