@@ -88,3 +88,7 @@ func (r *UserRepo) GetUsersByRoleID(roleID int64) ([]int64, error) {
 	}
 	return userIDs, nil
 }
+
+func (r *UserRepo) RemoveUsersByRoleID(roleID int64) error {
+	return r.db.Where("role_id = ?", roleID).Delete(&model.UserRole{}).Error
+}
