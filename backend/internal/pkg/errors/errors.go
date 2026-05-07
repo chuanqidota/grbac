@@ -35,6 +35,7 @@ var (
 	Success             = &AppError{Code: 0, Message: "success"}
 	ErrInvalidPassword  = &AppError{Code: 10001, Message: "用户名或密码错误"}
 	ErrAccountLocked    = &AppError{Code: 10002, Message: "账号已被锁定"}
+	ErrAccountDisabled  = &AppError{Code: 10006, Message: "账号已被禁用"}
 	ErrTokenExpired     = &AppError{Code: 10003, Message: "Token已过期"}
 	ErrTokenInvalid     = &AppError{Code: 10004, Message: "Token无效"}
 	ErrNoPermission     = &AppError{Code: 10005, Message: "无权限访问"}
