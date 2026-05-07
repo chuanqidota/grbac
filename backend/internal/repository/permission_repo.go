@@ -54,6 +54,19 @@ func (r *PermissionRepo) ListBySystem(systemID int64, page, pageSize int) ([]mod
 	return perms, total, nil
 }
 
+// ListByIDs returns permissions matching the given IDs.
+func (r *PermissionRepo) ListByIDs(ids []int64) ([]model.Permission, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var perms []model.Permission
+	err := r.db.Where("id IN ?", ids).Find(&perms).Error
+	if err != nil {
+		return nil, err
+	}
+	return perms, nil
+}
+
 func (r *PermissionRepo) Update(perm *model.Permission) error {
 	return r.db.Save(perm).Error
 }

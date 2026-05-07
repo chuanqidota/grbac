@@ -57,6 +57,19 @@ func (r *MenuRepo) HasChildren(systemID, menuID int64) (bool, error) {
 	return count > 0, nil
 }
 
+// ListByIDs returns menus matching the given IDs.
+func (r *MenuRepo) ListByIDs(ids []int64) ([]model.Menu, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var menus []model.Menu
+	err := r.db.Where("id IN ?", ids).Order("sort_order ASC, id ASC").Find(&menus).Error
+	if err != nil {
+		return nil, err
+	}
+	return menus, nil
+}
+
 func (r *MenuRepo) Update(menu *model.Menu) error {
 	return r.db.Save(menu).Error
 }

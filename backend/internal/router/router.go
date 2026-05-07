@@ -30,6 +30,7 @@ func SetupRouter(
 	roleHandler *handler.RoleHandler,
 	menuHandler *handler.MenuHandler,
 	permHandler *handler.PermissionHandler,
+	externalHandler *handler.ExternalHandler,
 ) *gin.Engine {
 	r := gin.New()
 
@@ -132,8 +133,11 @@ func SetupRouter(
 	ext := api.Group("/external")
 	ext.Use(externalMW)
 	{
-		// External endpoints are registered here as they are implemented.
-		// Example: ext.POST("/check-permission", externalHandler.CheckPermission)
+		ext.POST("/verify", externalHandler.Verify)
+		ext.POST("/user-info", externalHandler.GetUserInfo)
+		ext.POST("/menus", externalHandler.GetMenus)
+		ext.POST("/permissions", externalHandler.GetPermissions)
+		ext.POST("/validate-permission", externalHandler.ValidatePermission)
 	}
 
 	return r
