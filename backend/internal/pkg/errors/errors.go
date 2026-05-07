@@ -63,6 +63,7 @@ var (
 var (
 	ErrPermNotFound   = &AppError{Code: 50001, Message: "权限不存在"}
 	ErrPermPathExists = &AppError{Code: 50002, Message: "权限路径已存在"}
+	ErrPermInUse      = &AppError{Code: 50003, Message: "权限已被角色使用，无法删除"}
 )
 
 // User errors (6xxx)
