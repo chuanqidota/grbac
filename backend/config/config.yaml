@@ -31,3 +31,5 @@ password:
   min_length: 8
   max_attempts: 5
   lock_duration: 1800
+
+encryption_key: "grbac-aes-key-2026-32bytes!!"

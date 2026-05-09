@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"grbac/internal/pkg/errors"
 	"grbac/internal/pkg/response"
-	"grbac/internal/service"
+	systemService "grbac/internal/service/system"
 )
 
 // Context keys for external (system-credential) authentication.
@@ -16,7 +16,7 @@ const (
 // ExternalAuthMiddleware returns a middleware that validates the system
 // credentials carried in the X-System-Code / X-System-Secret request headers.
 // On success the system_id and system_code are stored in the request context.
-func ExternalAuthMiddleware(systemService *service.SystemService) gin.HandlerFunc {
+func ExternalAuthMiddleware(systemSvc *systemService.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		code := c.GetHeader("X-System-Code")
 		secret := c.GetHeader("X-System-Secret")
@@ -26,14 +26,8 @@ func ExternalAuthMiddleware(systemService *service.SystemService) gin.HandlerFun
 			return
 		}
 
-		system, err := systemService.GetByCode(code)
+		system, err := systemSvc.ValidateSecret(code, secret)
 		if err != nil {
-			response.Unauthorized(c, errors.ErrSystemCredential)
-			c.Abort()
-			return
-		}
-
-		if system.Secret != secret {
 			response.Unauthorized(c, errors.ErrSystemCredential)
 			c.Abort()
 			return

@@ -4,33 +4,39 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"grbac/internal/handler"
+	"github.com/redis/go-redis/v9"
+	auditHandler "grbac/internal/handler/audit"
+	authHandler "grbac/internal/handler/auth"
+	externalHandler "grbac/internal/handler/external"
+	menuHandler "grbac/internal/handler/menu"
+	permHandler "grbac/internal/handler/permission"
+	roleHandler "grbac/internal/handler/role"
+	systemHandler "grbac/internal/handler/system"
+	userHandler "grbac/internal/handler/user"
+	webhookHandler "grbac/internal/handler/webhook"
 	"grbac/internal/middleware"
-	"grbac/internal/service"
+	auditService "grbac/internal/service/audit"
+	authService "grbac/internal/service/auth"
+	systemService "grbac/internal/service/system"
 )
 
 // SetupRouter creates and configures the Gin engine with all routes and
 // middleware for the RBAC platform.
-//
-// Route hierarchy:
-//
-//	/api/health                              - public
-//	/api/auth/login, refresh                 - public
-//	/api/auth/* (other)                      - authenticated
-//	/api/users/*, /api/systems/* (CRUD)      - authenticated + super-admin
-//	/api/systems/:sid/roles/* etc.           - authenticated + system-admin
-//	/api/external/*                          - system-credential auth
 func SetupRouter(
 	jwtSecret []byte,
-	authService *service.AuthService,
-	systemService *service.SystemService,
-	authHandler *handler.AuthHandler,
-	userHandler *handler.UserHandler,
-	systemHandler *handler.SystemHandler,
-	roleHandler *handler.RoleHandler,
-	menuHandler *handler.MenuHandler,
-	permHandler *handler.PermissionHandler,
-	externalHandler *handler.ExternalHandler,
+	rdb *redis.Client,
+	authSvc *authService.Service,
+	systemSvc *systemService.Service,
+	auditSvc *auditService.Service,
+	authH *authHandler.Handler,
+	userH *userHandler.Handler,
+	systemH *systemHandler.Handler,
+	roleH *roleHandler.Handler,
+	menuH *menuHandler.Handler,
+	permH *permHandler.Handler,
+	externalH *externalHandler.Handler,
+	webhookH *webhookHandler.Handler,
+	auditH *auditHandler.Handler,
 ) *gin.Engine {
 	r := gin.New()
 
@@ -38,12 +44,15 @@ func SetupRouter(
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.AuditMiddleware(auditSvc))
 
 	// Build reusable middleware instances.
-	authMW := middleware.AuthMiddleware(jwtSecret, authService)
+	authMW := middleware.AuthMiddleware(jwtSecret, authSvc)
 	superAdminMW := middleware.SuperAdminMiddleware()
-	systemAdminMW := middleware.SystemAdminMiddleware(systemService)
-	externalMW := middleware.ExternalAuthMiddleware(systemService)
+	systemAdminMW := middleware.SystemAdminMiddleware(systemSvc)
+	externalMW := middleware.ExternalAuthMiddleware(systemSvc)
+	loginRateLimit := middleware.LoginRateLimit(rdb)
+	externalRateLimit := middleware.ExternalRateLimit(rdb)
 
 	api := r.Group("/api")
 
@@ -54,90 +63,102 @@ func SetupRouter(
 
 	// ---- Public auth routes (no token required) ----
 	publicAuth := api.Group("/auth")
+	publicAuth.Use(loginRateLimit)
 	{
-		publicAuth.POST("/login", authHandler.Login)
-		publicAuth.POST("/refresh", authHandler.Refresh)
+		publicAuth.POST("/login", authH.Login)
+		publicAuth.POST("/refresh", authH.Refresh)
 	}
 
 	// ---- Authenticated auth routes ----
 	protectedAuth := api.Group("/auth")
 	protectedAuth.Use(authMW)
 	{
-		protectedAuth.POST("/logout", authHandler.Logout)
-		protectedAuth.POST("/change-password", authHandler.ChangePassword)
+		protectedAuth.POST("/logout", authH.Logout)
+		protectedAuth.POST("/change-password", authH.ChangePassword)
 	}
 
 	// ---- Super-admin routes: user management ----
 	users := api.Group("/users")
 	users.Use(authMW, superAdminMW)
 	{
-		users.POST("", userHandler.Create)
-		users.GET("", userHandler.List)
-		users.GET("/:id", userHandler.GetByID)
-		users.PUT("/:id", userHandler.Update)
-		users.DELETE("/:id", userHandler.Delete)
-		users.PATCH("/:id/status", userHandler.UpdateStatus)
+		users.POST("", userH.Create)
+		users.GET("", userH.List)
+		users.GET("/:id", userH.GetByID)
+		users.PUT("/:id", userH.Update)
+		users.DELETE("/:id", userH.Delete)
+		users.PUT("/:id/status", userH.UpdateStatus)
 	}
 
 	// ---- Super-admin routes: system management ----
 	systems := api.Group("/systems")
 	systems.Use(authMW, superAdminMW)
 	{
-		systems.POST("", systemHandler.Create)
-		systems.GET("", systemHandler.List)
-		systems.GET("/:id", systemHandler.GetByID)
-		systems.PUT("/:id", systemHandler.Update)
-		systems.DELETE("/:id", systemHandler.Delete)
-		systems.POST("/:id/members", systemHandler.AddMember)
-		systems.DELETE("/:id/members/:uid", systemHandler.RemoveMember)
-		systems.GET("/:id/members", systemHandler.GetMembers)
+		systems.POST("", systemH.Create)
+		systems.GET("", systemH.List)
+		systems.GET("/:id", systemH.GetByID)
+		systems.PUT("/:id", systemH.Update)
+		systems.DELETE("/:id", systemH.Delete)
+		systems.POST("/:id/members", systemH.AddMember)
+		systems.DELETE("/:id/members/:uid", systemH.RemoveMember)
+		systems.GET("/:id/members", systemH.GetMembers)
+		systems.POST("/:id/webhooks", webhookH.Create)
+		systems.GET("/:id/webhooks", webhookH.GetBySystemID)
+		systems.PUT("/:id/webhooks/:wid", webhookH.Update)
+		systems.DELETE("/:id/webhooks/:wid", webhookH.Delete)
 	}
 
 	// ---- System-admin routes: roles ----
 	roles := api.Group("/systems/:id/roles")
 	roles.Use(authMW, systemAdminMW)
 	{
-		roles.POST("", roleHandler.Create)
-		roles.GET("", roleHandler.List)
-		roles.PUT("/:rid", roleHandler.Update)
-		roles.DELETE("/:rid", roleHandler.Delete)
-		roles.POST("/:rid/menus", roleHandler.AssignMenus)
-		roles.GET("/:rid/menus", roleHandler.GetRoleMenus)
-		roles.POST("/:rid/permissions", roleHandler.AssignPermissions)
-		roles.GET("/:rid/permissions", roleHandler.GetRolePermissions)
-		roles.POST("/:rid/users", roleHandler.AssignUsers)
-		roles.DELETE("/:rid/users/:uid", roleHandler.RemoveUser)
+		roles.POST("", roleH.Create)
+		roles.GET("", roleH.List)
+		roles.PUT("/:rid", roleH.Update)
+		roles.DELETE("/:rid", roleH.Delete)
+		roles.POST("/:rid/menus", roleH.AssignMenus)
+		roles.GET("/:rid/menus", roleH.GetRoleMenus)
+		roles.POST("/:rid/permissions", roleH.AssignPermissions)
+		roles.GET("/:rid/permissions", roleH.GetRolePermissions)
+		roles.POST("/:rid/users", roleH.AssignUsers)
+		roles.DELETE("/:rid/users/:uid", roleH.RemoveUser)
 	}
 
 	// ---- System-admin routes: menus ----
 	menus := api.Group("/systems/:id/menus")
 	menus.Use(authMW, systemAdminMW)
 	{
-		menus.POST("", menuHandler.Create)
-		menus.GET("", menuHandler.GetTree)
-		menus.PUT("/:mid", menuHandler.Update)
-		menus.DELETE("/:mid", menuHandler.Delete)
+		menus.POST("", menuH.Create)
+		menus.GET("", menuH.GetTree)
+		menus.PUT("/:mid", menuH.Update)
+		menus.DELETE("/:mid", menuH.Delete)
 	}
 
 	// ---- System-admin routes: permissions ----
 	perms := api.Group("/systems/:id/permissions")
 	perms.Use(authMW, systemAdminMW)
 	{
-		perms.POST("", permHandler.Create)
-		perms.GET("", permHandler.List)
-		perms.PUT("/:pid", permHandler.Update)
-		perms.DELETE("/:pid", permHandler.Delete)
+		perms.POST("", permH.Create)
+		perms.GET("", permH.List)
+		perms.PUT("/:pid", permH.Update)
+		perms.DELETE("/:pid", permH.Delete)
 	}
 
-	// ---- External system API (system-credential auth) ----
-	ext := api.Group("/external")
-	ext.Use(externalMW)
+	// ---- Super-admin routes: audit logs ----
+	auditLogs := api.Group("/audit-logs")
+	auditLogs.Use(authMW, superAdminMW)
 	{
-		ext.POST("/verify", externalHandler.Verify)
-		ext.POST("/user-info", externalHandler.GetUserInfo)
-		ext.POST("/menus", externalHandler.GetMenus)
-		ext.POST("/permissions", externalHandler.GetPermissions)
-		ext.POST("/validate-permission", externalHandler.ValidatePermission)
+		auditLogs.GET("", auditH.List)
+	}
+
+	// ---- External system API (system-credential auth + rate limit) ----
+	ext := api.Group("/external")
+	ext.Use(externalMW, externalRateLimit)
+	{
+		ext.GET("/verify", externalH.Verify)
+		ext.GET("/user-info", externalH.GetUserInfo)
+		ext.GET("/menus", externalH.GetMenus)
+		ext.GET("/permissions", externalH.GetPermissions)
+		ext.GET("/validate-permission", externalH.ValidatePermission)
 	}
 
 	return r

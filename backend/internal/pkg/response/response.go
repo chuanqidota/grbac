@@ -90,3 +90,12 @@ func InternalError(c *gin.Context) {
 		Data:    nil,
 	})
 }
+
+// RespondError sends the appropriate error response based on the error type.
+func RespondError(c *gin.Context, err error) {
+	if appErr, ok := errors.IsAppError(err); ok {
+		Fail(c, appErr)
+		return
+	}
+	InternalError(c)
+}

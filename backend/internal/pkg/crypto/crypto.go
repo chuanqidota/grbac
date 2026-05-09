@@ -1,9 +1,14 @@
 package crypto
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"io"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -40,4 +45,57 @@ func GenerateHMAC(payload []byte, secret []byte) string {
 func VerifyHMAC(payload []byte, secret []byte, signature string) bool {
 	expected := GenerateHMAC(payload, secret)
 	return hmac.Equal([]byte(expected), []byte(signature))
+}
+
+// Encrypt encrypts plaintext using AES-GCM with the given key (must be 16, 24, or 32 bytes).
+// Returns hex-encoded nonce + ciphertext.
+func Encrypt(plaintext []byte, key []byte) (string, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", fmt.Errorf("aes.NewCipher: %w", err)
+	}
+
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", fmt.Errorf("cipher.NewGCM: %w", err)
+	}
+
+	nonce := make([]byte, aesGCM.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", fmt.Errorf("generate nonce: %w", err)
+	}
+
+	ciphertext := aesGCM.Seal(nonce, nonce, plaintext, nil)
+	return hex.EncodeToString(ciphertext), nil
+}
+
+// Decrypt decrypts hex-encoded nonce+ciphertext using AES-GCM with the given key.
+func Decrypt(encoded string, key []byte) ([]byte, error) {
+	data, err := hex.DecodeString(encoded)
+	if err != nil {
+		return nil, fmt.Errorf("hex.DecodeString: %w", err)
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, fmt.Errorf("aes.NewCipher: %w", err)
+	}
+
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, fmt.Errorf("cipher.NewGCM: %w", err)
+	}
+
+	nonceSize := aesGCM.NonceSize()
+	if len(data) < nonceSize {
+		return nil, fmt.Errorf("ciphertext too short")
+	}
+
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := aesGCM.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, fmt.Errorf("aesGCM.Open: %w", err)
+	}
+
+	return plaintext, nil
 }

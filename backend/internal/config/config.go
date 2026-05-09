@@ -7,12 +7,13 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	Redis    RedisConfig    `yaml:"redis"`
-	JWT      JWTConfig      `yaml:"jwt"`
-	Log      LogConfig      `yaml:"log"`
-	Password PasswordConfig `yaml:"password"`
+	Server        ServerConfig   `yaml:"server"`
+	Database      DatabaseConfig `yaml:"database"`
+	Redis         RedisConfig    `yaml:"redis"`
+	JWT           JWTConfig      `yaml:"jwt"`
+	Log           LogConfig      `yaml:"log"`
+	Password      PasswordConfig `yaml:"password"`
+	EncryptionKey string         `yaml:"encryption_key"`
 }
 
 type ServerConfig struct {

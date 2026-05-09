@@ -6,13 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"grbac/internal/pkg/errors"
 	"grbac/internal/pkg/response"
-	"grbac/internal/service"
+	systemService "grbac/internal/service/system"
 )
 
 // SystemAdminMiddleware returns a middleware that verifies the authenticated
 // user is an administrator of the system identified by the "sid" path parameter.
 // Must be placed after AuthMiddleware so that CtxUserID is already set.
-func SystemAdminMiddleware(systemService *service.SystemService) gin.HandlerFunc {
+func SystemAdminMiddleware(systemService *systemService.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. Parse system ID from path parameter.
 		sid, err := strconv.ParseInt(c.Param("id"), 10, 64)

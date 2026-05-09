@@ -7,7 +7,7 @@ import (
 	"grbac/internal/pkg/errors"
 	"grbac/internal/pkg/jwt"
 	"grbac/internal/pkg/response"
-	"grbac/internal/service"
+	authService "grbac/internal/service/auth"
 )
 
 // Context keys set by the auth middleware.
@@ -22,7 +22,7 @@ const (
 // AuthMiddleware returns a Gin middleware that validates the JWT Bearer token
 // in the Authorization header. On success it populates the request context
 // with user_id, username, is_super_admin, and access_token.
-func AuthMiddleware(jwtSecret []byte, authService *service.AuthService) gin.HandlerFunc {
+func AuthMiddleware(jwtSecret []byte, authService *authService.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. Extract the Bearer token.
 		authHeader := c.GetHeader("Authorization")

@@ -1,0 +1,135 @@
+package user
+
+import (
+	"grbac/internal/model"
+	"grbac/internal/pkg/crypto"
+	"grbac/internal/pkg/errors"
+	userRepo "grbac/internal/repository/user"
+)
+
+// CreateRequest holds the payload for creating a new user.
+type CreateRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required,min=8"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
+}
+
+// UpdateRequest holds the payload for updating user profile fields.
+type UpdateRequest struct {
+	Email string `json:"email"`
+	Phone string `json:"phone"`
+}
+
+// Service provides user CRUD operations.
+type Service struct {
+	userRepo *userRepo.Repo
+}
+
+// NewService creates a new Service.
+func NewService(userRepo *userRepo.Repo) *Service {
+	return &Service{userRepo: userRepo}
+}
+
+// Create registers a new user after validating uniqueness and hashing the password.
+func (s *Service) Create(req *CreateRequest) (*model.User, error) {
+	existing, _ := s.userRepo.GetByUsername(req.Username)
+	if existing != nil {
+		return nil, errors.ErrUsernameExists
+	}
+
+	hashedPassword, err := crypto.HashPassword(req.Password)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap("密码加密失败")
+	}
+
+	user := &model.User{
+		Username:     req.Username,
+		PasswordHash: hashedPassword,
+		Email:        req.Email,
+		Phone:        req.Phone,
+		Status:       1,
+	}
+
+	if err := s.userRepo.Create(user); err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	return user, nil
+}
+
+// GetByID retrieves a user by their ID.
+func (s *Service) GetByID(id int64) (*model.User, error) {
+	user, err := s.userRepo.GetByID(id)
+	if err != nil {
+		return nil, errors.ErrUserNotFound
+	}
+	return user, nil
+}
+
+// List returns a paginated list of users and the total count.
+func (s *Service) List(page, pageSize int) ([]model.User, int64, error) {
+	users, total, err := s.userRepo.List(page, pageSize)
+	if err != nil {
+		return nil, 0, errors.ErrInternal.Wrap(err.Error())
+	}
+	return users, total, nil
+}
+
+// Update modifies editable profile fields of an existing user.
+func (s *Service) Update(id int64, req *UpdateRequest) (*model.User, error) {
+	user, err := s.userRepo.GetByID(id)
+	if err != nil {
+		return nil, errors.ErrUserNotFound
+	}
+
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+	if req.Phone != "" {
+		user.Phone = req.Phone
+	}
+
+	if err := s.userRepo.Update(user); err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	return user, nil
+}
+
+// Delete removes a user and cleans up their role assignments and system memberships.
+func (s *Service) Delete(id int64) error {
+	_, err := s.userRepo.GetByID(id)
+	if err != nil {
+		return errors.ErrUserNotFound
+	}
+
+	// Clean up associations before deleting the user.
+	if err := s.userRepo.RemoveAllUserRoles(id); err != nil {
+		return errors.ErrInternal.Wrap(err.Error())
+	}
+	if err := s.userRepo.RemoveAllSystemMembers(id); err != nil {
+		return errors.ErrInternal.Wrap(err.Error())
+	}
+
+	if err := s.userRepo.Delete(id); err != nil {
+		return errors.ErrInternal.Wrap(err.Error())
+	}
+
+	return nil
+}
+
+// UpdateStatus changes the active/disabled status of a user.
+func (s *Service) UpdateStatus(id int64, status int8) error {
+	user, err := s.userRepo.GetByID(id)
+	if err != nil {
+		return errors.ErrUserNotFound
+	}
+
+	user.Status = status
+	if err := s.userRepo.Update(user); err != nil {
+		return errors.ErrInternal.Wrap(err.Error())
+	}
+
+	return nil
+}
