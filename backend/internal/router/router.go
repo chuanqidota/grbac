@@ -94,7 +94,7 @@ func SetupRouter(
 	}
 
 	// ---- System-admin routes: roles ----
-	roles := api.Group("/systems/:sid/roles")
+	roles := api.Group("/systems/:system_id/roles")
 	roles.Use(authMW, systemAdminMW)
 	{
 		roles.POST("", roleHandler.Create)
@@ -110,7 +110,7 @@ func SetupRouter(
 	}
 
 	// ---- System-admin routes: menus ----
-	menus := api.Group("/systems/:sid/menus")
+	menus := api.Group("/systems/:system_id/menus")
 	menus.Use(authMW, systemAdminMW)
 	{
 		menus.POST("", menuHandler.Create)
@@ -120,7 +120,7 @@ func SetupRouter(
 	}
 
 	// ---- System-admin routes: permissions ----
-	perms := api.Group("/systems/:sid/permissions")
+	perms := api.Group("/systems/:system_id/permissions")
 	perms.Use(authMW, systemAdminMW)
 	{
 		perms.POST("", permHandler.Create)

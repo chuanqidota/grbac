@@ -23,7 +23,7 @@ func NewPermissionHandler(permService *service.PermissionService) *PermissionHan
 
 // Create registers a new API permission within a system.
 func (h *PermissionHandler) Create(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -46,7 +46,7 @@ func (h *PermissionHandler) Create(c *gin.Context) {
 
 // List returns a paginated list of permissions belonging to a system.
 func (h *PermissionHandler) List(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return

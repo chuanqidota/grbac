@@ -46,7 +46,7 @@ func NewRoleHandler(roleService *service.RoleService) *RoleHandler {
 
 // Create registers a new role within a system.
 func (h *RoleHandler) Create(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -69,7 +69,7 @@ func (h *RoleHandler) Create(c *gin.Context) {
 
 // List returns all roles belonging to a system.
 func (h *RoleHandler) List(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return

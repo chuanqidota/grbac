@@ -15,7 +15,7 @@ import (
 func SystemAdminMiddleware(systemService *service.SystemService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. Parse system ID from path parameter.
-		sid, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+		sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
 		if err != nil {
 			response.Fail(c, errors.ErrSystemNotFound)
 			c.Abort()

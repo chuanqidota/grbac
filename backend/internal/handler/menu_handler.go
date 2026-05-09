@@ -23,7 +23,7 @@ func NewMenuHandler(menuService *service.MenuService) *MenuHandler {
 
 // Create registers a new menu within a system.
 func (h *MenuHandler) Create(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -46,7 +46,7 @@ func (h *MenuHandler) Create(c *gin.Context) {
 
 // GetTree returns the full menu tree for a system.
 func (h *MenuHandler) GetTree(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -86,7 +86,7 @@ func (h *MenuHandler) Update(c *gin.Context) {
 
 // Delete removes a menu by its ID.
 func (h *MenuHandler) Delete(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
