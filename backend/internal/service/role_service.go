@@ -1,9 +1,9 @@
 package service
 
 import (
-	"github.com/jinang/grbac/internal/model"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/repository"
+	"grbac/internal/model"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/repository"
 )
 
 // CreateRoleRequest holds the payload for creating a new role.

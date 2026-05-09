@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinang/grbac/internal/handler"
-	"github.com/jinang/grbac/internal/middleware"
-	"github.com/jinang/grbac/internal/service"
+	"grbac/internal/handler"
+	"grbac/internal/middleware"
+	"grbac/internal/service"
 )
 
 // SetupRouter creates and configures the Gin engine with all routes and
@@ -94,39 +94,39 @@ func SetupRouter(
 	}
 
 	// ---- System-admin routes: roles ----
-	roles := api.Group("/systems/:system_id/roles")
+	roles := api.Group("/systems/:id/roles")
 	roles.Use(authMW, systemAdminMW)
 	{
 		roles.POST("", roleHandler.Create)
 		roles.GET("", roleHandler.List)
-		roles.PUT("/:id", roleHandler.Update)
-		roles.DELETE("/:id", roleHandler.Delete)
-		roles.POST("/:id/menus", roleHandler.AssignMenus)
-		roles.GET("/:id/menus", roleHandler.GetRoleMenus)
-		roles.POST("/:id/permissions", roleHandler.AssignPermissions)
-		roles.GET("/:id/permissions", roleHandler.GetRolePermissions)
-		roles.POST("/:id/users", roleHandler.AssignUsers)
-		roles.DELETE("/:id/users/:uid", roleHandler.RemoveUser)
+		roles.PUT("/:rid", roleHandler.Update)
+		roles.DELETE("/:rid", roleHandler.Delete)
+		roles.POST("/:rid/menus", roleHandler.AssignMenus)
+		roles.GET("/:rid/menus", roleHandler.GetRoleMenus)
+		roles.POST("/:rid/permissions", roleHandler.AssignPermissions)
+		roles.GET("/:rid/permissions", roleHandler.GetRolePermissions)
+		roles.POST("/:rid/users", roleHandler.AssignUsers)
+		roles.DELETE("/:rid/users/:uid", roleHandler.RemoveUser)
 	}
 
 	// ---- System-admin routes: menus ----
-	menus := api.Group("/systems/:system_id/menus")
+	menus := api.Group("/systems/:id/menus")
 	menus.Use(authMW, systemAdminMW)
 	{
 		menus.POST("", menuHandler.Create)
 		menus.GET("", menuHandler.GetTree)
-		menus.PUT("/:id", menuHandler.Update)
-		menus.DELETE("/:id", menuHandler.Delete)
+		menus.PUT("/:mid", menuHandler.Update)
+		menus.DELETE("/:mid", menuHandler.Delete)
 	}
 
 	// ---- System-admin routes: permissions ----
-	perms := api.Group("/systems/:system_id/permissions")
+	perms := api.Group("/systems/:id/permissions")
 	perms.Use(authMW, systemAdminMW)
 	{
 		perms.POST("", permHandler.Create)
 		perms.GET("", permHandler.List)
-		perms.PUT("/:id", permHandler.Update)
-		perms.DELETE("/:id", permHandler.Delete)
+		perms.PUT("/:pid", permHandler.Update)
+		perms.DELETE("/:pid", permHandler.Delete)
 	}
 
 	// ---- External system API (system-credential auth) ----

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jinang/grbac/internal/config"
-	"github.com/jinang/grbac/internal/model"
-	"github.com/jinang/grbac/internal/pkg/crypto"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/pkg/jwt"
-	"github.com/jinang/grbac/internal/repository"
+	"grbac/internal/config"
+	"grbac/internal/model"
+	"grbac/internal/pkg/crypto"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/pkg/jwt"
+	"grbac/internal/repository"
 	"github.com/redis/go-redis/v9"
 )
 

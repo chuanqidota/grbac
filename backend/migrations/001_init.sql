@@ -110,6 +110,13 @@ CREATE TABLE IF NOT EXISTS webhooks (
     updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Webhook配置表';
 
+-- ============================================================
+-- Seed data: initial super admin
+-- Username: admin  Password: admin123
+-- ============================================================
+INSERT INTO users (username, password_hash, email, is_super_admin, status)
+VALUES ('admin', '$2a$10$TIX.8yiuDKqeZPPUzBOWo.pszQ7Ybz9ZN6XrdaXfBQxcdCb7gFUrO', 'admin@grbac.local', 1, 1);
+
 CREATE TABLE IF NOT EXISTS audit_logs (
     id              BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id         BIGINT       NOT NULL COMMENT '操作人ID',

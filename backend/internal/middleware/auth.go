@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/pkg/jwt"
-	"github.com/jinang/grbac/internal/pkg/response"
-	"github.com/jinang/grbac/internal/service"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/pkg/jwt"
+	"grbac/internal/pkg/response"
+	"grbac/internal/service"
 )
 
 // Context keys set by the auth middleware.

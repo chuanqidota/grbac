@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/pkg/response"
-	"github.com/jinang/grbac/internal/service"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/pkg/response"
+	"grbac/internal/service"
 )
 
 // ---------- MenuHandler ----------
@@ -23,7 +23,7 @@ func NewMenuHandler(menuService *service.MenuService) *MenuHandler {
 
 // Create registers a new menu within a system.
 func (h *MenuHandler) Create(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -46,7 +46,7 @@ func (h *MenuHandler) Create(c *gin.Context) {
 
 // GetTree returns the full menu tree for a system.
 func (h *MenuHandler) GetTree(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -63,7 +63,7 @@ func (h *MenuHandler) GetTree(c *gin.Context) {
 
 // Update modifies an existing menu.
 func (h *MenuHandler) Update(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("mid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrMenuNotFound)
 		return
@@ -86,13 +86,13 @@ func (h *MenuHandler) Update(c *gin.Context) {
 
 // Delete removes a menu by its ID.
 func (h *MenuHandler) Delete(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
 	}
 
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("mid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrMenuNotFound)
 		return

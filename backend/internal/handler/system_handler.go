@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/pkg/response"
-	"github.com/jinang/grbac/internal/service"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/pkg/response"
+	"grbac/internal/service"
 )
 
 // ---------- Request structs ----------

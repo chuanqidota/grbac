@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/jinang/grbac/internal/model"
+	"grbac/internal/model"
 	"gorm.io/gorm"
 )
 

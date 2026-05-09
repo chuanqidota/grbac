@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jinang/grbac/internal/config"
+	"grbac/internal/config"
 	"github.com/redis/go-redis/v9"
 )
 

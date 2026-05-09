@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/pkg/response"
-	"github.com/jinang/grbac/internal/service"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/pkg/response"
+	"grbac/internal/service"
 )
 
 // ---------- PermissionHandler ----------
@@ -23,7 +23,7 @@ func NewPermissionHandler(permService *service.PermissionService) *PermissionHan
 
 // Create registers a new API permission within a system.
 func (h *PermissionHandler) Create(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -46,7 +46,7 @@ func (h *PermissionHandler) Create(c *gin.Context) {
 
 // List returns a paginated list of permissions belonging to a system.
 func (h *PermissionHandler) List(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -73,7 +73,7 @@ func (h *PermissionHandler) List(c *gin.Context) {
 
 // Update modifies the fields of an existing permission.
 func (h *PermissionHandler) Update(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("pid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrPermNotFound)
 		return
@@ -96,7 +96,7 @@ func (h *PermissionHandler) Update(c *gin.Context) {
 
 // Delete removes a permission by its ID.
 func (h *PermissionHandler) Delete(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("pid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrPermNotFound)
 		return

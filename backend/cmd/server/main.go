@@ -7,12 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/jinang/grbac/internal/config"
-	"github.com/jinang/grbac/internal/database"
-	"github.com/jinang/grbac/internal/handler"
-	"github.com/jinang/grbac/internal/repository"
-	"github.com/jinang/grbac/internal/router"
-	"github.com/jinang/grbac/internal/service"
+	"grbac/internal/config"
+	"grbac/internal/database"
+	"grbac/internal/handler"
+	"grbac/internal/repository"
+	"grbac/internal/router"
+	"grbac/internal/service"
 )
 
 func main() {

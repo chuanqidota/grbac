@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 
-	"github.com/jinang/grbac/internal/model"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/pkg/jwt"
-	"github.com/jinang/grbac/internal/repository"
+	"grbac/internal/model"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/pkg/jwt"
+	"grbac/internal/repository"
 )
 
 // UserInfo holds the user information returned to external systems.

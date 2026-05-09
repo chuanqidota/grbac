@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/jinang/grbac/internal/model"
-	"github.com/jinang/grbac/internal/pkg/crypto"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/repository"
+	"grbac/internal/model"
+	"grbac/internal/pkg/crypto"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/repository"
 )
 
 // CreateUserRequest holds the payload for creating a new user.

@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 
-	"github.com/jinang/grbac/internal/config"
+	"grbac/internal/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

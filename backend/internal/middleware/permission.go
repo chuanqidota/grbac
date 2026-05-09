@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/pkg/response"
-	"github.com/jinang/grbac/internal/service"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/pkg/response"
+	"grbac/internal/service"
 )
 
 // SystemAdminMiddleware returns a middleware that verifies the authenticated
@@ -15,7 +15,7 @@ import (
 func SystemAdminMiddleware(systemService *service.SystemService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. Parse system ID from path parameter.
-		sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
+		sid, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
 			response.Fail(c, errors.ErrSystemNotFound)
 			c.Abort()

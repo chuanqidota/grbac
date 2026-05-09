@@ -6,7 +6,7 @@ database:
   host: localhost
   port: 3306
   username: root
-  password: ""
+  password: "jinang123"
   dbname: grbac
   max_open_conns: 100
   max_idle_conns: 10

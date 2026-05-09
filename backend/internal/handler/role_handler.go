@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinang/grbac/internal/pkg/errors"
-	"github.com/jinang/grbac/internal/pkg/response"
-	"github.com/jinang/grbac/internal/service"
+	"grbac/internal/pkg/errors"
+	"grbac/internal/pkg/response"
+	"grbac/internal/service"
 )
 
 // ---------- Request structs ----------
@@ -46,7 +46,7 @@ func NewRoleHandler(roleService *service.RoleService) *RoleHandler {
 
 // Create registers a new role within a system.
 func (h *RoleHandler) Create(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -69,7 +69,7 @@ func (h *RoleHandler) Create(c *gin.Context) {
 
 // List returns all roles belonging to a system.
 func (h *RoleHandler) List(c *gin.Context) {
-	sid, err := strconv.ParseInt(c.Param("system_id"), 10, 64)
+	sid, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
@@ -86,7 +86,7 @@ func (h *RoleHandler) List(c *gin.Context) {
 
 // Update modifies the name and description of an existing role.
 func (h *RoleHandler) Update(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("rid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrRoleNotFound)
 		return
@@ -109,7 +109,7 @@ func (h *RoleHandler) Update(c *gin.Context) {
 
 // Delete removes a role by its ID.
 func (h *RoleHandler) Delete(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("rid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrRoleNotFound)
 		return
@@ -125,7 +125,7 @@ func (h *RoleHandler) Delete(c *gin.Context) {
 
 // AssignMenus replaces the menu set of a role.
 func (h *RoleHandler) AssignMenus(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("rid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrRoleNotFound)
 		return
@@ -147,7 +147,7 @@ func (h *RoleHandler) AssignMenus(c *gin.Context) {
 
 // GetRoleMenus returns the menu IDs assigned to a role.
 func (h *RoleHandler) GetRoleMenus(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("rid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrRoleNotFound)
 		return
@@ -164,7 +164,7 @@ func (h *RoleHandler) GetRoleMenus(c *gin.Context) {
 
 // AssignPermissions replaces the permission set of a role.
 func (h *RoleHandler) AssignPermissions(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("rid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrRoleNotFound)
 		return
@@ -186,7 +186,7 @@ func (h *RoleHandler) AssignPermissions(c *gin.Context) {
 
 // GetRolePermissions returns the permission IDs assigned to a role.
 func (h *RoleHandler) GetRolePermissions(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("rid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrRoleNotFound)
 		return
@@ -203,7 +203,7 @@ func (h *RoleHandler) GetRolePermissions(c *gin.Context) {
 
 // AssignUsers replaces the user set of a role.
 func (h *RoleHandler) AssignUsers(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := strconv.ParseInt(c.Param("rid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrRoleNotFound)
 		return
@@ -225,7 +225,7 @@ func (h *RoleHandler) AssignUsers(c *gin.Context) {
 
 // RemoveUser removes a single user from a role.
 func (h *RoleHandler) RemoveUser(c *gin.Context) {
-	roleID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	roleID, err := strconv.ParseInt(c.Param("rid"), 10, 64)
 	if err != nil {
 		response.Fail(c, errors.ErrRoleNotFound)
 		return

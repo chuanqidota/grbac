@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinang/grbac/internal/pkg/errors"
+	"grbac/internal/pkg/errors"
 )
 
 // Response is the standard JSON envelope returned by all API endpoints.
