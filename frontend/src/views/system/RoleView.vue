@@ -42,17 +42,7 @@
         </template>
       </el-table-column>
       <el-table-column prop="description" label="描述" min-width="180" show-overflow-tooltip />
-      <el-table-column label="用户数" width="100" align="center">
-        <template #default="{ row }">
-          <el-link type="primary" :underline="false">{{ row.user_count ?? '-' }}</el-link>
-        </template>
-      </el-table-column>
-      <el-table-column label="权限数" width="100" align="center">
-        <template #default="{ row }">
-          <el-link type="primary" :underline="false">{{ row.permission_count ?? '-' }}</el-link>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="220" fixed="right">
+      <el-table-column label="操作" width="160" fixed="right">
         <template #default="{ row }">
           <el-button type="success" link @click="showAssignDrawer(row)">
             授权
@@ -131,8 +121,6 @@ interface Role {
   name: string
   code: string
   description?: string
-  user_count?: number
-  permission_count?: number
   created_at: string
 }
 
@@ -277,28 +265,6 @@ onMounted(() => {
 
 <style scoped>
 .role-view {
-  padding: 20px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.header-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.search-bar {
-  margin-bottom: 16px;
+  padding: 0;
 }
 </style>

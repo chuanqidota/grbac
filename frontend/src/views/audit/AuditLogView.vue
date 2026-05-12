@@ -197,48 +197,37 @@ onMounted(() => {
 
 <style scoped>
 .audit-log-view {
-  padding: 20px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
+  padding: 0;
 }
 
 .filter-bar {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-md);
 }
 
 .pagination {
-  margin-top: 20px;
+  margin-top: var(--space-md);
   display: flex;
   justify-content: flex-end;
 }
 
 .detail-json {
-  margin-top: 20px;
+  margin-top: var(--space-md);
 }
 
 .detail-json h4 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-base);
   font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .detail-json pre {
-  background: #f5f7fa;
-  padding: 16px;
-  border-radius: 4px;
+  background: var(--color-bg-page);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
   overflow-x: auto;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   line-height: 1.5;
+  color: var(--color-text-regular);
 }
 </style>

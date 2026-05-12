@@ -9,8 +9,8 @@
         :default-active="activeMenu"
         :collapse="isCollapsed"
         :router="true"
-        background-color="#001529"
-        text-color="#ffffffa6"
+        background-color="var(--sidebar-bg)"
+        text-color="rgba(255,255,255,0.65)"
         active-text-color="#ffffff"
         class="aside-menu"
       >
@@ -180,7 +180,7 @@ async function handleCommand(command: string) {
 }
 
 .layout-aside {
-  background-color: #001529;
+  background-color: var(--sidebar-bg);
   transition: width 0.3s;
   overflow: hidden;
   height: 100vh;
@@ -196,7 +196,7 @@ async function handleCommand(command: string) {
 }
 
 .layout-aside :deep(.el-menu-item:hover) {
-  background-color: #ffffff1a !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .logo {
@@ -205,9 +205,9 @@ async function handleCommand(command: string) {
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   font-weight: 700;
-  border-bottom: 1px solid #ffffff1a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .aside-menu {
@@ -215,15 +215,15 @@ async function handleCommand(command: string) {
 }
 
 .menu-divider {
-  margin: 8px 16px;
-  border-color: #ffffff1a;
+  margin: var(--space-sm) var(--space-md);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .menu-divider :deep(.el-divider__text) {
-  background-color: #001529;
-  color: #ffffff4d;
-  font-size: 11px;
-  padding: 0 8px;
+  background-color: var(--sidebar-bg);
+  color: rgba(255, 255, 255, 0.3);
+  font-size: var(--font-size-xs);
+  padding: 0 var(--space-sm);
 }
 
 .divider-label {
@@ -242,9 +242,10 @@ async function handleCommand(command: string) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
-  padding: 0 16px;
+  background: var(--header-bg);
+  box-shadow: var(--shadow-sm);
+  padding: 0 var(--space-md);
+  height: var(--header-height);
 }
 
 .header-left {
@@ -256,33 +257,36 @@ async function handleCommand(command: string) {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-md);
 }
 
 .system-label {
-  font-size: 14px;
-  color: #606266;
+  font-size: var(--font-size-base);
+  color: var(--color-text-regular);
   white-space: nowrap;
 }
 
 .collapse-btn {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   cursor: pointer;
+  color: var(--color-text-regular);
 }
 
 .user-dropdown {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-xs);
   cursor: pointer;
+  color: var(--color-text-regular);
 }
 
 .username {
-  font-size: 14px;
+  font-size: var(--font-size-base);
 }
 
 .layout-main {
-  background: #f0f2f5;
+  background: var(--color-bg-page);
   overflow: auto;
+  padding: var(--space-lg);
 }
 </style>

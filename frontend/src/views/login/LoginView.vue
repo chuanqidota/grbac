@@ -94,12 +94,15 @@ async function handleLogin() {
 
 .login-card {
   width: 400px;
-  padding: 20px;
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
 }
 
 .login-title {
   text-align: center;
-  margin-bottom: 30px;
-  color: #303133;
+  margin-bottom: var(--space-xl);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
 }
 </style>

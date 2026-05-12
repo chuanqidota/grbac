@@ -129,54 +129,56 @@ onMounted(() => {
 
 <style scoped>
 .dashboard {
-  padding: 20px;
+  padding: 0;
 }
 
 .welcome-section {
-  margin-bottom: 30px;
+  margin-bottom: var(--space-xl);
 }
 
 .welcome-section h2 {
-  margin: 0 0 12px 0;
-  font-size: 24px;
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-2xl);
   font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .welcome-section p {
   margin: 0;
-  font-size: 16px;
-  color: #606266;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-regular);
 }
 
 .stats-section {
-  margin-bottom: 30px;
+  margin-bottom: var(--space-xl);
 }
 
 .stat-card {
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-card :deep(.el-card__body) {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
+  gap: var(--space-md);
+  padding: var(--space-lg);
 }
 
 .stat-icon {
   width: 48px;
   height: 48px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 24px;
+  font-size: var(--font-size-2xl);
 }
 
 .stat-info {
@@ -186,48 +188,46 @@ onMounted(() => {
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: #303133;
+  color: var(--color-text-primary);
   line-height: 1;
 }
 
 .stat-label {
-  font-size: 14px;
-  color: #909399;
-  margin-top: 4px;
-}
-
-.quick-actions {
-  margin-bottom: 30px;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-xs);
 }
 
 .quick-actions h3 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-lg);
   font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .action-card {
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
   text-align: center;
 }
 
 .action-card:hover {
   transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .action-card :deep(.el-card__body) {
-  padding: 24px;
+  padding: var(--space-lg);
 }
 
 .action-icon {
   font-size: 36px;
-  color: #409eff;
-  margin-bottom: 12px;
+  color: var(--color-primary);
+  margin-bottom: var(--space-sm);
 }
 
 .action-text {
-  font-size: 14px;
-  color: #606266;
+  font-size: var(--font-size-base);
+  color: var(--color-text-regular);
 }
 </style>

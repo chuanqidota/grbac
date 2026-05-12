@@ -280,36 +280,18 @@ onMounted(() => {
 
 <style scoped>
 .permission-view {
-  padding: 20px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.header-actions {
-  display: flex;
-  gap: 8px;
+  padding: 0;
 }
 
 .filter-bar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
   align-items: center;
 }
 
 .pagination {
-  margin-top: 20px;
+  margin-top: var(--space-md);
   display: flex;
   justify-content: flex-end;
 }

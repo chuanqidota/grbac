@@ -211,24 +211,6 @@ onMounted(() => { fetchMembers() })
 
 <style scoped>
 .member-view {
-  padding: 20px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.header-actions {
-  display: flex;
-  gap: 8px;
+  padding: 0;
 }
 </style>

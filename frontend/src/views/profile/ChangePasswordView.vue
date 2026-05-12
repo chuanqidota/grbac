@@ -113,17 +113,7 @@ async function handleSubmit() {
 
 <style scoped>
 .change-password-view {
-  padding: 20px;
-}
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
+  padding: 0;
 }
 
 .password-card {

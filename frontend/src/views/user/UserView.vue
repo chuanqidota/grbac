@@ -303,28 +303,11 @@ onMounted(() => {
 
 <style scoped>
 .user-view {
-  padding: 20px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.search-bar {
-  margin-bottom: 20px;
+  padding: 0;
 }
 
 .pagination {
-  margin-top: 20px;
+  margin-top: var(--space-md);
   display: flex;
   justify-content: flex-end;
 }

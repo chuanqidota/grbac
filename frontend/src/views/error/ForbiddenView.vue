@@ -24,13 +24,13 @@ const router = useRouter()
 
 .error-page h1 {
   font-size: 96px;
-  color: #e6a23c;
-  margin-bottom: 16px;
+  color: var(--color-warning);
+  margin-bottom: var(--space-md);
 }
 
 .error-page p {
-  font-size: 18px;
-  color: #606266;
-  margin-bottom: 24px;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-regular);
+  margin-bottom: var(--space-lg);
 }
 </style>

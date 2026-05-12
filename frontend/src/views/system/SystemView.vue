@@ -207,19 +207,6 @@ onMounted(() => {
 
 <style scoped>
 .system-view {
-  padding: 20px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
+  padding: 0;
 }
 </style>

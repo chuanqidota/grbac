@@ -81,20 +81,15 @@
       <el-tab-pane label="分配接口权限" name="permission">
         <div class="assign-container">
           <div class="assign-section">
-            <h4>接口权限列表</h4>
-            <el-table
-              :data="allPermissions"
+            <el-transfer
+              v-model="selectedPermissionIds"
+              :data="transferPermissions"
+              :titles="['未分配权限', '已分配权限']"
+              filterable
+              filter-placeholder="搜索权限编码或名称"
+              :props="{ key: 'id', label: 'label' }"
               v-loading="loadingPermissions"
-              border
-              size="small"
-              @selection-change="handlePermissionSelectionChange"
-            >
-              <el-table-column type="selection" width="55" />
-              <el-table-column prop="code" label="权限编码" />
-              <el-table-column prop="name" label="权限名称" />
-              <el-table-column prop="method" label="请求方法" width="100" />
-              <el-table-column prop="path" label="请求路径" />
-            </el-table>
+            />
           </div>
           <div class="assign-actions">
             <el-button type="primary" @click="assignPermissions" :loading="savingPermissions">
@@ -182,18 +177,27 @@ const menuTreeRef = ref()
 
 // Permissions
 const allPermissions = ref<Permission[]>([])
-const assignedPermissionIds = ref<number[]>([])
 const loadingPermissions = ref(false)
 const savingPermissions = ref(false)
 const selectedPermissionIds = ref<number[]>([])
+
+const transferPermissions = computed(() =>
+  allPermissions.value.map(p => ({
+    id: p.id,
+    label: `${p.code} (${p.method} ${p.path})`
+  }))
+)
 
 async function fetchAssignedUsers() {
   if (!props.role) return
   loadingUsers.value = true
   try {
     const data: any = await getRoleUsers(props.systemId, props.role.id)
+    console.log('[DEBUG] getRoleUsers response:', JSON.stringify(data))
     assignedUsers.value = data.list || []
+    console.log('[DEBUG] assignedUsers:', assignedUsers.value)
   } catch (error: any) {
+    console.error('[DEBUG] getRoleUsers error:', error)
     ElMessage.error(error.message || '获取已分配用户失败')
   } finally {
     loadingUsers.value = false
@@ -222,12 +226,15 @@ async function searchUsers(query: string) {
 async function assignUsers() {
   if (!props.role || selectedUserIds.value.length === 0) return
   try {
+    console.log('[DEBUG] assignUsers sending:', { systemId: props.systemId, roleId: props.role.id, userIds: selectedUserIds.value })
     await assignUsersApi(props.systemId, props.role.id, selectedUserIds.value)
+    console.log('[DEBUG] assignUsers success')
     ElMessage.success('用户分配成功')
     selectedUserIds.value = []
     fetchAssignedUsers()
     emit('success')
   } catch (error: any) {
+    console.error('[DEBUG] assignUsers error:', error)
     ElMessage.error(error.message || '用户分配失败')
   }
 }
@@ -248,8 +255,11 @@ async function fetchMenuTree() {
   loadingMenus.value = true
   try {
     const data: any = await getMenus(props.systemId)
+    console.log('[DEBUG] getMenus response:', JSON.stringify(data))
     menuTree.value = data.list || []
+    console.log('[DEBUG] menuTree:', menuTree.value)
   } catch (error: any) {
+    console.error('[DEBUG] getMenus error:', error)
     ElMessage.error(error.message || '获取菜单树失败')
   } finally {
     loadingMenus.value = false
@@ -260,8 +270,11 @@ async function fetchAssignedMenus() {
   if (!props.role) return
   try {
     const data: any = await getRoleMenus(props.systemId, props.role.id)
+    console.log('[DEBUG] getRoleMenus response:', JSON.stringify(data))
     assignedMenuIds.value = (data.list || []).map((m: any) => m.id || m)
+    console.log('[DEBUG] assignedMenuIds:', assignedMenuIds.value)
   } catch (error: any) {
+    console.error('[DEBUG] getRoleMenus error:', error)
     ElMessage.error(error.message || '获取已分配菜单失败')
   }
 }
@@ -286,9 +299,12 @@ async function assignMenus() {
 async function fetchPermissions() {
   loadingPermissions.value = true
   try {
-    const data: any = await getPermissions(props.systemId)
+    const data: any = await getPermissions(props.systemId, { page: 1, page_size: 500 })
+    console.log('[DEBUG] getPermissions response:', JSON.stringify(data))
     allPermissions.value = data.list || []
+    console.log('[DEBUG] allPermissions count:', allPermissions.value.length)
   } catch (error: any) {
+    console.error('[DEBUG] getPermissions error:', error)
     ElMessage.error(error.message || '获取权限列表失败')
   } finally {
     loadingPermissions.value = false
@@ -299,14 +315,13 @@ async function fetchAssignedPermissions() {
   if (!props.role) return
   try {
     const data: any = await getRolePermissions(props.systemId, props.role.id)
-    assignedPermissionIds.value = (data.list || []).map((p: any) => p.id || p)
+    console.log('[DEBUG] getRolePermissions response:', JSON.stringify(data))
+    selectedPermissionIds.value = (data.list || []).map((p: any) => p.id || p)
+    console.log('[DEBUG] selectedPermissionIds:', selectedPermissionIds.value)
   } catch (error: any) {
+    console.error('[DEBUG] getRolePermissions error:', error)
     ElMessage.error(error.message || '获取已分配权限失败')
   }
-}
-
-function handlePermissionSelectionChange(selection: Permission[]) {
-  selectedPermissionIds.value = selection.map(p => p.id)
 }
 
 async function assignPermissions() {
@@ -323,17 +338,42 @@ async function assignPermissions() {
   }
 }
 
+function clearData() {
+  assignedUsers.value = []
+  menuTree.value = []
+  assignedMenuIds.value = []
+  allPermissions.value = []
+  selectedPermissionIds.value = []
+  selectedUserIds.value = []
+  availableUsers.value = []
+}
+
 function handleClose() {
   activeTab.value = 'user'
+  clearData()
+}
+
+function loadAllData() {
+  if (!props.role) return
+  clearData()
+  fetchAssignedUsers()
+  fetchMenuTree()
+  fetchAssignedMenus()
+  fetchPermissions()
+  fetchAssignedPermissions()
 }
 
 watch(() => props.modelValue, (val) => {
+  console.log('[DEBUG] Drawer watch triggered:', { visible: val, role: props.role, systemId: props.systemId })
   if (val && props.role) {
-    fetchAssignedUsers()
-    fetchMenuTree()
-    fetchAssignedMenus()
-    fetchPermissions()
-    fetchAssignedPermissions()
+    loadAllData()
+  }
+})
+
+watch(() => props.role, (newRole, oldRole) => {
+  console.log('[DEBUG] Role changed:', { newRole: newRole?.id, oldRole: oldRole?.id, visible: props.modelValue })
+  if (props.modelValue && newRole && newRole.id !== oldRole?.id) {
+    loadAllData()
   }
 })
 </script>
@@ -342,7 +382,7 @@ watch(() => props.modelValue, (val) => {
 .assign-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-lg);
 }
 
 .assign-section {
@@ -350,13 +390,13 @@ watch(() => props.modelValue, (val) => {
 }
 
 .assign-section h4 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-base);
   font-weight: 600;
 }
 
 .assign-actions {
-  margin-top: 16px;
+  margin-top: var(--space-md);
   display: flex;
   justify-content: flex-end;
 }
