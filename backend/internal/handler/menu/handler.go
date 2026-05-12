@@ -56,7 +56,7 @@ func (h *Handler) GetTree(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, tree)
+	response.OKPage(c, int64(len(tree)), tree)
 }
 
 // Update modifies an existing menu.

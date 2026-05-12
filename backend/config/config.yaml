@@ -32,4 +32,4 @@ password:
   max_attempts: 5
   lock_duration: 1800
 
-encryption_key: "grbac-aes-key-2026-32bytes!!"
+encryption_key: "grbac-2026-secret-aes-32-byte-ok"

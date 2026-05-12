@@ -77,6 +77,9 @@ func SetupRouter(
 		protectedAuth.POST("/change-password", authH.ChangePassword)
 	}
 
+	// ---- Authenticated user info route ----
+	api.GET("/users/me", authMW, userH.GetMe)
+
 	// ---- Super-admin routes: user management ----
 	users := api.Group("/users")
 	users.Use(authMW, superAdminMW)
@@ -87,6 +90,7 @@ func SetupRouter(
 		users.PUT("/:id", userH.Update)
 		users.DELETE("/:id", userH.Delete)
 		users.PUT("/:id/status", userH.UpdateStatus)
+		users.GET("/:id/roles", userH.GetUserRoles)
 	}
 
 	// ---- Super-admin routes: system management ----
@@ -120,6 +124,7 @@ func SetupRouter(
 		roles.POST("/:rid/permissions", roleH.AssignPermissions)
 		roles.GET("/:rid/permissions", roleH.GetRolePermissions)
 		roles.POST("/:rid/users", roleH.AssignUsers)
+		roles.GET("/:rid/users", roleH.GetRoleUsers)
 		roles.DELETE("/:rid/users/:uid", roleH.RemoveUser)
 	}
 

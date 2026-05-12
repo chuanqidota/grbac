@@ -61,7 +61,7 @@ func (h *Handler) GetBySystemID(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, webhooks)
+	response.OKPage(c, int64(len(webhooks)), webhooks)
 }
 
 // Update modifies a webhook.

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import request from '@/utils/request'
-import { setToken, setRefreshToken, removeToken, getToken } from '@/utils/token'
+import { setToken, setRefreshToken, removeToken, removeRefreshToken, getToken, getRefreshToken } from '@/utils/token'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(getToken())
@@ -20,14 +20,15 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       token.value = null
       removeToken()
+      removeRefreshToken()
     }
   }
 
   async function refreshToken() {
-    const refreshToken = localStorage.getItem('grbac_refresh_token')
-    if (!refreshToken) throw new Error('No refresh token')
+    const rt = getRefreshToken()
+    if (!rt) throw new Error('No refresh token')
 
-    const data: any = await request.post('/auth/refresh', { refresh_token: refreshToken })
+    const data: any = await request.post('/auth/refresh', { refresh_token: rt })
     token.value = data.access_token
     setToken(data.access_token)
     setRefreshToken(data.refresh_token)

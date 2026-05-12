@@ -183,9 +183,9 @@ func (s *Service) RemoveMember(systemID, userID int64) error {
 	return nil
 }
 
-// GetMembers returns all members of a system.
-func (s *Service) GetMembers(systemID int64) ([]model.SystemMember, error) {
-	members, err := s.systemRepo.GetMembers(systemID)
+// GetMembers returns all members of a system with user info.
+func (s *Service) GetMembers(systemID int64) ([]systemRepo.MemberInfo, error) {
+	members, err := s.systemRepo.GetMembersWithUser(systemID)
 	if err != nil {
 		return nil, errors.ErrInternal.Wrap(err.Error())
 	}

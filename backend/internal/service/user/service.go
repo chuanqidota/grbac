@@ -4,6 +4,8 @@ import (
 	"grbac/internal/model"
 	"grbac/internal/pkg/crypto"
 	"grbac/internal/pkg/errors"
+	roleRepo "grbac/internal/repository/role"
+	systemRepo "grbac/internal/repository/system"
 	userRepo "grbac/internal/repository/user"
 )
 
@@ -21,14 +23,25 @@ type UpdateRequest struct {
 	Phone string `json:"phone"`
 }
 
+// UserRoleInfo holds role info with system context for a user.
+type UserRoleInfo struct {
+	SystemID   int64  `json:"system_id"`
+	SystemName string `json:"system_name"`
+	RoleID     int64  `json:"role_id"`
+	RoleName   string `json:"role_name"`
+	RoleCode   string `json:"role_code"`
+}
+
 // Service provides user CRUD operations.
 type Service struct {
-	userRepo *userRepo.Repo
+	userRepo   *userRepo.Repo
+	roleRepo   *roleRepo.Repo
+	systemRepo *systemRepo.Repo
 }
 
 // NewService creates a new Service.
-func NewService(userRepo *userRepo.Repo) *Service {
-	return &Service{userRepo: userRepo}
+func NewService(userRepo *userRepo.Repo, roleRepo *roleRepo.Repo, systemRepo *systemRepo.Repo) *Service {
+	return &Service{userRepo: userRepo, roleRepo: roleRepo, systemRepo: systemRepo}
 }
 
 // Create registers a new user after validating uniqueness and hashing the password.
@@ -132,4 +145,36 @@ func (s *Service) UpdateStatus(id int64, status int8) error {
 	}
 
 	return nil
+}
+
+// GetUserRoles returns all roles assigned to a user across all systems.
+func (s *Service) GetUserRoles(userID int64) ([]UserRoleInfo, error) {
+	userRoles, err := s.userRepo.GetUserRoles(userID)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	var result []UserRoleInfo
+	for _, ur := range userRoles {
+		role, err := s.roleRepo.GetByID(ur.RoleID)
+		if err != nil {
+			continue
+		}
+		sys, err := s.systemRepo.GetByID(role.SystemID)
+		if err != nil {
+			continue
+		}
+		result = append(result, UserRoleInfo{
+			SystemID:   sys.ID,
+			SystemName: sys.Name,
+			RoleID:     role.ID,
+			RoleName:   role.Name,
+			RoleCode:   role.Code,
+		})
+	}
+
+	if result == nil {
+		result = []UserRoleInfo{}
+	}
+	return result, nil
 }

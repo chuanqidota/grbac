@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"grbac/internal/middleware"
 	"grbac/internal/pkg/errors"
 	"grbac/internal/pkg/response"
 	userService "grbac/internal/service/user"
@@ -22,6 +23,23 @@ type Handler struct {
 // NewHandler creates a new Handler.
 func NewHandler(userSvc *userService.Service) *Handler {
 	return &Handler{userSvc: userSvc}
+}
+
+// GetMe returns the current authenticated user's info.
+func (h *Handler) GetMe(c *gin.Context) {
+	userID, exists := c.Get(middleware.CtxUserID)
+	if !exists {
+		response.Unauthorized(c, errors.ErrTokenInvalid)
+		return
+	}
+
+	user, err := h.userSvc.GetByID(userID.(int64))
+	if err != nil {
+		response.RespondError(c, err)
+		return
+	}
+
+	response.OK(c, user)
 }
 
 // Create registers a new user.
@@ -138,4 +156,21 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 	}
 
 	response.OKMessage(c)
+}
+
+// GetUserRoles returns all roles assigned to a user across all systems.
+func (h *Handler) GetUserRoles(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errors.ErrUserNotFound)
+		return
+	}
+
+	roles, err := h.userSvc.GetUserRoles(id)
+	if err != nil {
+		response.RespondError(c, err)
+		return
+	}
+
+	response.OKPage(c, int64(len(roles)), roles)
 }

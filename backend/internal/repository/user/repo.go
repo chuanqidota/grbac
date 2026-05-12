@@ -117,3 +117,13 @@ func (r *Repo) RemoveAllSystemMembers(userID int64) error {
 	var member model.SystemMember
 	return r.db.Where("user_id = ?", userID).Delete(&member).Error
 }
+
+// GetByRoleID returns all user objects assigned to the given role.
+func (r *Repo) GetByRoleID(roleID int64) ([]model.User, error) {
+	var users []model.User
+	err := r.db.Model(&model.User{}).
+		Joins("JOIN user_roles ON user_roles.user_id = users.id").
+		Where("user_roles.role_id = ?", roleID).
+		Find(&users).Error
+	return users, err
+}

@@ -1,0 +1,321 @@
+<h2>各页面内容区布局方案</h2>
+<p class="subtitle">统一布局规范：页面标题 + 操作栏 + 内容表格 + 分页</p>
+
+<style>
+.page-mock { border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; margin-bottom: 24px; background: #fff; }
+.page-mock-header { background: #f6f8fa; padding: 8px 12px; font-size: 12px; font-weight: 600; color: #333; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; gap: 8px; }
+.page-mock-body { padding: 16px; font-family: system-ui; }
+.mock-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.mock-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+.mock-input { border: 1px solid #dcdfe6; border-radius: 4px; padding: 6px 10px; font-size: 12px; background: #fff; color: #999; }
+.mock-btn { padding: 6px 14px; border-radius: 4px; font-size: 12px; border: 1px solid #dcdfe6; background: #fff; color: #606266; cursor: default; }
+.mock-btn-primary { background: #409eff; color: #fff; border-color: #409eff; }
+.mock-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mock-table th { background: #fafafa; padding: 8px 10px; text-align: left; border-bottom: 1px solid #ebeef5; color: #909399; font-weight: 500; }
+.mock-table td { padding: 8px 10px; border-bottom: 1px solid #ebeef5; color: #606266; }
+.mock-table tr:hover td { background: #f5f7fa; }
+.mock-tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; }
+.mock-tag-blue { background: #ecf5ff; color: #409eff; }
+.mock-tag-green { background: #f0f9eb; color: #67c23a; }
+.mock-tag-red { background: #fef0f0; color: #f56c6c; }
+.mock-tag-gray { background: #f4f4f5; color: #909399; }
+.mock-link { color: #409eff; font-size: 12px; cursor: pointer; }
+.mock-link-danger { color: #f56c6c; font-size: 12px; cursor: pointer; }
+.mock-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; color: #909399; }
+.mock-page-btn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 12px; color: #606266; }
+.mock-page-active { background: #409eff; color: #fff; border-color: #409eff; }
+.mock-card-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.mock-card { background: #fff; border: 1px solid #ebeef5; border-radius: 6px; padding: 16px; }
+.mock-card-label { font-size: 12px; color: #909399; margin-bottom: 8px; }
+.mock-card-value { font-size: 24px; font-weight: 700; color: #303133; }
+.mock-tabs { display: flex; gap: 0; border-bottom: 1px solid #e4e7ed; margin-bottom: 12px; }
+.mock-tab { padding: 8px 16px; font-size: 13px; color: #606266; cursor: pointer; border-bottom: 2px solid transparent; }
+.mock-tab-active { color: #409eff; border-bottom-color: #409eff; }
+.mock-desc { font-size: 11px; color: #909399; margin-top: 4px; }
+</style>
+
+<!-- Dashboard -->
+<div class="page-mock">
+  <div class="page-mock-header">
+    <span style="color: #409eff;">&#9632;</span> 首页 (Dashboard)
+  </div>
+  <div class="page-mock-body">
+    <div class="mock-title">仪表盘</div>
+    <div class="mock-card-row">
+      <div class="mock-card">
+        <div class="mock-card-label">用户总数</div>
+        <div class="mock-card-value">128</div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-card-label">系统数量</div>
+        <div class="mock-card-value">5</div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-card-label">角色总数</div>
+        <div class="mock-card-value">32</div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-card-label">权限总数</div>
+        <div class="mock-card-value">156</div>
+      </div>
+    </div>
+    <div class="mock-desc">超管看到所有统计，普通用户只看到所属系统的统计</div>
+  </div>
+</div>
+
+<!-- 用户管理 -->
+<div class="page-mock">
+  <div class="page-mock-header">
+    <span style="color: #409eff;">&#9632;</span> 用户管理
+  </div>
+  <div class="page-mock-body">
+    <div class="mock-title">
+      用户管理
+      <span class="mock-btn mock-btn-primary">+ 创建用户</span>
+    </div>
+    <div class="mock-toolbar">
+      <span class="mock-input" style="width: 240px;">&#128269; 搜索用户名</span>
+    </div>
+    <table class="mock-table">
+      <tr><th>ID</th><th>用户名</th><th>邮箱</th><th>手机号</th><th>状态</th><th>创建时间</th><th>操作</th></tr>
+      <tr>
+        <td>1</td><td>admin</td><td>admin@grbac.com</td><td>13800000001</td>
+        <td><span class="mock-tag mock-tag-green">启用</span></td>
+        <td>2026-01-15 10:30</td>
+        <td><span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+      <tr>
+        <td>2</td><td>zhangsan</td><td>zhang@grbac.com</td><td>13800000002</td>
+        <td><span class="mock-tag mock-tag-green">启用</span></td>
+        <td>2026-02-20 14:00</td>
+        <td><span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+    </table>
+    <div class="mock-pagination">
+      <span>共 128 条</span>
+      <span class="mock-page-btn">1</span>
+      <span class="mock-page-btn">2</span>
+      <span class="mock-page-btn">3</span>
+      <span>...</span>
+      <span class="mock-page-btn">13</span>
+    </div>
+  </div>
+</div>
+
+<!-- 系统管理 -->
+<div class="page-mock">
+  <div class="page-mock-header">
+    <span style="color: #409eff;">&#9632;</span> 系统管理
+  </div>
+  <div class="page-mock-body">
+    <div class="mock-title">
+      系统管理
+      <span class="mock-btn mock-btn-primary">+ 创建系统</span>
+    </div>
+    <table class="mock-table">
+      <tr><th>ID</th><th>系统名称</th><th>系统编码</th><th>描述</th><th>创建时间</th><th>操作</th></tr>
+      <tr>
+        <td>1</td><td>订单系统</td><td><span class="mock-tag mock-tag-blue">order</span></td><td>订单业务管理</td>
+        <td>2026-01-10</td>
+        <td><span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+      <tr>
+        <td>2</td><td>支付系统</td><td><span class="mock-tag mock-tag-blue">payment</span></td><td>支付与结算</td>
+        <td>2026-01-15</td>
+        <td><span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+    </table>
+    <div class="mock-desc">纯 CRUD 表格，不再使用左右布局</div>
+  </div>
+</div>
+
+<!-- 角色管理 -->
+<div class="page-mock">
+  <div class="page-mock-header">
+    <span style="color: #409eff;">&#9632;</span> 角色管理 <span style="color: #999; font-weight: 400;">（右上角已选"订单系统"）</span>
+  </div>
+  <div class="page-mock-body">
+    <div class="mock-title">
+      角色管理
+      <span class="mock-btn mock-btn-primary">+ 创建角色</span>
+    </div>
+    <table class="mock-table">
+      <tr><th>ID</th><th>角色名称</th><th>角色编码</th><th>描述</th><th>操作</th></tr>
+      <tr>
+        <td>1</td><td>管理员</td><td><span class="mock-tag mock-tag-blue">admin</span></td><td>系统管理员</td>
+        <td><span class="mock-link">授权</span> <span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+      <tr>
+        <td>2</td><td>普通用户</td><td><span class="mock-tag mock-tag-blue">user</span></td><td>普通操作员</td>
+        <td><span class="mock-link">授权</span> <span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+    </table>
+    <div class="mock-desc">点击"授权"打开抽屉，可分配用户/菜单/权限</div>
+  </div>
+</div>
+
+<!-- 菜单管理 -->
+<div class="page-mock">
+  <div class="page-mock-header">
+    <span style="color: #409eff;">&#9632;</span> 菜单管理
+  </div>
+  <div class="page-mock-body">
+    <div class="mock-title">
+      菜单管理
+      <span class="mock-btn mock-btn-primary">+ 添加菜单</span>
+    </div>
+    <table class="mock-table">
+      <tr><th>ID</th><th>菜单名称</th><th>路径</th><th>排序</th><th>操作</th></tr>
+      <tr>
+        <td>1</td><td>&#9654; 订单管理</td><td>/order</td><td>1</td>
+        <td><span class="mock-link">添加子菜单</span> <span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+      <tr>
+        <td>2</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&#9654; 订单列表</td><td>/order/list</td><td>1</td>
+        <td><span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+      <tr>
+        <td>3</td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;订单详情</td><td>/order/detail</td><td>1</td>
+        <td><span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+      <tr>
+        <td>4</td><td>&#9654; 退款管理</td><td>/refund</td><td>2</td>
+        <td><span class="mock-link">添加子菜单</span> <span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+    </table>
+    <div class="mock-desc">树形表格展示，支持拖拽排序和缩进层级</div>
+  </div>
+</div>
+
+<!-- 接口权限 -->
+<div class="page-mock">
+  <div class="page-mock-header">
+    <span style="color: #409eff;">&#9632;</span> 接口权限
+  </div>
+  <div class="page-mock-body">
+    <div class="mock-title">
+      接口权限
+      <span class="mock-btn mock-btn-primary">+ 添加权限</span>
+    </div>
+    <div class="mock-toolbar">
+      <span class="mock-input" style="width: 180px;">&#128269; 搜索编码</span>
+      <span class="mock-btn">GET</span>
+      <span class="mock-btn">POST</span>
+      <span class="mock-btn">PUT</span>
+      <span class="mock-btn">DELETE</span>
+    </div>
+    <table class="mock-table">
+      <tr><th>ID</th><th>权限编码</th><th>权限名称</th><th>请求方法</th><th>请求路径</th><th>操作</th></tr>
+      <tr>
+        <td>1</td><td>order:create</td><td>创建订单</td>
+        <td><span class="mock-tag mock-tag-green">POST</span></td>
+        <td>/api/orders</td>
+        <td><span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+      <tr>
+        <td>2</td><td>order:list</td><td>查询订单</td>
+        <td><span class="mock-tag mock-tag-blue">GET</span></td>
+        <td>/api/orders</td>
+        <td><span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+    </table>
+    <div class="mock-pagination">
+      <span>共 45 条</span>
+      <span class="mock-page-btn mock-page-active">1</span>
+      <span class="mock-page-btn">2</span>
+      <span class="mock-page-btn">3</span>
+    </div>
+  </div>
+</div>
+
+<!-- Webhook -->
+<div class="page-mock">
+  <div class="page-mock-header">
+    <span style="color: #409eff;">&#9632;</span> Webhook
+  </div>
+  <div class="page-mock-body">
+    <div class="mock-title">
+      Webhook 管理
+      <span class="mock-btn mock-btn-primary">+ 添加 Webhook</span>
+    </div>
+    <table class="mock-table">
+      <tr><th>ID</th><th>名称</th><th>URL</th><th>事件</th><th>状态</th><th>操作</th></tr>
+      <tr>
+        <td>1</td><td>角色变更通知</td><td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">https://hooks.example.com/role-change</td>
+        <td><span class="mock-tag mock-tag-blue">role.create</span> <span class="mock-tag mock-tag-blue">role.update</span></td>
+        <td><span class="mock-tag mock-tag-green">启用</span></td>
+        <td><span class="mock-link">测试</span> <span class="mock-link">编辑</span> <span class="mock-link-danger">删除</span></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- 成员管理 -->
+<div class="page-mock">
+  <div class="page-mock-header">
+    <span style="color: #409eff;">&#9632;</span> 成员管理
+  </div>
+  <div class="page-mock-body">
+    <div class="mock-title">
+      成员管理
+      <span class="mock-btn mock-btn-primary">+ 添加成员</span>
+    </div>
+    <table class="mock-table">
+      <tr><th>ID</th><th>用户名</th><th>邮箱</th><th>角色</th><th>加入时间</th><th>操作</th></tr>
+      <tr>
+        <td>1</td><td>zhangsan</td><td>zhang@grbac.com</td>
+        <td><span class="mock-tag mock-tag-red">管理员</span></td>
+        <td>2026-03-01</td>
+        <td><span class="mock-link-danger">移除</span></td>
+      </tr>
+      <tr>
+        <td>2</td><td>lisi</td><td>li@grbac.com</td>
+        <td><span class="mock-tag mock-tag-blue">成员</span></td>
+        <td>2026-03-15</td>
+        <td><span class="mock-link-danger">移除</span></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- 审计日志 -->
+<div class="page-mock">
+  <div class="page-mock-header">
+    <span style="color: #409eff;">&#9632;</span> 审计日志
+  </div>
+  <div class="page-mock-body">
+    <div class="mock-title">审计日志</div>
+    <div class="mock-toolbar">
+      <span class="mock-btn">筛选系统 ▾</span>
+      <span class="mock-btn">操作类型 ▾</span>
+      <span class="mock-input" style="width: 160px;">开始日期</span>
+      <span style="color: #999;">-</span>
+      <span class="mock-input" style="width: 160px;">结束日期</span>
+    </div>
+    <table class="mock-table">
+      <tr><th>ID</th><th>系统</th><th>操作人</th><th>操作</th><th>资源</th><th>IP</th><th>时间</th><th>详情</th></tr>
+      <tr>
+        <td>1</td><td>订单系统</td><td>admin</td>
+        <td><span class="mock-tag mock-tag-green">create</span></td>
+        <td>role #3</td><td>192.168.1.1</td>
+        <td>2026-05-11 14:30</td>
+        <td><span class="mock-link">查看</span></td>
+      </tr>
+      <tr>
+        <td>2</td><td>支付系统</td><td>admin</td>
+        <td><span class="mock-tag mock-tag-red">delete</span></td>
+        <td>permission #12</td><td>192.168.1.1</td>
+        <td>2026-05-11 14:25</td>
+        <td><span class="mock-link">查看</span></td>
+      </tr>
+    </table>
+    <div class="mock-pagination">
+      <span>共 256 条</span>
+      <span class="mock-page-btn mock-page-active">1</span>
+      <span class="mock-page-btn">2</span>
+      <span class="mock-page-btn">3</span>
+      <span>...</span>
+      <span class="mock-page-btn">26</span>
+    </div>
+  </div>
+</div>

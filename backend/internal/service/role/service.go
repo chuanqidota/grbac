@@ -211,3 +211,15 @@ func (s *Service) RemoveUser(roleID, userID int64) error {
 	}
 	return nil
 }
+
+// GetRoleUsers returns all users assigned to a role.
+func (s *Service) GetRoleUsers(roleID int64) ([]model.User, error) {
+	if _, err := s.roleRepo.GetByID(roleID); err != nil {
+		return nil, errors.ErrRoleNotFound
+	}
+	users, err := s.userRepo.GetByRoleID(roleID)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+	return users, nil
+}

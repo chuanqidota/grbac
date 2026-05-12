@@ -7,7 +7,7 @@ type System struct {
 	ID          int64     `json:"id"          gorm:"column:id;primaryKey;autoIncrement"`
 	Name        string    `json:"name"        gorm:"column:name;size:100;not null"`
 	Code        string    `json:"code"        gorm:"column:code;size:50;uniqueIndex;not null"`
-	Secret      string    `json:"-"           gorm:"column:secret;size:128;not null"`
+	Secret      string    `json:"-"           gorm:"column:secret;size:512;not null"`
 	Description string    `json:"description" gorm:"column:description;size:500"`
 	Status      int8      `json:"status"      gorm:"column:status;not null;default:1"`
 	CreatedAt   time.Time `json:"created_at"  gorm:"column:created_at;autoCreateTime"`

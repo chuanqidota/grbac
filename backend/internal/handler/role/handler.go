@@ -75,7 +75,7 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, roles)
+	response.OKPage(c, int64(len(roles)), roles)
 }
 
 // Update modifies the name and description of an existing role.
@@ -153,7 +153,7 @@ func (h *Handler) GetRoleMenus(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, menuIDs)
+	response.OKPage(c, int64(len(menuIDs)), menuIDs)
 }
 
 // AssignPermissions replaces the permission set of a role.
@@ -192,7 +192,7 @@ func (h *Handler) GetRolePermissions(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, permIDs)
+	response.OKPage(c, int64(len(permIDs)), permIDs)
 }
 
 // AssignUsers replaces the user set of a role.
@@ -237,4 +237,21 @@ func (h *Handler) RemoveUser(c *gin.Context) {
 	}
 
 	response.OKMessage(c)
+}
+
+// GetRoleUsers returns all users assigned to a role.
+func (h *Handler) GetRoleUsers(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("rid"), 10, 64)
+	if err != nil {
+		response.Fail(c, errors.ErrRoleNotFound)
+		return
+	}
+
+	users, err := h.roleSvc.GetRoleUsers(id)
+	if err != nil {
+		response.RespondError(c, err)
+		return
+	}
+
+	response.OKPage(c, int64(len(users)), users)
 }

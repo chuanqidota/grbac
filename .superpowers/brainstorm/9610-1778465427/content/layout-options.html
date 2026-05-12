@@ -1,0 +1,161 @@
+<h2>选择前端布局风格</h2>
+<p class="subtitle">GRBAC 权限管理系统 - 请选择你喜欢的整体布局方向</p>
+
+<div class="cards">
+  <div class="card" data-choice="classic-sidebar" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 0; overflow: hidden;">
+      <div style="display: flex; height: 240px; font-size: 11px; font-family: system-ui;">
+        <!-- Sidebar -->
+        <div style="width: 70px; background: #001529; color: #ffffffa6; display: flex; flex-direction: column;">
+          <div style="height: 32px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; border-bottom: 1px solid #ffffff1a; font-size: 13px;">G</div>
+          <div style="padding: 8px 0; display: flex; flex-direction: column; gap: 2px;">
+            <div style="padding: 6px 12px; background: #1890ff22; color: #fff; border-radius: 0 4px 4px 0; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">&#9632;</span> <span style="font-size: 10px;">首页</span>
+            </div>
+            <div style="padding: 6px 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">&#9632;</span> <span style="font-size: 10px;">用户</span>
+            </div>
+            <div style="padding: 6px 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">&#9632;</span> <span style="font-size: 10px;">系统</span>
+            </div>
+            <div style="padding: 6px 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">&#9632;</span> <span style="font-size: 10px;">审计</span>
+            </div>
+          </div>
+        </div>
+        <!-- Main -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <div style="height: 32px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #999; font-size: 14px;">&#9776;</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 10px;">
+              <span style="background: #f5f5f5; padding: 2px 8px; border-radius: 3px;">系统选择 ▾</span>
+              <span style="color: #666;">admin ▾</span>
+            </div>
+          </div>
+          <div style="flex: 1; background: #f0f2f5; padding: 12px;">
+            <div style="background: #fff; border-radius: 4px; padding: 12px; height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.06);">
+              <div style="color: #999; font-size: 10px;">内容区域</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 经典侧边栏（当前）</h3>
+      <p>深色左侧导航 + 白色顶栏。RBAC 管理系统最常见的布局，专业感强。</p>
+      <div style="margin-top: 8px; font-size: 12px; color: #52c41a;">&#10003; 熟悉、专业、适合多菜单</div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="light-sidebar" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 0; overflow: hidden;">
+      <div style="display: flex; height: 240px; font-size: 11px; font-family: system-ui;">
+        <!-- Sidebar -->
+        <div style="width: 70px; background: #fff; border-right: 1px solid #f0f0f0; display: flex; flex-direction: column;">
+          <div style="height: 32px; display: flex; align-items: center; justify-content: center; color: #1890ff; font-weight: 700; border-bottom: 1px solid #f0f0f0; font-size: 13px;">G</div>
+          <div style="padding: 8px 0; display: flex; flex-direction: column; gap: 2px;">
+            <div style="padding: 6px 12px; background: #e6f7ff; color: #1890ff; border-right: 2px solid #1890ff; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">&#9632;</span> <span style="font-size: 10px;">首页</span>
+            </div>
+            <div style="padding: 6px 12px; color: #666; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">&#9632;</span> <span style="font-size: 10px;">用户</span>
+            </div>
+            <div style="padding: 6px 12px; color: #666; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">&#9632;</span> <span style="font-size: 10px;">系统</span>
+            </div>
+            <div style="padding: 6px 12px; color: #666; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">&#9632;</span> <span style="font-size: 10px;">审计</span>
+            </div>
+          </div>
+        </div>
+        <!-- Main -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <div style="height: 32px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #999; font-size: 14px;">&#9776;</span>
+              <span style="color: #333; font-size: 10px; font-weight: 500;">首页</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 10px;">
+              <span style="background: #f5f5f5; padding: 2px 8px; border-radius: 3px;">系统选择 ▾</span>
+              <span style="color: #666;">admin ▾</span>
+            </div>
+          </div>
+          <div style="flex: 1; background: #f5f7fa; padding: 12px;">
+            <div style="background: #fff; border-radius: 4px; padding: 12px; height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+              <div style="color: #999; font-size: 10px;">内容区域</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 浅色侧边栏</h3>
+      <p>白色左侧导航 + 浅灰背景。更清爽现代，适合内容型管理系统。</p>
+      <div style="margin-top: 8px; font-size: 12px; color: #52c41a;">&#10003; 清爽、现代、护眼</div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="top-nav" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 0; overflow: hidden;">
+      <div style="display: flex; flex-direction: column; height: 240px; font-size: 11px; font-family: system-ui;">
+        <!-- Top bar -->
+        <div style="height: 36px; background: #001529; display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <span style="color: #fff; font-weight: 700; font-size: 13px;">GRBAC</span>
+            <div style="display: flex; gap: 4px;">
+              <span style="color: #fff; background: #1890ff33; padding: 4px 10px; border-radius: 3px; font-size: 10px;">首页</span>
+              <span style="color: #ffffffa6; padding: 4px 10px; font-size: 10px;">用户管理</span>
+              <span style="color: #ffffffa6; padding: 4px 10px; font-size: 10px;">系统管理</span>
+              <span style="color: #ffffffa6; padding: 4px 10px; font-size: 10px;">审计日志</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: #ffffffa6;">
+            <span>系统选择 ▾</span>
+            <span style="margin-left: 8px;">admin ▾</span>
+          </div>
+        </div>
+        <!-- Content -->
+        <div style="flex: 1; background: #f0f2f5; padding: 12px;">
+          <div style="background: #fff; border-radius: 4px; padding: 12px; height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.06);">
+            <div style="color: #999; font-size: 10px;">内容区域（无侧边栏，更宽）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. 顶部导航</h3>
+      <p>横向顶部菜单，无侧边栏。内容区域更宽，适合菜单项少的系统。</p>
+      <div style="margin-top: 8px; font-size: 12px; color: #faad14;">&#9888; 菜单多时会拥挤</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 32px;">
+  <h3>关于菜单目录结构</h3>
+  <p class="subtitle">当前菜单项为：首页、用户管理、系统管理、审计日志、修改密码</p>
+  <div style="background: #f6f8fa; border-radius: 8px; padding: 16px; margin-top: 12px;">
+    <div style="display: flex; gap: 32px; font-size: 13px;">
+      <div>
+        <div style="font-weight: 600; margin-bottom: 8px; color: #333;">当前结构</div>
+        <div style="color: #666; line-height: 1.8;">
+          &#9679; 首页（所有人）<br>
+          &#9679; 用户管理（超管）<br>
+          &#9679; 系统管理（所有人）<br>
+          &#9679; 审计日志（超管）<br>
+          &#9679; 修改密码（所有人）
+        </div>
+      </div>
+      <div>
+        <div style="font-weight: 600; margin-bottom: 8px; color: #333;">可选调整</div>
+        <div style="color: #666; line-height: 1.8;">
+          &#9676; 将"修改密码"移入用户下拉菜单（减少侧边栏噪音）<br>
+          &#9676; 系统管理内增加子菜单（角色/菜单/权限/成员）<br>
+          &#9676; 添加"我的系统"入口（非超管用户）<br>
+          &#9676; 添加仪表盘统计卡片
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

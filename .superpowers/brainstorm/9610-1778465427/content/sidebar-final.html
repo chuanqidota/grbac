@@ -1,0 +1,131 @@
+<h2>最终方案：头部选择 + 侧边栏联动</h2>
+<p class="subtitle">右上角选择系统后，侧边栏"系统管理"自动展开子菜单</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">状态 1：未选择系统</div>
+    <div class="mockup-body" style="padding: 0;">
+      <div style="display: flex; height: 340px; font-size: 11px; font-family: system-ui;">
+        <!-- Sidebar -->
+        <div style="width: 180px; background: #001529; color: #ffffffa6; display: flex; flex-direction: column;">
+          <div style="height: 40px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; border-bottom: 1px solid #ffffff1a;">GRBAC</div>
+          <div style="padding: 8px 0;">
+            <div style="padding: 10px 20px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 14px;">&#9632;</span> 首页
+            </div>
+            <div style="padding: 10px 20px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 14px;">&#9632;</span> 用户管理
+            </div>
+            <div style="padding: 10px 20px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+              <span style="font-size: 14px;">&#9632;</span> 系统管理
+            </div>
+            <div style="padding: 10px 20px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 14px;">&#9632;</span> 审计日志
+            </div>
+          </div>
+        </div>
+        <!-- Main -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <!-- Header -->
+          <div style="height: 40px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
+            <span style="color: #999;">&#9776;</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="background: #f5f5f5; padding: 3px 10px; border-radius: 4px; color: #999; font-size: 10px;">选择系统 ▾</span>
+              <span style="font-size: 10px; color: #666;">admin ▾</span>
+            </div>
+          </div>
+          <!-- Content -->
+          <div style="flex: 1; background: #f0f2f5; padding: 16px;">
+            <div style="background: #fff; border-radius: 6px; padding: 16px; height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.06);">
+              <div style="font-weight: 600; margin-bottom: 8px;">系统管理</div>
+              <div style="color: #999; font-size: 10px;">系统列表（右上角未选择系统，侧边栏"系统管理"为普通菜单项）</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">状态 2：右上角选择了"订单系统"</div>
+    <div class="mockup-body" style="padding: 0;">
+      <div style="display: flex; height: 340px; font-size: 11px; font-family: system-ui;">
+        <!-- Sidebar -->
+        <div style="width: 180px; background: #001529; color: #ffffffa6; display: flex; flex-direction: column;">
+          <div style="height: 40px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; border-bottom: 1px solid #ffffff1a;">GRBAC</div>
+          <div style="padding: 8px 0;">
+            <div style="padding: 10px 20px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 14px;">&#9632;</span> 首页
+            </div>
+            <div style="padding: 10px 20px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 14px;">&#9632;</span> 用户管理
+            </div>
+            <!-- System Management expanded -->
+            <div style="padding: 10px 20px; background: #1890ff22; color: #fff; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 14px;">&#9632;</span>
+              <span style="flex: 1;">
+                <span style="display: block; font-size: 9px; opacity: 0.7;">系统管理</span>
+                <span style="display: block; color: #fff; font-weight: 500; font-size: 12px;">订单系统</span>
+              </span>
+              <span style="font-size: 9px;">▾</span>
+            </div>
+            <!-- Sub-menus -->
+            <div style="padding: 4px 0;">
+              <div style="padding: 8px 20px 8px 48px; color: #1890ff; background: #1890ff15; border-right: 2px solid #1890ff;">
+                角色管理
+              </div>
+              <div style="padding: 8px 20px 8px 48px;">
+                菜单管理
+              </div>
+              <div style="padding: 8px 20px 8px 48px;">
+                接口权限
+              </div>
+              <div style="padding: 8px 20px 8px 48px;">
+                Webhook
+              </div>
+              <div style="padding: 8px 20px 8px 48px;">
+                成员管理
+              </div>
+            </div>
+            <div style="padding: 10px 20px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 14px;">&#9632;</span> 审计日志
+            </div>
+          </div>
+        </div>
+        <!-- Main -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <!-- Header -->
+          <div style="height: 40px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
+            <span style="color: #999;">&#9776;</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="background: #e6f7ff; color: #1890ff; padding: 3px 10px; border-radius: 4px; font-size: 10px; border: 1px solid #91d5ff;">订单系统 ▾</span>
+              <span style="font-size: 10px; color: #666;">admin ▾</span>
+            </div>
+          </div>
+          <!-- Content -->
+          <div style="flex: 1; background: #f0f2f5; padding: 16px;">
+            <div style="background: #fff; border-radius: 6px; padding: 16px; height: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.06);">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <span style="font-weight: 600;">角色管理</span>
+                <span style="background: #f0f0f0; padding: 1px 6px; border-radius: 3px; font-size: 9px; color: #999;">order</span>
+              </div>
+              <div style="color: #999; font-size: 10px;">角色列表内容（URL: /systems/1/roles）</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>交互流程</h3>
+  <div style="background: #f6f8fa; border-radius: 8px; padding: 16px; font-size: 13px; line-height: 2;">
+    <div><strong>1.</strong> 右上角下拉选择系统 → 侧边栏"系统管理"自动展开为该系统的子菜单</div>
+    <div><strong>2.</strong> 侧边栏子菜单：角色管理、菜单管理、接口权限、Webhook、成员管理</div>
+    <div><strong>3.</strong> 点击子菜单 → URL 变为 <code>/systems/:id/roles</code> 等，右侧内容切换</div>
+    <div><strong>4.</strong> 右上角切换其他系统 → 侧边栏子菜单跟着切换，保持当前子菜单类型</div>
+    <div><strong>5.</strong> 右上角清空选择 → 回到系统列表页面，侧边栏收起子菜单</div>
+    <div><strong>6.</strong> "修改密码"从侧边栏移除，放入右上角用户下拉菜单</div>
+  </div>
+</div>

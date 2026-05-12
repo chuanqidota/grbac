@@ -35,7 +35,7 @@ func NewHandler(systemSvc *systemService.Service) *Handler {
 func (h *Handler) Create(c *gin.Context) {
 	var req systemService.CreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Fail(c, errors.ErrInternal)
+		response.FailWithMessage(c, errors.ErrInternal, "请求参数无效: "+err.Error())
 		return
 	}
 
@@ -96,7 +96,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	var req UpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Fail(c, errors.ErrInternal)
+		response.FailWithMessage(c, errors.ErrInternal, "请求参数无效: "+err.Error())
 		return
 	}
 
@@ -135,7 +135,7 @@ func (h *Handler) AddMember(c *gin.Context) {
 
 	var req AddMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Fail(c, errors.ErrInternal)
+		response.FailWithMessage(c, errors.ErrInternal, "请求参数无效: "+err.Error())
 		return
 	}
 
@@ -183,5 +183,5 @@ func (h *Handler) GetMembers(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, members)
+	response.OKPage(c, int64(len(members)), members)
 }

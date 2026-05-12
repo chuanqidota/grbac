@@ -78,6 +78,29 @@ func (r *Repo) GetMembers(systemID int64) ([]model.SystemMember, error) {
 	return members, nil
 }
 
+// MemberInfo is a SystemMember enriched with user fields.
+type MemberInfo struct {
+	ID        int64  `json:"id"`
+	SystemID  int64  `json:"system_id"`
+	UserID    int64  `json:"user_id"`
+	Role      string `json:"role"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	CreatedAt string `json:"created_at"`
+}
+
+// GetMembersWithUser returns system members joined with user info.
+func (r *Repo) GetMembersWithUser(systemID int64) ([]MemberInfo, error) {
+	var results []MemberInfo
+	err := r.db.Table("system_members sm").
+		Select("sm.id, sm.system_id, sm.user_id, sm.role, u.username, u.email, sm.created_at").
+		Joins("LEFT JOIN users u ON u.id = sm.user_id").
+		Where("sm.system_id = ?", systemID).
+		Order("sm.id DESC").
+		Scan(&results).Error
+	return results, err
+}
+
 func (r *Repo) IsMember(systemID, userID int64) (bool, error) {
 	var count int64
 	err := r.db.Model(&model.SystemMember{}).
