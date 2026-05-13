@@ -301,3 +301,59 @@ func (s *Service) GetMemberMenus(systemID, userID int64) ([]*MenuTree, error) {
 
 	return buildMenuTree(menus, 0), nil
 }
+
+// GetMemberPermissions returns the effective permissions for a user within a system.
+// Aggregates permissions from all the user's RBAC roles (deduplicated).
+func (s *Service) GetMemberPermissions(systemID, userID int64) ([]model.Permission, error) {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, errors.ErrUserNotFound
+	}
+
+	// Super admin has no explicit permissions (they bypass checks).
+	if user.IsSuperAdmin == 1 {
+		return []model.Permission{}, nil
+	}
+
+	roles, err := s.userRepo.GetRolesInSystem(userID, systemID)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	if len(roles) == 0 {
+		return []model.Permission{}, nil
+	}
+
+	roleIDs := make([]int64, len(roles))
+	for i, r := range roles {
+		roleIDs[i] = r.ID
+	}
+
+	rolePerms, err := s.roleRepo.GetRolePermissionsByRoleIDs(roleIDs)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	permIDSet := make(map[int64]struct{})
+	for _, permIDs := range rolePerms {
+		for _, pid := range permIDs {
+			permIDSet[pid] = struct{}{}
+		}
+	}
+
+	if len(permIDSet) == 0 {
+		return []model.Permission{}, nil
+	}
+
+	ids := make([]int64, 0, len(permIDSet))
+	for id := range permIDSet {
+		ids = append(ids, id)
+	}
+
+	perms, err := s.permissionRepo.ListByIDs(ids)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	return perms, nil
+}

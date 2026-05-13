@@ -107,6 +107,7 @@ func SetupRouter(
 		systems.GET("/:id/members", systemH.GetMembers)
 		systems.GET("/:id/members/:uid/roles", systemH.GetMemberRoles)
 		systems.GET("/:id/members/:uid/menus", systemH.GetMemberMenus)
+		systems.GET("/:id/members/:uid/permissions", systemH.GetMemberPermissions)
 		systems.POST("/:id/webhooks", webhookH.Create)
 		systems.GET("/:id/webhooks", webhookH.GetBySystemID)
 		systems.PUT("/:id/webhooks/:wid", webhookH.Update)

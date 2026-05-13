@@ -231,3 +231,26 @@ func (h *Handler) GetMemberMenus(c *gin.Context) {
 
 	response.OK(c, menus)
 }
+
+// GetMemberPermissions returns the effective permissions of a member within a system.
+func (h *Handler) GetMemberPermissions(c *gin.Context) {
+	systemID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errors.ErrSystemNotFound)
+		return
+	}
+
+	userID, err := strconv.ParseInt(c.Param("uid"), 10, 64)
+	if err != nil {
+		response.Fail(c, errors.ErrUserNotFound)
+		return
+	}
+
+	perms, err := h.systemSvc.GetMemberPermissions(systemID, userID)
+	if err != nil {
+		response.RespondError(c, err)
+		return
+	}
+
+	response.OK(c, perms)
+}
