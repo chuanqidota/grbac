@@ -212,3 +212,12 @@ func (s *Service) GetMembers(systemID int64) ([]systemRepo.MemberInfo, error) {
 func (s *Service) IsAdmin(systemID, userID int64) (bool, error) {
 	return s.systemRepo.IsAdmin(systemID, userID)
 }
+
+// GetMemberRoles returns the RBAC roles assigned to a user within a system.
+func (s *Service) GetMemberRoles(systemID, userID int64) ([]model.Role, error) {
+	roles, err := s.userRepo.GetRolesInSystem(userID, systemID)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+	return roles, nil
+}

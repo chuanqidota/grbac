@@ -185,3 +185,26 @@ func (h *Handler) GetMembers(c *gin.Context) {
 
 	response.OKPage(c, int64(len(members)), members)
 }
+
+// GetMemberRoles returns the RBAC roles of a member within a system.
+func (h *Handler) GetMemberRoles(c *gin.Context) {
+	systemID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errors.ErrSystemNotFound)
+		return
+	}
+
+	userID, err := strconv.ParseInt(c.Param("uid"), 10, 64)
+	if err != nil {
+		response.Fail(c, errors.ErrUserNotFound)
+		return
+	}
+
+	roles, err := h.systemSvc.GetMemberRoles(systemID, userID)
+	if err != nil {
+		response.RespondError(c, err)
+		return
+	}
+
+	response.OK(c, roles)
+}
