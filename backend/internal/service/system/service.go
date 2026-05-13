@@ -221,3 +221,83 @@ func (s *Service) GetMemberRoles(systemID, userID int64) ([]model.Role, error) {
 	}
 	return roles, nil
 }
+
+// MenuTree represents a menu node with children for tree output.
+type MenuTree struct {
+	model.Menu
+	Children []*MenuTree `json:"children"`
+}
+
+func buildMenuTree(menus []model.Menu, parentID int64) []*MenuTree {
+	var trees []*MenuTree
+	for _, m := range menus {
+		if m.ParentID == parentID {
+			node := &MenuTree{
+				Menu:     m,
+				Children: buildMenuTree(menus, m.ID),
+			}
+			trees = append(trees, node)
+		}
+	}
+	return trees
+}
+
+// GetMemberMenus returns the effective menu tree for a user within a system.
+// Aggregates menus from all the user's RBAC roles (deduplicated).
+func (s *Service) GetMemberMenus(systemID, userID int64) ([]*MenuTree, error) {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, errors.ErrUserNotFound
+	}
+
+	// Super admin gets all system menus.
+	if user.IsSuperAdmin == 1 {
+		menus, err := s.menuRepo.ListBySystem(systemID)
+		if err != nil {
+			return nil, errors.ErrInternal.Wrap(err.Error())
+		}
+		return buildMenuTree(menus, 0), nil
+	}
+
+	roles, err := s.userRepo.GetRolesInSystem(userID, systemID)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	if len(roles) == 0 {
+		return []*MenuTree{}, nil
+	}
+
+	roleIDs := make([]int64, len(roles))
+	for i, r := range roles {
+		roleIDs[i] = r.ID
+	}
+
+	roleMenus, err := s.roleRepo.GetRoleMenusByRoleIDs(roleIDs)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	menuIDSet := make(map[int64]struct{})
+	for _, menuIDs := range roleMenus {
+		for _, mid := range menuIDs {
+			menuIDSet[mid] = struct{}{}
+		}
+	}
+
+	if len(menuIDSet) == 0 {
+		return []*MenuTree{}, nil
+	}
+
+	ids := make([]int64, 0, len(menuIDSet))
+	for id := range menuIDSet {
+		ids = append(ids, id)
+	}
+
+	menus, err := s.menuRepo.ListByIDs(ids)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	return buildMenuTree(menus, 0), nil
+}
