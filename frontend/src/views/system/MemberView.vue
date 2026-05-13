@@ -36,12 +36,20 @@
           {{ formatDate(row.created_at) }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="100" fixed="right">
+      <el-table-column label="操作" width="150" fixed="right">
         <template #default="{ row }">
+          <el-button type="primary" link @click="showDetail(row)">查看</el-button>
           <el-button type="danger" link @click="handleRemove(row)">移除</el-button>
         </template>
       </el-table-column>
     </el-table>
+
+    <MemberDetailDrawer
+      v-model="detailDrawerVisible"
+      :system-id="systemId"
+      :member="selectedMember"
+      @success="fetchMembers"
+    />
 
     <!-- Add Member Dialog -->
     <el-dialog v-model="dialogVisible" title="添加成员" width="500px">
@@ -87,6 +95,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getSystemMembers, addSystemMember, removeSystemMember } from '@/api/system'
 import { getUsers } from '@/api/user'
+import MemberDetailDrawer from './MemberDetailDrawer.vue'
 
 interface Member {
   id: number
@@ -112,6 +121,8 @@ const dialogVisible = ref(false)
 const submitting = ref(false)
 const availableUsers = ref<User[]>([])
 const searchingUsers = ref(false)
+const detailDrawerVisible = ref(false)
+const selectedMember = ref<{ id: number; username: string; email?: string; role: string } | null>(null)
 
 const formRef = ref<FormInstance>()
 const form = ref({ user_id: null as number | null, role: 'member' })
@@ -154,6 +165,11 @@ async function searchUsers(query: string) {
   } finally {
     searchingUsers.value = false
   }
+}
+
+function showDetail(member: Member) {
+  selectedMember.value = { id: member.id, username: member.username, email: member.email, role: member.role }
+  detailDrawerVisible.value = true
 }
 
 function showAddDialog() {
