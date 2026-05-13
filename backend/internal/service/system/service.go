@@ -7,6 +7,9 @@ import (
 	"grbac/internal/model"
 	"grbac/internal/pkg/crypto"
 	"grbac/internal/pkg/errors"
+	menuRepo "grbac/internal/repository/menu"
+	permRepo "grbac/internal/repository/permission"
+	roleRepo "grbac/internal/repository/role"
 	systemRepo "grbac/internal/repository/system"
 	userRepo "grbac/internal/repository/user"
 )
@@ -20,17 +23,30 @@ type CreateRequest struct {
 
 // Service provides system CRUD and member management operations.
 type Service struct {
-	systemRepo    *systemRepo.Repo
-	userRepo      *userRepo.Repo
-	encryptionKey []byte
+	systemRepo     *systemRepo.Repo
+	userRepo       *userRepo.Repo
+	roleRepo       *roleRepo.Repo
+	menuRepo       *menuRepo.Repo
+	permissionRepo *permRepo.Repo
+	encryptionKey  []byte
 }
 
 // NewService creates a new Service.
-func NewService(systemRepo *systemRepo.Repo, userRepo *userRepo.Repo, encryptionKey string) *Service {
+func NewService(
+	systemRepo *systemRepo.Repo,
+	userRepo *userRepo.Repo,
+	roleRepo *roleRepo.Repo,
+	menuRepo *menuRepo.Repo,
+	permissionRepo *permRepo.Repo,
+	encryptionKey string,
+) *Service {
 	return &Service{
-		systemRepo:    systemRepo,
-		userRepo:      userRepo,
-		encryptionKey: []byte(encryptionKey),
+		systemRepo:     systemRepo,
+		userRepo:       userRepo,
+		roleRepo:       roleRepo,
+		menuRepo:       menuRepo,
+		permissionRepo: permissionRepo,
+		encryptionKey:  []byte(encryptionKey),
 	}
 }
 
