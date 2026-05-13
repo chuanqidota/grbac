@@ -23,3 +23,12 @@ export const addSystemMember = (id: number, data: { user_id: number; role: strin
 
 export const removeSystemMember = (id: number, uid: number) =>
   request.delete(`/systems/${id}/members/${uid}`)
+
+export const getMemberRoles = (systemId: number, userId: number) =>
+  request.get(`/systems/${systemId}/members/${userId}/roles`)
+
+export const getMemberMenus = (systemId: number, userId: number) =>
+  request.get(`/systems/${systemId}/members/${userId}/menus`)
+
+export const getMemberPermissions = (systemId: number, userId: number) =>
+  request.get(`/systems/${systemId}/members/${userId}/permissions`)
