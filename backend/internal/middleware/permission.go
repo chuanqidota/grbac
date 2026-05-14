@@ -11,10 +11,17 @@ import (
 
 // SystemAdminMiddleware returns a middleware that verifies the authenticated
 // user is an administrator of the system identified by the "sid" path parameter.
-// Must be placed after AuthMiddleware so that CtxUserID is already set.
+// Super-admins (is_super_admin=true) bypass the system membership check.
+// Must be placed after AuthMiddleware so that CtxUserID and CtxIsSuperAdmin are already set.
 func SystemAdminMiddleware(systemService *systemService.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 1. Parse system ID from path parameter.
+		// 1. Super-admins pass through without system membership check.
+		if isSuper, exists := c.Get(CtxIsSuperAdmin); exists && isSuper.(bool) {
+			c.Next()
+			return
+		}
+
+		// 2. Parse system ID from path parameter.
 		sid, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
 			response.Fail(c, errors.ErrSystemNotFound)
@@ -22,7 +29,7 @@ func SystemAdminMiddleware(systemService *systemService.Service) gin.HandlerFunc
 			return
 		}
 
-		// 2. Get the authenticated user ID from context.
+		// 3. Get the authenticated user ID from context.
 		userID, exists := c.Get(CtxUserID)
 		if !exists {
 			response.Unauthorized(c, errors.ErrTokenInvalid)
@@ -30,7 +37,7 @@ func SystemAdminMiddleware(systemService *systemService.Service) gin.HandlerFunc
 			return
 		}
 
-		// 3. Check admin membership.
+		// 4. Check admin membership.
 		isAdmin, err := systemService.IsAdmin(sid, userID.(int64))
 		if err != nil || !isAdmin {
 			response.Forbidden(c, errors.ErrNoPermission)

@@ -7,20 +7,23 @@ import (
 	roleRepo "grbac/internal/repository/role"
 	systemRepo "grbac/internal/repository/system"
 	userRepo "grbac/internal/repository/user"
+	"gorm.io/gorm"
 )
 
 // CreateRequest holds the payload for creating a new user.
 type CreateRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required,min=8"`
-	Email    string `json:"email"`
-	Phone    string `json:"phone"`
+	Username    string `json:"username"     binding:"required"`
+	ChineseName string `json:"chinese_name"`
+	Password    string `json:"password"     binding:"required,min=8"`
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
 }
 
 // UpdateRequest holds the payload for updating user profile fields.
 type UpdateRequest struct {
-	Email string `json:"email"`
-	Phone string `json:"phone"`
+	ChineseName string `json:"chinese_name"`
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
 }
 
 // UserRoleInfo holds role info with system context for a user.
@@ -34,14 +37,15 @@ type UserRoleInfo struct {
 
 // Service provides user CRUD operations.
 type Service struct {
+	db         *gorm.DB
 	userRepo   *userRepo.Repo
 	roleRepo   *roleRepo.Repo
 	systemRepo *systemRepo.Repo
 }
 
 // NewService creates a new Service.
-func NewService(userRepo *userRepo.Repo, roleRepo *roleRepo.Repo, systemRepo *systemRepo.Repo) *Service {
-	return &Service{userRepo: userRepo, roleRepo: roleRepo, systemRepo: systemRepo}
+func NewService(db *gorm.DB, userRepo *userRepo.Repo, roleRepo *roleRepo.Repo, systemRepo *systemRepo.Repo) *Service {
+	return &Service{db: db, userRepo: userRepo, roleRepo: roleRepo, systemRepo: systemRepo}
 }
 
 // Create registers a new user after validating uniqueness and hashing the password.
@@ -58,6 +62,7 @@ func (s *Service) Create(req *CreateRequest) (*model.User, error) {
 
 	user := &model.User{
 		Username:     req.Username,
+		ChineseName:  req.ChineseName,
 		PasswordHash: hashedPassword,
 		Email:        req.Email,
 		Phone:        req.Phone,
@@ -96,6 +101,9 @@ func (s *Service) Update(id int64, req *UpdateRequest) (*model.User, error) {
 		return nil, errors.ErrUserNotFound
 	}
 
+	if req.ChineseName != "" {
+		user.ChineseName = req.ChineseName
+	}
 	if req.Email != "" {
 		user.Email = req.Email
 	}
@@ -117,19 +125,15 @@ func (s *Service) Delete(id int64) error {
 		return errors.ErrUserNotFound
 	}
 
-	// Clean up associations before deleting the user.
-	if err := s.userRepo.RemoveAllUserRoles(id); err != nil {
-		return errors.ErrInternal.Wrap(err.Error())
-	}
-	if err := s.userRepo.RemoveAllSystemMembers(id); err != nil {
-		return errors.ErrInternal.Wrap(err.Error())
-	}
-
-	if err := s.userRepo.Delete(id); err != nil {
-		return errors.ErrInternal.Wrap(err.Error())
-	}
-
-	return nil
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.userRepo.RemoveAllUserRolesTx(tx, id); err != nil {
+			return err
+		}
+		if err := s.userRepo.RemoveAllSystemMembersTx(tx, id); err != nil {
+			return err
+		}
+		return s.userRepo.DeleteTx(tx, id)
+	})
 }
 
 // UpdateStatus changes the active/disabled status of a user.
@@ -140,6 +144,41 @@ func (s *Service) UpdateStatus(id int64, status int8) error {
 	}
 
 	user.Status = status
+	if err := s.userRepo.Update(user); err != nil {
+		return errors.ErrInternal.Wrap(err.Error())
+	}
+
+	return nil
+}
+
+// ResetPassword changes a user's password (admin operation).
+func (s *Service) ResetPassword(id int64, newPassword string) error {
+	user, err := s.userRepo.GetByID(id)
+	if err != nil {
+		return errors.ErrUserNotFound
+	}
+
+	hashedPassword, err := crypto.HashPassword(newPassword)
+	if err != nil {
+		return errors.ErrInternal.Wrap("密码加密失败")
+	}
+
+	user.PasswordHash = hashedPassword
+	if err := s.userRepo.Update(user); err != nil {
+		return errors.ErrInternal.Wrap(err.Error())
+	}
+
+	return nil
+}
+
+// UpdateSuperAdmin sets or unsets the super-admin flag for a user.
+func (s *Service) UpdateSuperAdmin(id int64, isSuperAdmin int8) error {
+	user, err := s.userRepo.GetByID(id)
+	if err != nil {
+		return errors.ErrUserNotFound
+	}
+
+	user.IsSuperAdmin = isSuperAdmin
 	if err := s.userRepo.Update(user); err != nil {
 		return errors.ErrInternal.Wrap(err.Error())
 	}

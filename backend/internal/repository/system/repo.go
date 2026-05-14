@@ -123,6 +123,37 @@ func (r *Repo) IsAdmin(systemID, userID int64) (bool, error) {
 	return count > 0, nil
 }
 
+// ListByUserID returns all systems where the user is a member.
+func (r *Repo) ListByUserID(userID int64) ([]model.System, error) {
+	var systems []model.System
+	err := r.db.Model(&model.System{}).
+		Joins("JOIN system_members ON system_members.system_id = systems.id").
+		Where("system_members.user_id = ?", userID).
+		Order("systems.id DESC").
+		Find(&systems).Error
+	return systems, err
+}
+
+// RoleMemberInfo is a user enriched with their roles in a system.
+type RoleMemberInfo struct {
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+// GetUsersWithRoles returns distinct users who have at least one role in the system.
+func (r *Repo) GetUsersWithRoles(systemID int64) ([]RoleMemberInfo, error) {
+	var results []RoleMemberInfo
+	err := r.db.Table("users u").
+		Select("DISTINCT u.id AS user_id, u.username, u.email").
+		Joins("JOIN user_roles ur ON ur.user_id = u.id").
+		Joins("JOIN roles r ON r.id = ur.role_id").
+		Where("r.system_id = ?", systemID).
+		Order("u.id DESC").
+		Scan(&results).Error
+	return results, err
+}
+
 // DeleteCascade removes a system and all associated data within a transaction.
 func (r *Repo) DeleteCascade(systemID int64) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {

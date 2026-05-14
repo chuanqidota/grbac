@@ -6,6 +6,7 @@ import "time"
 type User struct {
 	ID            int64      `json:"id"             gorm:"column:id;primaryKey;autoIncrement"`
 	Username      string     `json:"username"       gorm:"column:username;size:50;uniqueIndex;not null"`
+	ChineseName   string     `json:"chinese_name"   gorm:"column:chinese_name;size:100"`
 	PasswordHash  string     `json:"-"              gorm:"column:password_hash;size:128;not null"`
 	Email         string     `json:"email"          gorm:"column:email;size:100"`
 	Phone         string     `json:"phone"          gorm:"column:phone;size:20"`

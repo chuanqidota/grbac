@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"grbac/internal/middleware"
 	"grbac/internal/pkg/errors"
 	"grbac/internal/pkg/response"
 	systemService "grbac/internal/service/system"
@@ -49,6 +50,7 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 // List returns a paginated list of systems.
+// Super-admins see all systems; regular users see only systems they belong to.
 func (h *Handler) List(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
@@ -60,7 +62,13 @@ func (h *Handler) List(c *gin.Context) {
 		pageSize = 10
 	}
 
-	systems, total, err := h.systemSvc.List(page, pageSize)
+	userID := c.GetInt64(middleware.CtxUserID)
+	isSuperAdmin := false
+	if v, exists := c.Get(middleware.CtxIsSuperAdmin); exists {
+		isSuperAdmin = v.(bool)
+	}
+
+	systems, total, err := h.systemSvc.ListForUser(userID, isSuperAdmin, page, pageSize)
 	if err != nil {
 		response.RespondError(c, err)
 		return
@@ -184,6 +192,23 @@ func (h *Handler) GetMembers(c *gin.Context) {
 	}
 
 	response.OKPage(c, int64(len(members)), members)
+}
+
+// GetMemberUsers returns users who have roles in the system with role and permission info.
+func (h *Handler) GetMemberUsers(c *gin.Context) {
+	systemID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errors.ErrSystemNotFound)
+		return
+	}
+
+	users, err := h.systemSvc.GetMemberUsers(systemID)
+	if err != nil {
+		response.RespondError(c, err)
+		return
+	}
+
+	response.OKPage(c, int64(len(users)), users)
 }
 
 // GetMemberRoles returns the RBAC roles of a member within a system.

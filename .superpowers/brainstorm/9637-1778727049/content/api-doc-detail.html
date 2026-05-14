@@ -1,0 +1,173 @@
+<h2>API 文档页面 - 详细设计</h2>
+<p class="subtitle">左右分栏 + 在线测试</p>
+
+<div class="mockup">
+  <div class="mockup-header">预览: /systems/1/api-docs</div>
+  <div class="mockup-body" style="padding:0;">
+    <div style="display:flex;height:500px;">
+      <!-- Left: API List -->
+      <div style="width:240px;border-right:1px solid #e4e7ed;background:#fafafa;overflow-y:auto;">
+        <div style="padding:12px;font-weight:600;font-size:13px;border-bottom:1px solid #e4e7ed;background:#fff;">
+          对外接口 <span style="color:#909399;font-weight:normal;font-size:11px;">(5)</span>
+        </div>
+        <div style="padding:0;">
+          <!-- Selected item -->
+          <div style="padding:10px 12px;background:#ecf5ff;border-left:3px solid #409eff;cursor:pointer;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:2px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:600;">GET</span>
+              <code style="font-size:11px;font-weight:600;">/verify</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">验证 Token</div>
+          </div>
+          <!-- Normal items -->
+          <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:2px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:600;">GET</span>
+              <code style="font-size:11px;">/user-info</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">用户信息和角色</div>
+          </div>
+          <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:2px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:600;">GET</span>
+              <code style="font-size:11px;">/menus</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">用户菜单列表</div>
+          </div>
+          <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:2px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:600;">GET</span>
+              <code style="font-size:11px;">/permissions</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">用户权限列表</div>
+          </div>
+          <div style="padding:10px 12px;cursor:pointer;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:2px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:600;">GET</span>
+              <code style="font-size:11px;">/validate-permission</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">校验接口权限</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Detail Panel -->
+      <div style="flex:1;overflow-y:auto;background:#fff;">
+        <!-- Header -->
+        <div style="padding:16px 20px;border-bottom:1px solid #e4e7ed;">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+            <span style="background:#67c23a;color:#fff;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:600;">GET</span>
+            <code style="font-size:15px;font-weight:600;color:#303133;">/api/external/verify</code>
+          </div>
+          <p style="color:#606266;font-size:12px;margin:0;">验证用户 Token 是否有效，返回用户身份信息</p>
+        </div>
+
+        <!-- Request Headers -->
+        <div style="padding:16px 20px;border-bottom:1px solid #f0f0f0;">
+          <h4 style="font-size:13px;margin:0 0 10px 0;color:#303133;">请求头</h4>
+          <table style="width:100%;font-size:11px;border-collapse:collapse;">
+            <tr style="background:#f5f7fa;">
+              <th style="text-align:left;padding:6px 8px;color:#909399;font-weight:500;">参数名</th>
+              <th style="text-align:left;padding:6px 8px;color:#909399;font-weight:500;">必填</th>
+              <th style="text-align:left;padding:6px 8px;color:#909399;font-weight:500;">说明</th>
+            </tr>
+            <tr>
+              <td style="padding:6px 8px;"><code>X-System-Code</code></td>
+              <td style="padding:6px 8px;"><span style="color:#f56c6c;">是</span></td>
+              <td style="padding:6px 8px;color:#606266;">系统编码</td>
+            </tr>
+            <tr style="background:#fafafa;">
+              <td style="padding:6px 8px;"><code>X-User-Token</code></td>
+              <td style="padding:6px 8px;"><span style="color:#f56c6c;">是</span></td>
+              <td style="padding:6px 8px;color:#606266;">用户 JWT Token</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Query Parameters -->
+        <div style="padding:16px 20px;border-bottom:1px solid #f0f0f0;">
+          <h4 style="font-size:13px;margin:0 0 10px 0;color:#303133;">请求参数</h4>
+          <div style="color:#909399;font-size:11px;font-style:italic;">无额外参数</div>
+        </div>
+
+        <!-- Response Example -->
+        <div style="padding:16px 20px;border-bottom:1px solid #f0f0f0;">
+          <h4 style="font-size:13px;margin:0 0 10px 0;color:#303133;">响应示例</h4>
+          <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:11px;margin:0;overflow-x:auto;"><code>{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "user_id": 42,
+    "username": "alice",
+    "is_super_admin": false
+  }
+}</code></pre>
+        </div>
+
+        <!-- Try It Out -->
+        <div style="padding:16px 20px;background:#f9f9f9;">
+          <h4 style="font-size:13px;margin:0 0 12px 0;color:#303133;">
+            在线测试
+            <span style="background:#e6a23c;color:#fff;padding:1px 6px;border-radius:3px;font-size:9px;margin-left:6px;">Try It Out</span>
+          </h4>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div>
+              <label style="font-size:11px;color:#606266;display:block;margin-bottom:3px;">X-System-Code</label>
+              <input style="width:100%;padding:6px 8px;border:1px solid #dcdfe6;border-radius:4px;font-size:11px;box-sizing:border-box;" value="SYS001" />
+            </div>
+            <div>
+              <label style="font-size:11px;color:#606266;display:block;margin-bottom:3px;">X-User-Token</label>
+              <input style="width:100%;padding:6px 8px;border:1px solid #dcdfe6;border-radius:4px;font-size:11px;box-sizing:border-box;" placeholder="粘贴 JWT Token" />
+            </div>
+            <button style="background:#409eff;color:#fff;border:none;padding:8px 16px;border-radius:4px;font-size:12px;cursor:pointer;width:fit-content;">
+              发送请求
+            </button>
+          </div>
+
+          <!-- Response Area -->
+          <div style="margin-top:12px;">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+              <span style="font-size:11px;color:#606266;">响应</span>
+              <span style="background:#67c23a;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;">200 OK</span>
+              <span style="color:#909399;font-size:10px;">12ms</span>
+            </div>
+            <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:11px;margin:0;max-height:150px;overflow:auto;"><code>{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "user_id": 42,
+    "username": "alice",
+    "is_super_admin": false
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;">
+  <h3>页面结构说明</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px;">
+    <div>
+      <h4>左侧面板</h4>
+      <ul style="color:#606266;line-height:1.8;">
+        <li>固定宽度 240px</li>
+        <li>平铺展示所有对外接口</li>
+        <li>每个接口显示：方法标签 + 路径 + 简短说明</li>
+        <li>选中项高亮（蓝色左边框）</li>
+      </ul>
+    </div>
+    <div>
+      <h4>右侧面板</h4>
+      <ul style="color:#606266;line-height:1.8;">
+        <li>接口详情：方法、路径、描述</li>
+        <li>请求头文档（自动带入系统编码）</li>
+        <li>请求参数文档</li>
+        <li>响应示例（代码高亮）</li>
+        <li>在线测试区（填写参数、发送请求、查看响应）</li>
+      </ul>
+    </div>
+  </div>
+</div>

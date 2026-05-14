@@ -93,7 +93,12 @@ func (s *Service) Login(ctx context.Context, username, password string) (*LoginR
 }
 
 // RefreshToken validates a refresh token and issues a new token pair.
+// The old refresh token is blacklisted after use (refresh token rotation).
 func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*LoginResponse, error) {
+	if s.IsTokenBlacklisted(ctx, refreshToken) {
+		return nil, errors.ErrTokenExpired
+	}
+
 	claims, err := jwt.ParseToken(refreshToken, s.jwtSecret)
 	if err != nil {
 		return nil, errors.ErrTokenInvalid
@@ -101,6 +106,13 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Login
 
 	if claims.Subject != "refresh" {
 		return nil, errors.ErrTokenInvalid
+	}
+
+	// Blacklist the old refresh token to prevent reuse.
+	ttl := time.Until(claims.ExpiresAt.Time)
+	if ttl > 0 {
+		key := fmt.Sprintf("%s%s", tokenBlacklistPrefix, refreshToken)
+		s.redis.Set(ctx, key, "1", ttl)
 	}
 
 	user, err := s.userRepo.GetByID(int64(claims.UserID))

@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,13 +31,13 @@ func RateLimitMiddleware(rdb *redis.Client, cfg RateLimitConfig) gin.HandlerFunc
 		pipe := rdb.Pipeline()
 		// Remove expired entries.
 		pipe.ZRemRangeByScore(c.Request.Context(), key, "0",
-			string(rune(windowStart)))
+			strconv.FormatInt(windowStart, 10))
 		// Count current entries.
 		countCmd := pipe.ZCard(c.Request.Context(), key)
 		// Add current request.
 		pipe.ZAdd(c.Request.Context(), key, redis.Z{
 			Score:  float64(now),
-			Member: now,
+			Member: fmt.Sprintf("%d", now),
 		})
 		// Set TTL so keys don't accumulate forever.
 		pipe.Expire(c.Request.Context(), key, cfg.Window+time.Minute)

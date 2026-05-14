@@ -58,8 +58,8 @@ func (s *Service) GetByID(id int64) (*model.Permission, error) {
 }
 
 // ListBySystem returns a paginated list of permissions belonging to a system.
-func (s *Service) ListBySystem(systemID int64, page, pageSize int) ([]model.Permission, int64, error) {
-	perms, total, err := s.permRepo.ListBySystem(systemID, page, pageSize)
+func (s *Service) ListBySystem(systemID int64, page, pageSize int, method, keyword string) ([]model.Permission, int64, error) {
+	perms, total, err := s.permRepo.ListBySystem(systemID, page, pageSize, method, keyword)
 	if err != nil {
 		return nil, 0, errors.ErrInternal.Wrap(err.Error())
 	}

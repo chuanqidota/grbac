@@ -64,6 +64,10 @@ func (r *Repo) AddUserRole(userRole *model.UserRole) error {
 	return r.db.Create(userRole).Error
 }
 
+func (r *Repo) AddUserRoleTx(tx *gorm.DB, userRole *model.UserRole) error {
+	return tx.Create(userRole).Error
+}
+
 func (r *Repo) RemoveUserRole(userID, roleID int64) error {
 	return r.db.Where("user_id = ? AND role_id = ?", userID, roleID).
 		Delete(&model.UserRole{}).Error
@@ -93,6 +97,10 @@ func (r *Repo) RemoveUsersByRoleID(roleID int64) error {
 	return r.db.Where("role_id = ?", roleID).Delete(&model.UserRole{}).Error
 }
 
+func (r *Repo) RemoveUsersByRoleIDTx(tx *gorm.DB, roleID int64) error {
+	return tx.Where("role_id = ?", roleID).Delete(&model.UserRole{}).Error
+}
+
 // GetRolesInSystem returns all roles assigned to the user within the specified system.
 // Uses a single JOIN query instead of loading all user roles then filtering.
 func (r *Repo) GetRolesInSystem(userID, systemID int64) ([]model.Role, error) {
@@ -112,10 +120,25 @@ func (r *Repo) RemoveAllUserRoles(userID int64) error {
 	return r.db.Where("user_id = ?", userID).Delete(&model.UserRole{}).Error
 }
 
+// RemoveAllUserRolesTx removes all role associations for a user within a transaction.
+func (r *Repo) RemoveAllUserRolesTx(tx *gorm.DB, userID int64) error {
+	return tx.Where("user_id = ?", userID).Delete(&model.UserRole{}).Error
+}
+
 // RemoveAllSystemMembers removes all system memberships for a user.
 func (r *Repo) RemoveAllSystemMembers(userID int64) error {
 	var member model.SystemMember
 	return r.db.Where("user_id = ?", userID).Delete(&member).Error
+}
+
+// RemoveAllSystemMembersTx removes all system memberships for a user within a transaction.
+func (r *Repo) RemoveAllSystemMembersTx(tx *gorm.DB, userID int64) error {
+	return tx.Where("user_id = ?", userID).Delete(&model.SystemMember{}).Error
+}
+
+// DeleteTx removes a user by ID within a transaction.
+func (r *Repo) DeleteTx(tx *gorm.DB, id int64) error {
+	return tx.Where("id = ?", id).Delete(&model.User{}).Error
 }
 
 // GetByRoleID returns all user objects assigned to the given role.

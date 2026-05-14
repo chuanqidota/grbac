@@ -89,7 +89,7 @@ async function handleLogin() {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
 }
 
 .login-card {

@@ -318,6 +318,42 @@ func (s *Service) ValidatePermission(ctx context.Context, userID int64, systemCo
 	return s.permissionRepo.HasUserPermission(userID, system.ID, method, path)
 }
 
+// GetUserInfoByUsername returns the user's identity and their roles within the specified system.
+func (s *Service) GetUserInfoByUsername(ctx context.Context, username, systemCode string) (*UserInfo, error) {
+	user, err := s.userRepo.GetByUsername(username)
+	if err != nil {
+		return nil, errors.ErrUserNotFound
+	}
+	return s.GetUserInfo(ctx, user.ID, systemCode)
+}
+
+// GetUserMenusByUsername returns the menus assigned to the user within the specified system.
+func (s *Service) GetUserMenusByUsername(ctx context.Context, username, systemCode string) ([]model.Menu, error) {
+	user, err := s.userRepo.GetByUsername(username)
+	if err != nil {
+		return nil, errors.ErrUserNotFound
+	}
+	return s.GetUserMenus(ctx, user.ID, systemCode)
+}
+
+// GetUserPermissionsByUsername returns the permission codes assigned to the user within the specified system.
+func (s *Service) GetUserPermissionsByUsername(ctx context.Context, username, systemCode string) ([]string, error) {
+	user, err := s.userRepo.GetByUsername(username)
+	if err != nil {
+		return nil, errors.ErrUserNotFound
+	}
+	return s.GetUserPermissions(ctx, user.ID, systemCode)
+}
+
+// ValidatePermissionByUsername checks whether the user holds a specific permission (method + path).
+func (s *Service) ValidatePermissionByUsername(ctx context.Context, username, systemCode, method, path string) (bool, error) {
+	user, err := s.userRepo.GetByUsername(username)
+	if err != nil {
+		return false, errors.ErrUserNotFound
+	}
+	return s.ValidatePermission(ctx, user.ID, systemCode, method, path)
+}
+
 func (s *Service) cacheResult(ctx context.Context, key string, value interface{}) {
 	data, err := json.Marshal(value)
 	if err != nil {

@@ -14,19 +14,18 @@ const (
 )
 
 // ExternalAuthMiddleware returns a middleware that validates the system
-// credentials carried in the X-System-Code / X-System-Secret request headers.
+// credentials carried in the X-System-Code request header.
 // On success the system_id and system_code are stored in the request context.
 func ExternalAuthMiddleware(systemSvc *systemService.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		code := c.GetHeader("X-System-Code")
-		secret := c.GetHeader("X-System-Secret")
-		if code == "" || secret == "" {
+		if code == "" {
 			response.Unauthorized(c, errors.ErrSystemCredential)
 			c.Abort()
 			return
 		}
 
-		system, err := systemSvc.ValidateSecret(code, secret)
+		system, err := systemSvc.GetByCode(code)
 		if err != nil {
 			response.Unauthorized(c, errors.ErrSystemCredential)
 			c.Abort()

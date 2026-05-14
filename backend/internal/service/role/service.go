@@ -107,10 +107,10 @@ func (s *Service) Delete(id int64) error {
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		if err := s.roleRepo.RemoveRoleMenus(id); err != nil {
+		if err := s.roleRepo.RemoveRoleMenusTx(tx, id); err != nil {
 			return err
 		}
-		if err := s.roleRepo.RemoveRolePermissions(id); err != nil {
+		if err := s.roleRepo.RemoveRolePermissionsTx(tx, id); err != nil {
 			return err
 		}
 		return s.roleRepo.Delete(id)
@@ -124,7 +124,7 @@ func (s *Service) AssignMenus(roleID int64, menuIDs []int64) error {
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		if err := s.roleRepo.RemoveRoleMenus(roleID); err != nil {
+		if err := s.roleRepo.RemoveRoleMenusTx(tx, roleID); err != nil {
 			return err
 		}
 		for _, menuID := range menuIDs {
@@ -132,7 +132,7 @@ func (s *Service) AssignMenus(roleID int64, menuIDs []int64) error {
 				RoleID: roleID,
 				MenuID: menuID,
 			}
-			if err := s.roleRepo.AddRoleMenu(rm); err != nil {
+			if err := s.roleRepo.AddRoleMenuTx(tx, rm); err != nil {
 				return err
 			}
 		}
@@ -156,7 +156,7 @@ func (s *Service) AssignPermissions(roleID int64, permIDs []int64) error {
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		if err := s.roleRepo.RemoveRolePermissions(roleID); err != nil {
+		if err := s.roleRepo.RemoveRolePermissionsTx(tx, roleID); err != nil {
 			return err
 		}
 		for _, permID := range permIDs {
@@ -164,7 +164,7 @@ func (s *Service) AssignPermissions(roleID int64, permIDs []int64) error {
 				RoleID:       roleID,
 				PermissionID: permID,
 			}
-			if err := s.roleRepo.AddRolePermission(rp); err != nil {
+			if err := s.roleRepo.AddRolePermissionTx(tx, rp); err != nil {
 				return err
 			}
 		}
@@ -188,7 +188,7 @@ func (s *Service) AssignUsers(roleID int64, userIDs []int64) error {
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		if err := s.userRepo.RemoveUsersByRoleID(roleID); err != nil {
+		if err := s.userRepo.RemoveUsersByRoleIDTx(tx, roleID); err != nil {
 			return err
 		}
 		for _, userID := range userIDs {
@@ -196,7 +196,7 @@ func (s *Service) AssignUsers(roleID int64, userIDs []int64) error {
 				UserID: userID,
 				RoleID: roleID,
 			}
-			if err := s.userRepo.AddUserRole(ur); err != nil {
+			if err := s.userRepo.AddUserRoleTx(tx, ur); err != nil {
 				return err
 			}
 		}

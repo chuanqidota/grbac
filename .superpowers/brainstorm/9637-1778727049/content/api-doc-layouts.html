@@ -1,0 +1,176 @@
+<h2>API 文档页面布局方案</h2>
+<p class="subtitle">系统级页面，展示对外接口文档和测试功能</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <!-- Layout A: Card Grid -->
+      <div style="background:#f5f7fa;padding:16px;border-radius:8px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong style="font-size:14px;">对外接口文档</strong>
+          <span style="color:#909399;font-size:11px;">共 5 个接口</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:#fff;border:1px solid #e4e7ed;border-radius:6px;padding:10px;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;">GET</span>
+              <code style="font-size:11px;">/verify</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">验证 Token 有效性</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e4e7ed;border-radius:6px;padding:10px;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;">GET</span>
+              <code style="font-size:11px;">/user-info</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">获取用户信息和角色</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e4e7ed;border-radius:6px;padding:10px;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;">GET</span>
+              <code style="font-size:11px;">/menus</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">获取用户菜单</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e4e7ed;border-radius:6px;padding:10px;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;">GET</span>
+              <code style="font-size:11px;">/permissions</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">获取用户权限列表</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e4e7ed;border-radius:6px;padding:10px;">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+              <span style="background:#67c23a;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;">GET</span>
+              <code style="font-size:11px;">/validate-permission</code>
+            </div>
+            <div style="color:#909399;font-size:10px;">校验接口权限</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 卡片网格</h3>
+      <p>每个接口一张卡片，点击展开详情和测试面板。视觉清晰，适合接口数量较少的场景。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <!-- Layout B: Table + Drawer -->
+      <div style="background:#f5f7fa;padding:16px;border-radius:8px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong style="font-size:14px;">对外接口文档</strong>
+          <div style="display:flex;gap:8px;">
+            <span style="background:#f5f7fa;border:1px solid #dcdfe6;padding:2px 8px;border-radius:3px;font-size:10px;">全部</span>
+            <span style="background:#67c23a;color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;">GET</span>
+            <span style="background:#409eff;color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;">POST</span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e4e7ed;border-radius:4px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:60px 140px 120px 1fr;background:#f5f7fa;padding:6px 8px;font-weight:600;color:#606266;border-bottom:1px solid #e4e7ed;">
+            <span>方法</span><span>路径</span><span>认证</span><span>说明</span>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 140px 120px 1fr;padding:8px;border-bottom:1px solid #f0f0f0;align-items:center;">
+            <span style="background:#67c23a;color:#fff;padding:1px 4px;border-radius:3px;font-size:10px;text-align:center;">GET</span>
+            <code style="font-size:11px;">/verify</code>
+            <span style="font-size:10px;color:#909399;">SystemCode + Token</span>
+            <span style="font-size:11px;color:#606266;">验证 Token 有效性</span>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 140px 120px 1fr;padding:8px;border-bottom:1px solid #f0f0f0;align-items:center;">
+            <span style="background:#67c23a;color:#fff;padding:1px 4px;border-radius:3px;font-size:10px;text-align:center;">GET</span>
+            <code style="font-size:11px;">/user-info</code>
+            <span style="font-size:10px;color:#909399;">SystemCode + Token</span>
+            <span style="font-size:11px;color:#606266;">获取用户信息和角色</span>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 140px 120px 1fr;padding:8px;border-bottom:1px solid #f0f0f0;align-items:center;">
+            <span style="background:#67c23a;color:#fff;padding:1px 4px;border-radius:3px;font-size:10px;text-align:center;">GET</span>
+            <code style="font-size:11px;">/menus</code>
+            <span style="font-size:10px;color:#909399;">SystemCode + Token</span>
+            <span style="font-size:11px;color:#606266;">获取用户菜单</span>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 140px 120px 1fr;padding:8px;align-items:center;">
+            <span style="background:#67c23a;color:#fff;padding:1px 4px;border-radius:3px;font-size:10px;text-align:center;">GET</span>
+            <code style="font-size:11px;">/validate-permission</code>
+            <span style="font-size:10px;color:#909399;">SystemCode + Token</span>
+            <span style="font-size:11px;color:#606266;">校验接口权限</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 表格 + 抽屉</h3>
+      <p>表格列出所有接口，点击行打开抽屉查看详细文档和在线测试。与现有页面风格一致。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <!-- Layout C: Left List + Right Detail -->
+      <div style="background:#f5f7fa;padding:16px;border-radius:8px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong style="font-size:14px;">对外接口文档</strong>
+          <span style="color:#909399;font-size:11px;">共 5 个接口</span>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <!-- Left: API List -->
+          <div style="width:220px;flex-shrink:0;">
+            <div style="background:#fff;border:1px solid #e4e7ed;border-radius:4px;overflow:hidden;">
+              <div style="padding:8px 10px;border-bottom:1px solid #f0f0f0;background:#ecf5ff;border-left:3px solid #409eff;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span style="background:#67c23a;color:#fff;padding:1px 4px;border-radius:3px;font-size:9px;">GET</span>
+                  <code style="font-size:10px;">/verify</code>
+                </div>
+              </div>
+              <div style="padding:8px 10px;border-bottom:1px solid #f0f0f0;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span style="background:#67c23a;color:#fff;padding:1px 4px;border-radius:3px;font-size:9px;">GET</span>
+                  <code style="font-size:10px;">/user-info</code>
+                </div>
+              </div>
+              <div style="padding:8px 10px;border-bottom:1px solid #f0f0f0;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span style="background:#67c23a;color:#fff;padding:1px 4px;border-radius:3px;font-size:9px;">GET</span>
+                  <code style="font-size:10px;">/menus</code>
+                </div>
+              </div>
+              <div style="padding:8px 10px;border-bottom:1px solid #f0f0f0;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span style="background:#67c23a;color:#fff;padding:1px 4px;border-radius:3px;font-size:9px;">GET</span>
+                  <code style="font-size:10px;">/permissions</code>
+                </div>
+              </div>
+              <div style="padding:8px 10px;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span style="background:#67c23a;color:#fff;padding:1px 4px;border-radius:3px;font-size:9px;">GET</span>
+                  <code style="font-size:10px;">/validate-permission</code>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Right: Detail Panel -->
+          <div style="flex:1;background:#fff;border:1px solid #e4e7ed;border-radius:4px;padding:12px;">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+              <span style="background:#67c23a;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;">GET</span>
+              <code style="font-size:13px;font-weight:600;">/api/external/verify</code>
+            </div>
+            <p style="color:#606266;font-size:11px;margin-bottom:10px;">验证用户 Token 是否有效，返回用户身份信息</p>
+            <div style="background:#f5f7fa;padding:8px;border-radius:4px;margin-bottom:8px;">
+              <div style="font-size:10px;color:#909399;margin-bottom:4px;">请求头</div>
+              <div style="font-size:10px;"><code>X-System-Code</code> <span style="color:#67c23a;">必填</span></div>
+              <div style="font-size:10px;"><code>X-User-Token</code> <span style="color:#67c23a;">必填</span></div>
+            </div>
+            <div style="background:#f5f7fa;padding:8px;border-radius:4px;">
+              <div style="font-size:10px;color:#909399;margin-bottom:4px;">响应示例</div>
+              <pre style="font-size:10px;margin:0;color:#606266;">{"code":0,"data":{"user_id":42,"username":"alice"}}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. 左右分栏</h3>
+      <p>左侧接口列表，右侧展示详情和测试。类似 Swagger UI 风格，信息密度高，适合多接口场景。</p>
+    </div>
+  </div>
+</div>

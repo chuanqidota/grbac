@@ -31,5 +31,3 @@ password:
   min_length: 8
   max_attempts: 5
   lock_duration: 1800
-
-encryption_key: "grbac-2026-secret-aes-32-byte-ok"

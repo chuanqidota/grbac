@@ -36,11 +36,18 @@ func (r *Repo) GetByMethodPath(systemID int64, method, path string) (*model.Perm
 	return &perm, nil
 }
 
-func (r *Repo) ListBySystem(systemID int64, page, pageSize int) ([]model.Permission, int64, error) {
+func (r *Repo) ListBySystem(systemID int64, page, pageSize int, method, keyword string) ([]model.Permission, int64, error) {
 	var perms []model.Permission
 	var total int64
 
 	query := r.db.Model(&model.Permission{}).Where("system_id = ?", systemID)
+	if method != "" {
+		query = query.Where("method = ?", method)
+	}
+	if keyword != "" {
+		query = query.Where("(code LIKE ? OR name LIKE ?)", "%"+keyword+"%", "%"+keyword+"%")
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}

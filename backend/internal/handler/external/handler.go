@@ -17,48 +17,21 @@ func NewHandler(externalSvc *externalService.Service) *Handler {
 	return &Handler{externalSvc: externalSvc}
 }
 
-// Verify validates the JWT carried in the X-User-Token header.
-func (h *Handler) Verify(c *gin.Context) {
-	token := c.GetHeader("X-User-Token")
-	if token == "" {
-		response.Fail(c, errors.ErrTokenInvalid)
-		return
-	}
-
-	claims, err := h.externalSvc.VerifyToken(c.Request.Context(), token)
-	if err != nil {
-		respondExternalError(c, err)
-		return
-	}
-
-	response.OK(c, gin.H{
-		"user_id":        claims.UserID,
-		"username":       claims.Username,
-		"is_super_admin": claims.IsSuperAdmin,
-	})
-}
-
-// GetUserInfo returns the user's identity and their roles within the requesting system.
-func (h *Handler) GetUserInfo(c *gin.Context) {
-	token := c.GetHeader("X-User-Token")
-	if token == "" {
-		response.Fail(c, errors.ErrTokenInvalid)
-		return
-	}
-
+// GetUserRoles returns the user's identity and their roles within the requesting system.
+func (h *Handler) GetUserRoles(c *gin.Context) {
 	systemCode := c.GetHeader("X-System-Code")
 	if systemCode == "" {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
 	}
 
-	claims, err := h.externalSvc.VerifyToken(c.Request.Context(), token)
-	if err != nil {
-		respondExternalError(c, err)
+	username := c.Query("username")
+	if username == "" {
+		response.FailWithMessage(c, errors.ErrInternal, "缺少必填参数 username")
 		return
 	}
 
-	userInfo, err := h.externalSvc.GetUserInfo(c.Request.Context(), int64(claims.UserID), systemCode)
+	userInfo, err := h.externalSvc.GetUserInfoByUsername(c.Request.Context(), username, systemCode)
 	if err != nil {
 		respondExternalError(c, err)
 		return
@@ -69,25 +42,19 @@ func (h *Handler) GetUserInfo(c *gin.Context) {
 
 // GetMenus returns the menus assigned to the user within the requesting system.
 func (h *Handler) GetMenus(c *gin.Context) {
-	token := c.GetHeader("X-User-Token")
-	if token == "" {
-		response.Fail(c, errors.ErrTokenInvalid)
-		return
-	}
-
 	systemCode := c.GetHeader("X-System-Code")
 	if systemCode == "" {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
 	}
 
-	claims, err := h.externalSvc.VerifyToken(c.Request.Context(), token)
-	if err != nil {
-		respondExternalError(c, err)
+	username := c.Query("username")
+	if username == "" {
+		response.FailWithMessage(c, errors.ErrInternal, "缺少必填参数 username")
 		return
 	}
 
-	menus, err := h.externalSvc.GetUserMenus(c.Request.Context(), int64(claims.UserID), systemCode)
+	menus, err := h.externalSvc.GetUserMenusByUsername(c.Request.Context(), username, systemCode)
 	if err != nil {
 		respondExternalError(c, err)
 		return
@@ -96,27 +63,21 @@ func (h *Handler) GetMenus(c *gin.Context) {
 	response.OK(c, menus)
 }
 
-// GetPermissions returns the permission codes assigned to the user within the requesting system.
-func (h *Handler) GetPermissions(c *gin.Context) {
-	token := c.GetHeader("X-User-Token")
-	if token == "" {
-		response.Fail(c, errors.ErrTokenInvalid)
-		return
-	}
-
+// GetUserAPIs returns the API permissions assigned to the user within the requesting system.
+func (h *Handler) GetUserAPIs(c *gin.Context) {
 	systemCode := c.GetHeader("X-System-Code")
 	if systemCode == "" {
 		response.Fail(c, errors.ErrSystemNotFound)
 		return
 	}
 
-	claims, err := h.externalSvc.VerifyToken(c.Request.Context(), token)
-	if err != nil {
-		respondExternalError(c, err)
+	username := c.Query("username")
+	if username == "" {
+		response.FailWithMessage(c, errors.ErrInternal, "缺少必填参数 username")
 		return
 	}
 
-	permissions, err := h.externalSvc.GetUserPermissions(c.Request.Context(), int64(claims.UserID), systemCode)
+	permissions, err := h.externalSvc.GetUserPermissionsByUsername(c.Request.Context(), username, systemCode)
 	if err != nil {
 		respondExternalError(c, err)
 		return
@@ -125,17 +86,17 @@ func (h *Handler) GetPermissions(c *gin.Context) {
 	response.OK(c, permissions)
 }
 
-// ValidatePermission checks whether the user holds a specific permission (method + path).
-func (h *Handler) ValidatePermission(c *gin.Context) {
-	token := c.GetHeader("X-User-Token")
-	if token == "" {
-		response.Fail(c, errors.ErrTokenInvalid)
-		return
-	}
-
+// CheckPermission checks whether the user holds a specific permission (method + path).
+func (h *Handler) CheckPermission(c *gin.Context) {
 	systemCode := c.GetHeader("X-System-Code")
 	if systemCode == "" {
 		response.Fail(c, errors.ErrSystemNotFound)
+		return
+	}
+
+	username := c.Query("username")
+	if username == "" {
+		response.FailWithMessage(c, errors.ErrInternal, "缺少必填参数 username")
 		return
 	}
 
@@ -146,13 +107,7 @@ func (h *Handler) ValidatePermission(c *gin.Context) {
 		return
 	}
 
-	claims, err := h.externalSvc.VerifyToken(c.Request.Context(), token)
-	if err != nil {
-		respondExternalError(c, err)
-		return
-	}
-
-	valid, err := h.externalSvc.ValidatePermission(c.Request.Context(), int64(claims.UserID), systemCode, method, path)
+	valid, err := h.externalSvc.ValidatePermissionByUsername(c.Request.Context(), username, systemCode, method, path)
 	if err != nil {
 		respondExternalError(c, err)
 		return

@@ -26,6 +26,7 @@
     <el-table :data="users" v-loading="loading" border stripe>
       <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="username" label="用户名" min-width="120" />
+      <el-table-column prop="chinese_name" label="中文名" min-width="100" />
       <el-table-column prop="email" label="邮箱" min-width="180" />
       <el-table-column prop="phone" label="手机号" min-width="120" />
       <el-table-column label="状态" width="100">
@@ -38,18 +39,33 @@
           />
         </template>
       </el-table-column>
+      <el-table-column label="超管" width="100">
+        <template #default="{ row }">
+          <el-switch
+            v-model="row.is_super_admin"
+            :active-value="1"
+            :inactive-value="0"
+            active-text="是"
+            inactive-text="否"
+            @change="handleSuperAdminChange(row)"
+          />
+        </template>
+      </el-table-column>
       <el-table-column prop="created_at" label="创建时间" min-width="180">
         <template #default="{ row }">
           {{ formatDate(row.created_at) }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="240" fixed="right">
+      <el-table-column label="操作" width="300" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" link @click="showDetail(row)">
             详情
           </el-button>
           <el-button type="primary" link @click="showEditDialog(row)">
             编辑
+          </el-button>
+          <el-button type="warning" link @click="showResetPasswordDialog(row)">
+            重置密码
           </el-button>
           <el-button type="danger" link @click="handleDelete(row)">
             删除
@@ -86,7 +102,13 @@
           <el-input
             v-model="form.username"
             :disabled="isEditing"
-            placeholder="请输入用户名"
+            placeholder="请输入用户名（英文名）"
+          />
+        </el-form-item>
+        <el-form-item label="中文名" prop="chinese_name">
+          <el-input
+            v-model="form.chinese_name"
+            placeholder="请输入中文名"
           />
         </el-form-item>
         <el-form-item v-if="!isEditing" label="密码" prop="password">
@@ -112,6 +134,38 @@
       </template>
     </el-dialog>
 
+    <!-- Reset Password Dialog -->
+    <el-dialog
+      v-model="resetPasswordVisible"
+      title="重置密码"
+      width="450px"
+    >
+      <el-form
+        ref="resetFormRef"
+        :model="resetForm"
+        :rules="resetRules"
+        label-width="100px"
+      >
+        <el-form-item label="用户名">
+          <el-input :model-value="resetPasswordUser?.username" disabled />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input
+            v-model="resetForm.newPassword"
+            type="password"
+            show-password
+            placeholder="请输入新密码"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="resetPasswordVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleResetPassword" :loading="resetSubmitting">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
+
     <!-- User Detail Drawer -->
     <UserDetailDrawer
       v-model="detailVisible"
@@ -125,15 +179,17 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
-import { getUsers, createUser, updateUser, deleteUser, updateUserStatus } from '@/api/user'
+import { getUsers, createUser, updateUser, deleteUser, updateUserStatus, updateUserSuperAdmin, resetUserPassword } from '@/api/user'
 import UserDetailDrawer from './UserDetailDrawer.vue'
 
 interface User {
   id: number
   username: string
+  chinese_name?: string
   email?: string
   phone?: string
   status: number
+  is_super_admin: number
   created_at: string
 }
 
@@ -152,9 +208,22 @@ const editingId = ref<number | null>(null)
 const detailVisible = ref(false)
 const selectedUser = ref<User | null>(null)
 
+const resetPasswordVisible = ref(false)
+const resetSubmitting = ref(false)
+const resetPasswordUser = ref<User | null>(null)
+const resetFormRef = ref<FormInstance>()
+const resetForm = ref({ newPassword: '' })
+const resetRules: FormRules = {
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 8, message: '密码长度不能少于 8 位', trigger: 'blur' }
+  ]
+}
+
 const formRef = ref<FormInstance>()
 const form = ref({
   username: '',
+  chinese_name: '',
   password: '',
   email: '',
   phone: ''
@@ -214,7 +283,7 @@ function handleCurrentChange(page: number) {
 function showCreateDialog() {
   isEditing.value = false
   editingId.value = null
-  form.value = { username: '', password: '', email: '', phone: '' }
+  form.value = { username: '', chinese_name: '', password: '', email: '', phone: '' }
   dialogVisible.value = true
 }
 
@@ -228,6 +297,7 @@ function showEditDialog(user: User) {
   editingId.value = user.id
   form.value = {
     username: user.username,
+    chinese_name: user.chinese_name || '',
     password: '',
     email: user.email || '',
     phone: user.phone || ''
@@ -245,6 +315,7 @@ async function handleSubmit() {
     try {
       if (isEditing.value && editingId.value) {
         await updateUser(editingId.value, {
+          chinese_name: form.value.chinese_name,
           email: form.value.email,
           phone: form.value.phone
         })
@@ -252,6 +323,7 @@ async function handleSubmit() {
       } else {
         await createUser({
           username: form.value.username,
+          chinese_name: form.value.chinese_name,
           password: form.value.password,
           email: form.value.email,
           phone: form.value.phone
@@ -294,6 +366,52 @@ async function handleStatusChange(user: User) {
     user.status = user.status === 1 ? 0 : 1
     ElMessage.error(error.message || '状态更新失败')
   }
+}
+
+async function handleSuperAdminChange(user: User) {
+  try {
+    await ElMessageBox.confirm(
+      user.is_super_admin === 1
+        ? `确定要将 "${user.username}" 设为超管吗？超管可以管理所有系统。`
+        : `确定要取消 "${user.username}" 的超管权限吗？`,
+      '确认操作',
+      { type: 'warning' }
+    )
+    await updateUserSuperAdmin(user.id, user.is_super_admin)
+    ElMessage.success(user.is_super_admin === 1 ? '已设为超管' : '已取消超管')
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      user.is_super_admin = user.is_super_admin === 1 ? 0 : 1
+      ElMessage.error(error.message || '操作失败')
+    } else {
+      user.is_super_admin = user.is_super_admin === 1 ? 0 : 1
+    }
+  }
+}
+
+function showResetPasswordDialog(user: User) {
+  resetPasswordUser.value = user
+  resetForm.value = { newPassword: '' }
+  resetPasswordVisible.value = true
+}
+
+async function handleResetPassword() {
+  if (!resetFormRef.value || !resetPasswordUser.value) return
+
+  await resetFormRef.value.validate(async (valid) => {
+    if (!valid) return
+
+    resetSubmitting.value = true
+    try {
+      await resetUserPassword(resetPasswordUser.value!.id, resetForm.value.newPassword)
+      ElMessage.success('密码重置成功')
+      resetPasswordVisible.value = false
+    } catch (error: any) {
+      ElMessage.error(error.message || '密码重置失败')
+    } finally {
+      resetSubmitting.value = false
+    }
+  })
 }
 
 onMounted(() => {

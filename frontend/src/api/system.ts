@@ -7,7 +7,6 @@ export const getSystemById = (id: number) => request.get(`/systems/${id}`)
 
 export const createSystem = (data: {
   name: string
-  code: string
   description?: string
 }) => request.post('/systems', data)
 
@@ -17,6 +16,8 @@ export const updateSystem = (id: number, data: { name?: string; description?: st
 export const deleteSystem = (id: number) => request.delete(`/systems/${id}`)
 
 export const getSystemMembers = (id: number) => request.get(`/systems/${id}/members`)
+
+export const getMemberUsers = (id: number) => request.get(`/systems/${id}/members/users`)
 
 export const addSystemMember = (id: number, data: { user_id: number; role: string }) =>
   request.post(`/systems/${id}/members`, data)

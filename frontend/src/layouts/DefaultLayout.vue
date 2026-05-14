@@ -60,6 +60,11 @@
             <el-icon><User /></el-icon>
             <template #title>成员管理</template>
           </el-menu-item>
+
+          <el-menu-item :index="`/systems/${systemStore.currentSystemId}/api-docs`">
+            <el-icon><Document /></el-icon>
+            <template #title>接口文档</template>
+          </el-menu-item>
         </template>
 
         <el-divider class="menu-divider" />
@@ -120,14 +125,14 @@
         </div>
       </el-header>
       <el-main class="layout-main">
-        <router-view />
+        <router-view :key="route.fullPath" />
       </el-main>
     </el-container>
   </el-container>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { HomeFilled, Fold, Expand, UserFilled, ArrowDown, SwitchButton, User, Monitor, Document, Lock, Menu, Key, Connection } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
@@ -149,18 +154,40 @@ onMounted(async () => {
   } catch {
     // ignore
   }
-  if (userStore.isSuperAdmin()) {
-    try {
-      await systemStore.fetchSystems()
-    } catch {
-      // ignore
+  // Fetch systems for all authenticated users (super-admins see all, others see their own)
+  try {
+    await systemStore.fetchSystems()
+  } catch {
+    // ignore
+  }
+  // If URL already has a system ID, sync it to the store
+  const match = route.path.match(/^\/systems\/(\d+)\//)
+  if (match) {
+    const urlSystemId = Number(match[1])
+    if (urlSystemId && urlSystemId !== systemStore.currentSystemId) {
+      systemStore.setCurrentSystem(urlSystemId)
+    }
+  }
+})
+
+// Keep store in sync when navigating between system-scoped routes
+watch(() => route.path, (path) => {
+  const match = path.match(/^\/systems\/(\d+)\//)
+  if (match) {
+    const urlSystemId = Number(match[1])
+    if (urlSystemId && urlSystemId !== systemStore.currentSystemId) {
+      systemStore.setCurrentSystem(urlSystemId)
     }
   }
 })
 
 function handleSystemChange(id: number | null) {
-  if (id) {
-    systemStore.setCurrentSystem(id)
+  if (!id) return
+  systemStore.setCurrentSystem(id)
+  // If currently on a system-scoped route, navigate to the same page under the new system
+  const match = route.path.match(/^\/systems\/\d+\/(.+)$/)
+  if (match) {
+    router.replace(`/systems/${id}/${match[1]}`)
   }
 }
 

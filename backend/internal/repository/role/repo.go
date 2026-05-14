@@ -56,8 +56,16 @@ func (r *Repo) AddRoleMenu(roleMenu *model.RoleMenu) error {
 	return r.db.Create(roleMenu).Error
 }
 
+func (r *Repo) AddRoleMenuTx(tx *gorm.DB, roleMenu *model.RoleMenu) error {
+	return tx.Create(roleMenu).Error
+}
+
 func (r *Repo) RemoveRoleMenus(roleID int64) error {
 	return r.db.Where("role_id = ?", roleID).Delete(&model.RoleMenu{}).Error
+}
+
+func (r *Repo) RemoveRoleMenusTx(tx *gorm.DB, roleID int64) error {
+	return tx.Where("role_id = ?", roleID).Delete(&model.RoleMenu{}).Error
 }
 
 func (r *Repo) GetRoleMenus(roleID int64) ([]int64, error) {
@@ -75,8 +83,16 @@ func (r *Repo) AddRolePermission(rolePerm *model.RolePermission) error {
 	return r.db.Create(rolePerm).Error
 }
 
+func (r *Repo) AddRolePermissionTx(tx *gorm.DB, rolePerm *model.RolePermission) error {
+	return tx.Create(rolePerm).Error
+}
+
 func (r *Repo) RemoveRolePermissions(roleID int64) error {
 	return r.db.Where("role_id = ?", roleID).Delete(&model.RolePermission{}).Error
+}
+
+func (r *Repo) RemoveRolePermissionsTx(tx *gorm.DB, roleID int64) error {
+	return tx.Where("role_id = ?", roleID).Delete(&model.RolePermission{}).Error
 }
 
 func (r *Repo) GetRolePermissions(roleID int64) ([]int64, error) {

@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -52,10 +53,12 @@ func (h *Handler) GetTree(c *gin.Context) {
 
 	tree, err := h.menuSvc.GetTree(sid)
 	if err != nil {
+		log.Printf("[DEBUG] GetTree error: systemID=%d, err=%v", sid, err)
 		response.RespondError(c, err)
 		return
 	}
 
+	log.Printf("[DEBUG] GetTree: systemID=%d, count=%d", sid, len(tree))
 	response.OKPage(c, int64(len(tree)), tree)
 }
 

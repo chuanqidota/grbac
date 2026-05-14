@@ -15,6 +15,16 @@ type StatusUpdateRequest struct {
 	Status int8 `json:"status" binding:"required"`
 }
 
+// SuperAdminUpdateRequest holds the new super-admin flag for a user.
+type SuperAdminUpdateRequest struct {
+	IsSuperAdmin int8 `json:"is_super_admin" binding:"required"`
+}
+
+// ResetPasswordRequest holds the new password for a user.
+type ResetPasswordRequest struct {
+	NewPassword string `json:"new_password" binding:"required,min=8"`
+}
+
 // Handler handles user CRUD HTTP requests.
 type Handler struct {
 	userSvc *userService.Service
@@ -151,6 +161,50 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 	}
 
 	if err := h.userSvc.UpdateStatus(id, req.Status); err != nil {
+		response.RespondError(c, err)
+		return
+	}
+
+	response.OKMessage(c)
+}
+
+// ResetPassword changes a user's password (admin operation).
+func (h *Handler) ResetPassword(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errors.ErrUserNotFound)
+		return
+	}
+
+	var req ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errors.ErrInternal)
+		return
+	}
+
+	if err := h.userSvc.ResetPassword(id, req.NewPassword); err != nil {
+		response.RespondError(c, err)
+		return
+	}
+
+	response.OKMessage(c)
+}
+
+// UpdateSuperAdmin sets or unsets the super-admin flag for a user.
+func (h *Handler) UpdateSuperAdmin(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Fail(c, errors.ErrUserNotFound)
+		return
+	}
+
+	var req SuperAdminUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Fail(c, errors.ErrInternal)
+		return
+	}
+
+	if err := h.userSvc.UpdateSuperAdmin(id, req.IsSuperAdmin); err != nil {
 		response.RespondError(c, err)
 		return
 	}

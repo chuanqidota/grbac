@@ -65,7 +65,6 @@
               :props="{ label: 'name', children: 'children' }"
               show-checkbox
               node-key="id"
-              :default-checked-keys="assignedMenuIds"
               v-loading="loadingMenus"
             />
           </div>
@@ -103,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   getRoleUsers,
@@ -174,6 +173,23 @@ const assignedMenuIds = ref<number[]>([])
 const loadingMenus = ref(false)
 const savingMenus = ref(false)
 const menuTreeRef = ref()
+
+function getLeafNodeIds(tree: Menu[], ids: Set<number>): number[] {
+  const leafIds: number[] = []
+  function traverse(nodes: Menu[]) {
+    for (const node of nodes) {
+      if (node.children && node.children.length > 0) {
+        traverse(node.children)
+      } else {
+        if (ids.has(node.id)) {
+          leafIds.push(node.id)
+        }
+      }
+    }
+  }
+  traverse(tree)
+  return leafIds
+}
 
 // Permissions
 const allPermissions = ref<Permission[]>([])
@@ -363,6 +379,16 @@ function loadAllData() {
   fetchAssignedPermissions()
 }
 
+watch([menuTree, assignedMenuIds], () => {
+  if (menuTree.value.length > 0 && assignedMenuIds.value.length > 0 && menuTreeRef.value) {
+    const idSet = new Set(assignedMenuIds.value)
+    const leafIds = getLeafNodeIds(menuTree.value, idSet)
+    nextTick(() => {
+      menuTreeRef.value?.setCheckedKeys(leafIds)
+    })
+  }
+})
+
 watch(() => props.modelValue, (val) => {
   console.log('[DEBUG] Drawer watch triggered:', { visible: val, role: props.role, systemId: props.systemId })
   if (val && props.role) {
@@ -373,6 +399,12 @@ watch(() => props.modelValue, (val) => {
 watch(() => props.role, (newRole, oldRole) => {
   console.log('[DEBUG] Role changed:', { newRole: newRole?.id, oldRole: oldRole?.id, visible: props.modelValue })
   if (props.modelValue && newRole && newRole.id !== oldRole?.id) {
+    loadAllData()
+  }
+})
+
+onMounted(() => {
+  if (props.modelValue && props.role) {
     loadAllData()
   }
 })

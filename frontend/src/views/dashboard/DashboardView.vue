@@ -14,7 +14,7 @@
       <el-row :gutter="20">
         <el-col :span="8">
           <el-card shadow="hover" class="stat-card">
-            <div class="stat-icon" style="background: #409eff">
+            <div class="stat-icon" style="background: var(--color-primary)">
               <el-icon><Monitor /></el-icon>
             </div>
             <div class="stat-info">
@@ -25,7 +25,7 @@
         </el-col>
         <el-col :span="8">
           <el-card shadow="hover" class="stat-card">
-            <div class="stat-icon" style="background: #67c23a">
+            <div class="stat-icon" style="background: var(--color-success)">
               <el-icon><User /></el-icon>
             </div>
             <div class="stat-info">
@@ -36,7 +36,7 @@
         </el-col>
         <el-col :span="8">
           <el-card shadow="hover" class="stat-card">
-            <div class="stat-icon" style="background: #e6a23c">
+            <div class="stat-icon" style="background: var(--color-warning)">
               <el-icon><Document /></el-icon>
             </div>
             <div class="stat-info">

@@ -1,6 +1,7 @@
 package permission
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -56,16 +57,21 @@ func (h *Handler) List(c *gin.Context) {
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 100 {
+	if pageSize < 1 || pageSize > 500 {
 		pageSize = 10
 	}
 
-	perms, total, err := h.permSvc.ListBySystem(sid, page, pageSize)
+	method := c.Query("method")
+	keyword := c.Query("keyword")
+
+	perms, total, err := h.permSvc.ListBySystem(sid, page, pageSize, method, keyword)
 	if err != nil {
+		log.Printf("[DEBUG] Permission List error: systemID=%d, err=%v", sid, err)
 		response.RespondError(c, err)
 		return
 	}
 
+	log.Printf("[DEBUG] Permission List: systemID=%d, page=%d, pageSize=%d, total=%d, count=%d", sid, page, pageSize, total, len(perms))
 	response.OKPage(c, total, perms)
 }
 

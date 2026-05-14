@@ -1,6 +1,7 @@
 package role
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -127,15 +128,19 @@ func (h *Handler) AssignMenus(c *gin.Context) {
 
 	var req AssignMenusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[DEBUG] AssignMenus bind error: %v", err)
 		response.Fail(c, errors.ErrInternal)
 		return
 	}
 
+	log.Printf("[DEBUG] AssignMenus: roleID=%d, menuIDs=%v", id, req.MenuIDs)
 	if err := h.roleSvc.AssignMenus(id, req.MenuIDs); err != nil {
+		log.Printf("[DEBUG] AssignMenus service error: %v", err)
 		response.RespondError(c, err)
 		return
 	}
 
+	log.Printf("[DEBUG] AssignMenus success: roleID=%d", id)
 	response.OKMessage(c)
 }
 
@@ -149,10 +154,12 @@ func (h *Handler) GetRoleMenus(c *gin.Context) {
 
 	menuIDs, err := h.roleSvc.GetRoleMenus(id)
 	if err != nil {
+		log.Printf("[DEBUG] GetRoleMenus error: roleID=%d, err=%v", id, err)
 		response.RespondError(c, err)
 		return
 	}
 
+	log.Printf("[DEBUG] GetRoleMenus: roleID=%d, count=%d, ids=%v", id, len(menuIDs), menuIDs)
 	response.OKPage(c, int64(len(menuIDs)), menuIDs)
 }
 
@@ -188,10 +195,12 @@ func (h *Handler) GetRolePermissions(c *gin.Context) {
 
 	permIDs, err := h.roleSvc.GetRolePermissions(id)
 	if err != nil {
+		log.Printf("[DEBUG] GetRolePermissions error: roleID=%d, err=%v", id, err)
 		response.RespondError(c, err)
 		return
 	}
 
+	log.Printf("[DEBUG] GetRolePermissions: roleID=%d, count=%d, ids=%v", id, len(permIDs), permIDs)
 	response.OKPage(c, int64(len(permIDs)), permIDs)
 }
 
@@ -205,15 +214,19 @@ func (h *Handler) AssignUsers(c *gin.Context) {
 
 	var req AssignUsersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[DEBUG] AssignUsers bind error: %v", err)
 		response.Fail(c, errors.ErrInternal)
 		return
 	}
 
+	log.Printf("[DEBUG] AssignUsers: roleID=%d, userIDs=%v", id, req.UserIDs)
 	if err := h.roleSvc.AssignUsers(id, req.UserIDs); err != nil {
+		log.Printf("[DEBUG] AssignUsers service error: %v", err)
 		response.RespondError(c, err)
 		return
 	}
 
+	log.Printf("[DEBUG] AssignUsers success: roleID=%d", id)
 	response.OKMessage(c)
 }
 
@@ -249,9 +262,11 @@ func (h *Handler) GetRoleUsers(c *gin.Context) {
 
 	users, err := h.roleSvc.GetRoleUsers(id)
 	if err != nil {
+		log.Printf("[DEBUG] GetRoleUsers error: roleID=%d, err=%v", id, err)
 		response.RespondError(c, err)
 		return
 	}
 
+	log.Printf("[DEBUG] GetRoleUsers: roleID=%d, count=%d", id, len(users))
 	response.OKPage(c, int64(len(users)), users)
 }

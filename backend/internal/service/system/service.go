@@ -2,10 +2,9 @@ package system
 
 import (
 	"crypto/rand"
-	"encoding/hex"
+	"math/big"
 
 	"grbac/internal/model"
-	"grbac/internal/pkg/crypto"
 	"grbac/internal/pkg/errors"
 	menuRepo "grbac/internal/repository/menu"
 	permRepo "grbac/internal/repository/permission"
@@ -17,7 +16,6 @@ import (
 // CreateRequest holds the payload for registering a new system.
 type CreateRequest struct {
 	Name        string `json:"name" binding:"required"`
-	Code        string `json:"code" binding:"required"`
 	Description string `json:"description"`
 }
 
@@ -28,7 +26,6 @@ type Service struct {
 	roleRepo       *roleRepo.Repo
 	menuRepo       *menuRepo.Repo
 	permissionRepo *permRepo.Repo
-	encryptionKey  []byte
 }
 
 // NewService creates a new Service.
@@ -38,7 +35,6 @@ func NewService(
 	roleRepo *roleRepo.Repo,
 	menuRepo *menuRepo.Repo,
 	permissionRepo *permRepo.Repo,
-	encryptionKey string,
 ) *Service {
 	return &Service{
 		systemRepo:     systemRepo,
@@ -46,34 +42,19 @@ func NewService(
 		roleRepo:       roleRepo,
 		menuRepo:       menuRepo,
 		permissionRepo: permissionRepo,
-		encryptionKey:  []byte(encryptionKey),
 	}
 }
 
-// Create registers a new system with an auto-generated secret key.
-// The secret is encrypted before storage. The plaintext secret is returned
-// in the response (shown once to the admin).
+// Create registers a new system with an auto-generated code.
 func (s *Service) Create(req *CreateRequest) (*model.System, error) {
-	existing, _ := s.systemRepo.GetByCode(req.Code)
-	if existing != nil {
-		return nil, errors.ErrInternal.Wrap("系统编码已存在")
-	}
-
-	secretBytes := make([]byte, 32)
-	if _, err := rand.Read(secretBytes); err != nil {
-		return nil, errors.ErrInternal.Wrap("生成系统密钥失败")
-	}
-	plaintextSecret := hex.EncodeToString(secretBytes)
-
-	encryptedSecret, err := crypto.Encrypt([]byte(plaintextSecret), s.encryptionKey)
+	code, err := s.generateUniqueCode()
 	if err != nil {
-		return nil, errors.ErrInternal.Wrap("加密系统密钥失败")
+		return nil, err
 	}
 
 	system := &model.System{
 		Name:        req.Name,
-		Code:        req.Code,
-		Secret:      encryptedSecret,
+		Code:        code,
 		Description: req.Description,
 		Status:      1,
 	}
@@ -82,28 +63,25 @@ func (s *Service) Create(req *CreateRequest) (*model.System, error) {
 		return nil, errors.ErrInternal.Wrap(err.Error())
 	}
 
-	// Return plaintext secret in response (shown once).
-	system.Secret = plaintextSecret
 	return system, nil
 }
 
-// ValidateSecret checks whether the given secret matches the stored (encrypted) secret.
-func (s *Service) ValidateSecret(code, secret string) (*model.System, error) {
-	system, err := s.systemRepo.GetByCode(code)
-	if err != nil {
-		return nil, errors.ErrSystemNotFound
-	}
+const codeChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-	decrypted, err := crypto.Decrypt(system.Secret, s.encryptionKey)
-	if err != nil {
-		return nil, errors.ErrInternal.Wrap("解密系统密钥失败")
+func (s *Service) generateUniqueCode() (string, error) {
+	for i := 0; i < 10; i++ {
+		b := make([]byte, 8)
+		for j := range b {
+			n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(codeChars))))
+			b[j] = codeChars[n.Int64()]
+		}
+		code := string(b)
+		existing, _ := s.systemRepo.GetByCode(code)
+		if existing == nil {
+			return code, nil
+		}
 	}
-
-	if string(decrypted) != secret {
-		return nil, errors.ErrSystemCredential
-	}
-
-	return system, nil
+	return "", errors.ErrInternal.Wrap("生成唯一系统编码失败")
 }
 
 // GetByID retrieves a system by its ID.
@@ -131,6 +109,20 @@ func (s *Service) List(page, pageSize int) ([]model.System, int64, error) {
 		return nil, 0, errors.ErrInternal.Wrap(err.Error())
 	}
 	return systems, total, nil
+}
+
+// ListForUser returns systems visible to the given user.
+// Super-admins see all systems; regular users see only systems they belong to.
+func (s *Service) ListForUser(userID int64, isSuperAdmin bool, page, pageSize int) ([]model.System, int64, error) {
+	if isSuperAdmin {
+		return s.List(page, pageSize)
+	}
+
+	systems, err := s.systemRepo.ListByUserID(userID)
+	if err != nil {
+		return nil, 0, errors.ErrInternal.Wrap(err.Error())
+	}
+	return systems, int64(len(systems)), nil
 }
 
 // Update modifies the name and description of an existing system.
@@ -170,6 +162,10 @@ func (s *Service) Delete(id int64) error {
 
 // AddMember adds a user to a system with the specified role (admin / member).
 func (s *Service) AddMember(systemID, userID int64, role string) error {
+	if role != "admin" && role != "member" {
+		return errors.ErrInternal.Wrap("无效的角色值，必须是 admin 或 member")
+	}
+
 	if _, err := s.systemRepo.GetByID(systemID); err != nil {
 		return errors.ErrSystemNotFound
 	}
@@ -206,6 +202,61 @@ func (s *Service) GetMembers(systemID int64) ([]systemRepo.MemberInfo, error) {
 		return nil, errors.ErrInternal.Wrap(err.Error())
 	}
 	return members, nil
+}
+
+// MemberUserInfo holds a user with their roles and permission count in a system.
+type MemberUserInfo struct {
+	UserID          int64      `json:"user_id"`
+	Username        string     `json:"username"`
+	Email           string     `json:"email"`
+	Roles           []model.Role `json:"roles"`
+	PermissionCount int        `json:"permission_count"`
+}
+
+// GetMemberUsers returns users who have roles in the system, enriched with role and permission info.
+func (s *Service) GetMemberUsers(systemID int64) ([]MemberUserInfo, error) {
+	users, err := s.systemRepo.GetUsersWithRoles(systemID)
+	if err != nil {
+		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	var result []MemberUserInfo
+	for _, u := range users {
+		roles, err := s.userRepo.GetRolesInSystem(u.UserID, systemID)
+		if err != nil {
+			continue
+		}
+
+		// Count unique permissions across all roles.
+		permIDSet := make(map[int64]struct{})
+		if len(roles) > 0 {
+			roleIDs := make([]int64, len(roles))
+			for i, r := range roles {
+				roleIDs[i] = r.ID
+			}
+			rolePerms, err := s.roleRepo.GetRolePermissionsByRoleIDs(roleIDs)
+			if err == nil {
+				for _, permIDs := range rolePerms {
+					for _, pid := range permIDs {
+						permIDSet[pid] = struct{}{}
+					}
+				}
+			}
+		}
+
+		result = append(result, MemberUserInfo{
+			UserID:          u.UserID,
+			Username:        u.Username,
+			Email:           u.Email,
+			Roles:           roles,
+			PermissionCount: len(permIDSet),
+		})
+	}
+
+	if result == nil {
+		result = []MemberUserInfo{}
+	}
+	return result, nil
 }
 
 // IsAdmin checks whether a user has the admin role in a system.

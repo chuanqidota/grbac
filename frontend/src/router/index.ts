@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { getToken } from '@/utils/token'
+import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -64,6 +65,12 @@ const router = createRouter({
           meta: { title: '成员管理', icon: 'User' },
         },
         {
+          path: 'systems/:id/api-docs',
+          name: 'SystemApiDocs',
+          component: () => import('@/views/system/ApiDocView.vue'),
+          meta: { title: '接口文档', icon: 'Document' },
+        },
+        {
           path: 'audit-logs',
           name: 'AuditLogs',
           component: () => import('@/views/audit/AuditLogView.vue'),
@@ -90,7 +97,7 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const token = getToken()
 
   if (to.path === '/login') {
@@ -101,6 +108,23 @@ router.beforeEach((to, from, next) => {
   if (!token) {
     next('/login')
     return
+  }
+
+  // Enforce super-admin guard for routes that require it.
+  if (to.meta.superAdmin) {
+    const userStore = useUserStore()
+    if (!userStore.userInfo) {
+      try {
+        await userStore.fetchUserInfo()
+      } catch {
+        next('/login')
+        return
+      }
+    }
+    if (!userStore.isSuperAdmin()) {
+      next('/403')
+      return
+    }
   }
 
   document.title = (to.meta.title as string) ? `${to.meta.title} - GRBAC` : 'GRBAC'

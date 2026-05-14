@@ -90,28 +90,39 @@ func SetupRouter(
 		users.PUT("/:id", userH.Update)
 		users.DELETE("/:id", userH.Delete)
 		users.PUT("/:id/status", userH.UpdateStatus)
+		users.PUT("/:id/reset-password", userH.ResetPassword)
+		users.PUT("/:id/super-admin", userH.UpdateSuperAdmin)
 		users.GET("/:id/roles", userH.GetUserRoles)
 	}
+
+	// ---- Authenticated routes: system list (filtered by role) ----
+	api.GET("/systems", authMW, systemH.List)
 
 	// ---- Super-admin routes: system management ----
 	systems := api.Group("/systems")
 	systems.Use(authMW, superAdminMW)
 	{
 		systems.POST("", systemH.Create)
-		systems.GET("", systemH.List)
 		systems.GET("/:id", systemH.GetByID)
 		systems.PUT("/:id", systemH.Update)
 		systems.DELETE("/:id", systemH.Delete)
-		systems.POST("/:id/members", systemH.AddMember)
-		systems.DELETE("/:id/members/:uid", systemH.RemoveMember)
-		systems.GET("/:id/members", systemH.GetMembers)
-		systems.GET("/:id/members/:uid/roles", systemH.GetMemberRoles)
-		systems.GET("/:id/members/:uid/menus", systemH.GetMemberMenus)
-		systems.GET("/:id/members/:uid/permissions", systemH.GetMemberPermissions)
 		systems.POST("/:id/webhooks", webhookH.Create)
 		systems.GET("/:id/webhooks", webhookH.GetBySystemID)
 		systems.PUT("/:id/webhooks/:wid", webhookH.Update)
 		systems.DELETE("/:id/webhooks/:wid", webhookH.Delete)
+	}
+
+	// ---- System-admin routes: member management ----
+	members := api.Group("/systems/:id/members")
+	members.Use(authMW, systemAdminMW)
+	{
+		members.POST("", systemH.AddMember)
+		members.DELETE("/:uid", systemH.RemoveMember)
+		members.GET("", systemH.GetMembers)
+		members.GET("/users", systemH.GetMemberUsers)
+		members.GET("/:uid/roles", systemH.GetMemberRoles)
+		members.GET("/:uid/menus", systemH.GetMemberMenus)
+		members.GET("/:uid/permissions", systemH.GetMemberPermissions)
 	}
 
 	// ---- System-admin routes: roles ----
@@ -162,11 +173,10 @@ func SetupRouter(
 	ext := api.Group("/external")
 	ext.Use(externalMW, externalRateLimit)
 	{
-		ext.GET("/verify", externalH.Verify)
-		ext.GET("/user-info", externalH.GetUserInfo)
+		ext.GET("/user-roles", externalH.GetUserRoles)
 		ext.GET("/menus", externalH.GetMenus)
-		ext.GET("/permissions", externalH.GetPermissions)
-		ext.GET("/validate-permission", externalH.ValidatePermission)
+		ext.GET("/user-apis", externalH.GetUserAPIs)
+		ext.GET("/check-permission", externalH.CheckPermission)
 	}
 
 	return r

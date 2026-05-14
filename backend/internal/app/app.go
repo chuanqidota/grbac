@@ -58,8 +58,8 @@ func Run(cfg *config.Config) error {
 
 	// Services
 	authService := authSvc.NewService(userRepo, redis, cfg.JWT.Secret, cfg.Password)
-	userService := userSvc.NewService(userRepo, roleRepo, sysRepo)
-	systemService := systemSvc.NewService(sysRepo, userRepo, roleRepo, menuRepo, permRepo, cfg.EncryptionKey)
+	userService := userSvc.NewService(db, userRepo, roleRepo, sysRepo)
+	systemService := systemSvc.NewService(sysRepo, userRepo, roleRepo, menuRepo, permRepo)
 	roleService := roleSvc.NewService(db, roleRepo, userRepo)
 	menuService := menuSvc.NewService(menuRepo)
 	permService := permSvc.NewService(permRepo)
