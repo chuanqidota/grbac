@@ -5,6 +5,7 @@ import request from '@/utils/request'
 interface UserInfo {
   id: number
   username: string
+  chinese_name?: string
   email: string
   is_super_admin: boolean
 }

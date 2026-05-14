@@ -10,7 +10,11 @@
 
     <el-table :data="members" v-loading="loading" border stripe>
       <el-table-column prop="user_id" label="ID" width="80" />
-      <el-table-column prop="username" label="用户名" min-width="120" />
+      <el-table-column label="用户" min-width="160">
+        <template #default="{ row }">
+          {{ row.chinese_name ? `${row.chinese_name}(${row.username})` : row.username }}
+        </template>
+      </el-table-column>
       <el-table-column prop="email" label="邮箱" min-width="180" />
       <el-table-column label="已分配角色" min-width="200">
         <template #default="{ row }">
@@ -27,10 +31,9 @@
         </template>
       </el-table-column>
       <el-table-column prop="permission_count" label="权限数" width="100" align="center" />
-      <el-table-column label="操作" width="180" fixed="right">
+      <el-table-column label="操作" width="100" fixed="right">
         <template #default="{ row }">
-          <el-button type="primary" link @click="showDetail(row)">查看权限</el-button>
-          <el-button type="primary" link @click="showAssignDialogForUser(row)">分配角色</el-button>
+          <el-button type="primary" link @click="showDetail(row)">授权</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -59,7 +62,7 @@
             <el-option
               v-for="user in availableUsers"
               :key="user.id"
-              :label="user.username"
+              :label="user.chinese_name ? `${user.chinese_name}(${user.username})` : user.username"
               :value="user.id"
             />
           </el-select>
@@ -108,6 +111,7 @@ interface Role {
 interface MemberUser {
   user_id: number
   username: string
+  chinese_name?: string
   email?: string
   roles: Role[]
   permission_count: number
@@ -116,6 +120,7 @@ interface MemberUser {
 interface User {
   id: number
   username: string
+  chinese_name?: string
 }
 
 const route = useRoute()
@@ -125,7 +130,7 @@ const members = ref<MemberUser[]>([])
 const loading = ref(false)
 
 const detailDrawerVisible = ref(false)
-const selectedMember = ref<{ id: number; username: string; email?: string; role: string } | null>(null)
+const selectedMember = ref<{ id: number; username: string; chinese_name?: string; email?: string; role: string } | null>(null)
 
 const assignDialogVisible = ref(false)
 const assigning = ref(false)
@@ -172,7 +177,8 @@ async function searchUsers(query: string) {
     const data: any = await getUsers({ page: 1, page_size: 50 })
     const users = data.list || []
     availableUsers.value = users.filter((u: User) =>
-      u.username.toLowerCase().includes(query.toLowerCase())
+      u.username.toLowerCase().includes(query.toLowerCase()) ||
+      (u.chinese_name && u.chinese_name.toLowerCase().includes(query.toLowerCase()))
     )
   } catch {
     // ignore
@@ -185,6 +191,7 @@ function showDetail(member: MemberUser) {
   selectedMember.value = {
     id: member.user_id,
     username: member.username,
+    chinese_name: member.chinese_name,
     email: member.email,
     role: 'member'
   }
@@ -203,7 +210,7 @@ function showAssignDialogForUser(member: MemberUser) {
     role_ids: [],
     _fixedUser: true
   }
-  availableUsers.value = [{ id: member.user_id, username: member.username }]
+  availableUsers.value = [{ id: member.user_id, username: member.username, chinese_name: member.chinese_name }]
   assignDialogVisible.value = true
 }
 
@@ -236,7 +243,7 @@ async function handleAssign() {
 async function handleRemoveRole(member: MemberUser, role: Role) {
   try {
     await ElMessageBox.confirm(
-      `确定要移除 "${member.username}" 的 "${role.name}" 角色吗？`,
+      `确定要移除 "${member.chinese_name ? `${member.chinese_name}(${member.username})` : member.username}" 的 "${role.name}" 角色吗？`,
       '确认移除',
       { type: 'warning' }
     )

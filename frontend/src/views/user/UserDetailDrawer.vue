@@ -1,7 +1,7 @@
 <template>
   <el-drawer
     v-model="visible"
-    :title="`用户详情 — ${user?.username ?? ''}`"
+    :title="`用户详情 — ${user?.chinese_name ? `${user.chinese_name}(${user.username})` : (user?.username ?? '')}`"
     size="60%"
     @close="handleClose"
   >
@@ -113,6 +113,7 @@ import { getRoles, assignUsers, removeRoleUser } from '@/api/role'
 interface UserInfo {
   id: number
   username: string
+  chinese_name?: string
   email?: string
   phone?: string
   status: number
@@ -230,7 +231,7 @@ async function handleRemoveRole(role: UserRoleInfo) {
   if (!props.user) return
   try {
     await ElMessageBox.confirm(
-      `确定要移除用户 "${props.user.username}" 在 "${role.system_name}" 系统中的 "${role.role_name}" 角色吗？`,
+      `确定要移除用户 "${props.user.chinese_name ? `${props.user.chinese_name}(${props.user.username})` : props.user.username}" 在 "${role.system_name}" 系统中的 "${role.role_name}" 角色吗？`,
       '确认移除',
       { type: 'warning' }
     )

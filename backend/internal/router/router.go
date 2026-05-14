@@ -98,7 +98,7 @@ func SetupRouter(
 	// ---- Authenticated routes: system list (filtered by role) ----
 	api.GET("/systems", authMW, systemH.List)
 
-	// ---- Super-admin routes: system management ----
+	// ---- Super-admin routes: system CRUD ----
 	systems := api.Group("/systems")
 	systems.Use(authMW, superAdminMW)
 	{
@@ -106,10 +106,16 @@ func SetupRouter(
 		systems.GET("/:id", systemH.GetByID)
 		systems.PUT("/:id", systemH.Update)
 		systems.DELETE("/:id", systemH.Delete)
-		systems.POST("/:id/webhooks", webhookH.Create)
-		systems.GET("/:id/webhooks", webhookH.GetBySystemID)
-		systems.PUT("/:id/webhooks/:wid", webhookH.Update)
-		systems.DELETE("/:id/webhooks/:wid", webhookH.Delete)
+	}
+
+	// ---- System-admin routes: webhooks ----
+	webhooks := api.Group("/systems/:id/webhooks")
+	webhooks.Use(authMW, systemAdminMW)
+	{
+		webhooks.POST("", webhookH.Create)
+		webhooks.GET("", webhookH.GetBySystemID)
+		webhooks.PUT("/:wid", webhookH.Update)
+		webhooks.DELETE("/:wid", webhookH.Delete)
 	}
 
 	// ---- System-admin routes: member management ----

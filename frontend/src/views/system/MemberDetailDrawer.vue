@@ -1,7 +1,7 @@
 <template>
   <el-drawer
     v-model="visible"
-    :title="`授权 — ${member?.username ?? ''}`"
+    :title="`授权 — ${member?.chinese_name ? `${member.chinese_name}(${member.username})` : (member?.username ?? '')}`"
     size="70%"
     @close="handleClose"
   >
@@ -118,6 +118,7 @@ import { getRoles, assignUsers, removeRoleUser } from '@/api/role'
 interface MemberInfo {
   id: number
   username: string
+  chinese_name?: string
   email?: string
   role: string
 }
@@ -267,7 +268,7 @@ async function handleRemoveRole(role: Role) {
   if (!props.member) return
   try {
     await ElMessageBox.confirm(
-      `确定要移除成员 "${props.member.username}" 的 "${role.name}" 角色吗？`,
+      `确定要移除成员 "${props.member.chinese_name ? `${props.member.chinese_name}(${props.member.username})` : props.member.username}" 的 "${role.name}" 角色吗？`,
       '确认移除',
       { type: 'warning' }
     )

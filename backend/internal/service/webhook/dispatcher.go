@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"grbac/internal/pkg/crypto"
 	webhookRepo "grbac/internal/repository/webhook"
 )
 
@@ -62,13 +61,11 @@ func (d *Dispatcher) Dispatch(ctx context.Context, event string, payload interfa
 		if !matched {
 			continue
 		}
-		go d.sendWithRetry(wh.URL, wh.Secret, event, body)
+		go d.sendWithRetry(wh.URL, body)
 	}
 }
 
-func (d *Dispatcher) sendWithRetry(url, secret, event string, body []byte) {
-	signature := crypto.GenerateHMAC(body, []byte(secret))
-
+func (d *Dispatcher) sendWithRetry(url string, body []byte) {
 	for attempt, delay := range retryDelays {
 		req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 		if err != nil {
@@ -77,8 +74,6 @@ func (d *Dispatcher) sendWithRetry(url, secret, event string, body []byte) {
 		}
 
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("X-Webhook-Event", event)
-		req.Header.Set("X-Webhook-Signature", signature)
 
 		resp, err := d.client.Do(req)
 		if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
@@ -94,5 +89,5 @@ func (d *Dispatcher) sendWithRetry(url, secret, event string, body []byte) {
 		}
 	}
 
-	log.Printf("webhook send: all retries exhausted for %s (event: %s)", url, event)
+	log.Printf("webhook send: all retries exhausted for %s", url)
 }

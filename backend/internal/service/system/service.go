@@ -1,8 +1,10 @@
 package system
 
 import (
+	"context"
 	"crypto/rand"
 	"math/big"
+	"time"
 
 	"grbac/internal/model"
 	"grbac/internal/pkg/errors"
@@ -12,6 +14,9 @@ import (
 	systemRepo "grbac/internal/repository/system"
 	userRepo "grbac/internal/repository/user"
 )
+
+// DispatchFn is the signature for async webhook event dispatch.
+type DispatchFn func(ctx context.Context, event string, payload interface{})
 
 // CreateRequest holds the payload for registering a new system.
 type CreateRequest struct {
@@ -26,6 +31,7 @@ type Service struct {
 	roleRepo       *roleRepo.Repo
 	menuRepo       *menuRepo.Repo
 	permissionRepo *permRepo.Repo
+	dispatchFn     DispatchFn
 }
 
 // NewService creates a new Service.
@@ -35,6 +41,7 @@ func NewService(
 	roleRepo *roleRepo.Repo,
 	menuRepo *menuRepo.Repo,
 	permissionRepo *permRepo.Repo,
+	dispatchFn DispatchFn,
 ) *Service {
 	return &Service{
 		systemRepo:     systemRepo,
@@ -42,6 +49,7 @@ func NewService(
 		roleRepo:       roleRepo,
 		menuRepo:       menuRepo,
 		permissionRepo: permissionRepo,
+		dispatchFn:     dispatchFn,
 	}
 }
 
@@ -61,6 +69,15 @@ func (s *Service) Create(req *CreateRequest) (*model.System, error) {
 
 	if err := s.systemRepo.Create(system); err != nil {
 		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "system.created", map[string]interface{}{
+			"event":     "system.created",
+			"timestamp": time.Now(),
+			"system_id": system.ID,
+			"data":      map[string]interface{}{"system_name": system.Name, "system_code": system.Code},
+		})
 	}
 
 	return system, nil
@@ -111,14 +128,22 @@ func (s *Service) List(page, pageSize int) ([]model.System, int64, error) {
 	return systems, total, nil
 }
 
-// ListForUser returns systems visible to the given user.
-// Super-admins see all systems; regular users see only systems they belong to.
-func (s *Service) ListForUser(userID int64, isSuperAdmin bool, page, pageSize int) ([]model.System, int64, error) {
+// ListForUser returns systems visible to the given user, enriched with the user's role.
+// Super-admins see all systems with role "super_admin"; regular users see only systems they belong to with their actual role.
+func (s *Service) ListForUser(userID int64, isSuperAdmin bool, page, pageSize int) ([]systemRepo.SystemWithRole, int64, error) {
 	if isSuperAdmin {
-		return s.List(page, pageSize)
+		systems, total, err := s.List(page, pageSize)
+		if err != nil {
+			return nil, 0, err
+		}
+		result := make([]systemRepo.SystemWithRole, len(systems))
+		for i, sys := range systems {
+			result[i] = systemRepo.SystemWithRole{System: sys, CurrentUserRole: "super_admin"}
+		}
+		return result, total, nil
 	}
 
-	systems, err := s.systemRepo.ListByUserID(userID)
+	systems, err := s.systemRepo.ListByUserIDWithRole(userID)
 	if err != nil {
 		return nil, 0, errors.ErrInternal.Wrap(err.Error())
 	}
@@ -143,6 +168,15 @@ func (s *Service) Update(id int64, name, description string) (*model.System, err
 		return nil, errors.ErrInternal.Wrap(err.Error())
 	}
 
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "system.updated", map[string]interface{}{
+			"event":     "system.updated",
+			"timestamp": time.Now(),
+			"system_id": system.ID,
+			"data":      map[string]interface{}{"system_name": system.Name},
+		})
+	}
+
 	return system, nil
 }
 
@@ -155,6 +189,15 @@ func (s *Service) Delete(id int64) error {
 
 	if err := s.systemRepo.DeleteCascade(id); err != nil {
 		return errors.ErrInternal.Wrap(err.Error())
+	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "system.deleted", map[string]interface{}{
+			"event":     "system.deleted",
+			"timestamp": time.Now(),
+			"system_id": id,
+			"data":      map[string]interface{}{"system_id": id},
+		})
 	}
 
 	return nil
@@ -184,6 +227,15 @@ func (s *Service) AddMember(systemID, userID int64, role string) error {
 		return errors.ErrInternal.Wrap(err.Error())
 	}
 
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "system.member_added", map[string]interface{}{
+			"event":     "system.member_added",
+			"timestamp": time.Now(),
+			"system_id": systemID,
+			"data":      map[string]interface{}{"user_id": userID, "role": role},
+		})
+	}
+
 	return nil
 }
 
@@ -192,6 +244,16 @@ func (s *Service) RemoveMember(systemID, userID int64) error {
 	if err := s.systemRepo.RemoveMember(systemID, userID); err != nil {
 		return errors.ErrInternal.Wrap(err.Error())
 	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "system.member_removed", map[string]interface{}{
+			"event":     "system.member_removed",
+			"timestamp": time.Now(),
+			"system_id": systemID,
+			"data":      map[string]interface{}{"user_id": userID},
+		})
+	}
+
 	return nil
 }
 
@@ -208,6 +270,7 @@ func (s *Service) GetMembers(systemID int64) ([]systemRepo.MemberInfo, error) {
 type MemberUserInfo struct {
 	UserID          int64      `json:"user_id"`
 	Username        string     `json:"username"`
+	ChineseName     string     `json:"chinese_name"`
 	Email           string     `json:"email"`
 	Roles           []model.Role `json:"roles"`
 	PermissionCount int        `json:"permission_count"`
@@ -247,6 +310,7 @@ func (s *Service) GetMemberUsers(systemID int64) ([]MemberUserInfo, error) {
 		result = append(result, MemberUserInfo{
 			UserID:          u.UserID,
 			Username:        u.Username,
+			ChineseName:     u.ChineseName,
 			Email:           u.Email,
 			Roles:           roles,
 			PermissionCount: len(permIDSet),

@@ -38,7 +38,7 @@ func main() {
 			&model.Webhook{},
 			&model.AuditLog{},
 		}
-		if err := migrate.Run(db, "migrations", models); err != nil {
+		if err := migrate.Run(db, models); err != nil {
 			log.Fatalf("Migration failed: %v", err)
 		}
 		return

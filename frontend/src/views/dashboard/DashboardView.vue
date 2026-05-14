@@ -3,7 +3,7 @@
     <div class="welcome-section">
       <h2>欢迎使用 GRBAC 权限管理系统</h2>
       <p v-if="userStore.userInfo">
-        当前用户：<strong>{{ userStore.userInfo.username }}</strong>
+        当前用户：<strong>{{ userStore.userInfo.chinese_name ? `${userStore.userInfo.chinese_name}(${userStore.userInfo.username})` : userStore.userInfo.username }}</strong>
         <el-tag v-if="userStore.isSuperAdmin()" type="danger" style="margin-left: 8px">
           超级管理员
         </el-tag>

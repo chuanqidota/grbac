@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"strings"
 
 	"grbac/internal/model"
@@ -118,17 +119,55 @@ func (s *Service) DispatchEvent(ctx context.Context, event string, payload inter
 	go s.dispatcher.Dispatch(ctx, event, payload)
 }
 
+// validEvents is the set of all recognized webhook event types.
+var validEvents = map[string]bool{
+	"role.created":              true,
+	"role.updated":              true,
+	"role.deleted":              true,
+	"role.menus_assigned":       true,
+	"role.permissions_assigned": true,
+	"role.users_assigned":       true,
+	"role.user_removed":         true,
+	"menu.created":              true,
+	"menu.updated":              true,
+	"menu.deleted":              true,
+	"permission.created":        true,
+	"permission.updated":        true,
+	"permission.deleted":        true,
+	"system.created":            true,
+	"system.updated":            true,
+	"system.deleted":            true,
+	"system.member_added":       true,
+	"system.member_removed":     true,
+}
+
+// ParseEvents parses an events string that may be a JSON array ("[\"a\",\"b\"]")
+// or comma-separated ("a,b") and returns a normalized comma-separated string.
+func ParseEvents(raw string) (string, []string) {
+	raw = strings.TrimSpace(raw)
+	var list []string
+	// Try JSON array first.
+	if strings.HasPrefix(raw, "[") {
+		_ = json.Unmarshal([]byte(raw), &list)
+	}
+	// Fall back to comma-separated.
+	if list == nil {
+		for _, e := range strings.Split(raw, ",") {
+			if t := strings.TrimSpace(e); t != "" {
+				list = append(list, t)
+			}
+		}
+	}
+	return strings.Join(list, ","), list
+}
+
 // ValidateEvents checks that all event strings are valid.
 func ValidateEvents(events string) bool {
-	validEvents := map[string]bool{
-		"permission_change": true,
-		"menu_change":       true,
-		"role_change":       true,
-	}
-	for _, e := range strings.Split(events, ",") {
-		if !validEvents[strings.TrimSpace(e)] {
+	_, list := ParseEvents(events)
+	for _, e := range list {
+		if !validEvents[e] {
 			return false
 		}
 	}
-	return true
+	return len(list) > 0
 }

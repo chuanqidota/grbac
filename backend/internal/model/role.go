@@ -9,6 +9,7 @@ type Role struct {
 	Name        string    `json:"name"        gorm:"column:name;size:50;not null"`
 	Code        string    `json:"code"        gorm:"column:code;size:50;not null;uniqueIndex:uk_system_code"`
 	Description string    `json:"description" gorm:"column:description;size:500"`
+	IsDefault   int8      `json:"is_default"  gorm:"column:is_default;not null;default:0"`
 	Version     int       `json:"version"     gorm:"column:version;not null;default:1"`
 	Status      int8      `json:"status"      gorm:"column:status;not null;default:1"`
 	CreatedAt   time.Time `json:"created_at"  gorm:"column:created_at;autoCreateTime"`

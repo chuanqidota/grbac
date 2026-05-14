@@ -35,6 +35,15 @@ func (r *Repo) GetByCode(systemID int64, code string) (*model.Role, error) {
 	return &role, nil
 }
 
+func (r *Repo) GetDefaultRoleBySystem(systemID int64) (*model.Role, error) {
+	var role model.Role
+	err := r.db.Where("system_id = ? AND is_default = 1 AND status = 1", systemID).First(&role).Error
+	if err != nil {
+		return nil, err
+	}
+	return &role, nil
+}
+
 func (r *Repo) ListBySystem(systemID int64) ([]model.Role, error) {
 	var roles []model.Role
 	err := r.db.Where("system_id = ?", systemID).Order("id ASC").Find(&roles).Error

@@ -2,7 +2,7 @@
   <div class="system-view">
     <div class="page-header">
       <h2>系统管理</h2>
-      <el-button type="primary" @click="showCreateDialog">
+      <el-button type="primary" @click="showCreateDialog" v-if="userStore.isSuperAdmin()">
         <el-icon><Plus /></el-icon>
         创建系统
       </el-button>
@@ -26,7 +26,7 @@
               type="warning"
               style="margin: 2px 4px 2px 0;"
             >
-              {{ admin.username }}
+              {{ admin.chinese_name ? `${admin.chinese_name}(${admin.username})` : admin.username }}
             </el-tag>
           </div>
           <span v-else style="color: #999;">未设置</span>
@@ -39,13 +39,16 @@
       </el-table-column>
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button type="primary" link @click="showAdminDialog(row)">
+          <el-button
+            v-if="userStore.isSuperAdmin() || row.current_user_role === 'admin'"
+            type="primary" link @click="showAdminDialog(row)"
+          >
             管理员
           </el-button>
-          <el-button type="primary" link @click="showEditDialog(row)">
+          <el-button v-if="userStore.isSuperAdmin()" type="primary" link @click="showEditDialog(row)">
             编辑
           </el-button>
-          <el-button type="danger" link @click="handleDelete(row)">
+          <el-button v-if="userStore.isSuperAdmin()" type="danger" link @click="handleDelete(row)">
             删除
           </el-button>
         </template>
@@ -121,7 +124,7 @@
             style="margin: 4px 8px 4px 0;"
             @close="handleRemoveAdmin(admin)"
           >
-            {{ admin.username }}
+            {{ admin.chinese_name ? `${admin.chinese_name}(${admin.username})` : admin.username }}
           </el-tag>
         </div>
         <el-empty v-else description="暂无管理员" :image-size="60" />
@@ -144,7 +147,7 @@
             <el-option
               v-for="user in availableAdminUsers"
               :key="user.id"
-              :label="user.username"
+              :label="user.chinese_name ? `${user.chinese_name}(${user.username})` : user.username"
               :value="user.id"
             />
           </el-select>
@@ -169,10 +172,14 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getSystems, createSystem, updateSystem, deleteSystem, getSystemMembers, addSystemMember, removeSystemMember } from '@/api/system'
 import { getUsers } from '@/api/user'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
 
 interface AdminInfo {
   user_id: number
   username: string
+  chinese_name?: string
 }
 
 interface System {
@@ -200,7 +207,7 @@ const adminDialogVisible = ref(false)
 const adminSystem = ref<System | null>(null)
 const adminList = ref<AdminInfo[]>([])
 const newAdminUserId = ref<number | null>(null)
-const availableAdminUsers = ref<{ id: number; username: string }[]>([])
+const availableAdminUsers = ref<{ id: number; username: string; chinese_name?: string }[]>([])
 const searchingAdminUsers = ref(false)
 const addingAdmin = ref(false)
 
@@ -233,7 +240,8 @@ async function fetchSystems() {
         const members = membersData.list || membersData || []
         sys._admins = members.filter((m: any) => m.role === 'admin').map((m: any) => ({
           user_id: m.user_id,
-          username: m.username
+          username: m.username,
+          chinese_name: m.chinese_name
         }))
       } catch {
         sys._admins = []
@@ -332,7 +340,8 @@ async function searchUsersForAdmin(query: string) {
     const data: any = await getUsers({ page: 1, page_size: 50 })
     const users = data.list || []
     availableAdminUsers.value = users.filter((u: any) =>
-      u.username.toLowerCase().includes(query.toLowerCase())
+      u.username.toLowerCase().includes(query.toLowerCase()) ||
+      (u.chinese_name && u.chinese_name.toLowerCase().includes(query.toLowerCase()))
     )
   } catch {
     // ignore
@@ -358,7 +367,8 @@ async function handleAddAdmin() {
     const members = membersData.list || membersData || []
     adminList.value = members.filter((m: any) => m.role === 'admin').map((m: any) => ({
       user_id: m.user_id,
-      username: m.username
+      username: m.username,
+      chinese_name: m.chinese_name
     }))
     fetchSystems()
   } catch (error: any) {

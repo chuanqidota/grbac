@@ -41,6 +41,27 @@
       </el-table-column>
     </el-table>
 
+    <!-- Payload Demo Section -->
+    <div class="demo-section">
+      <el-collapse v-model="activeDemo">
+        <el-collapse-item title="Payload Demo - 对接参考" name="demo">
+          <p class="demo-hint">
+            Webhook 触发时会向注册的 URL 发送 POST 请求，携带以下 JSON payload。接收方通过 <code>system_code</code> 识别所属系统。
+          </p>
+          <div v-for="group in eventDemoGroups" :key="group.category" class="demo-group">
+            <h4>{{ group.label }}</h4>
+            <div v-for="demo in group.events" :key="demo.event" class="demo-item">
+              <div class="demo-header">
+                <el-tag size="small" type="primary">{{ demo.event }}</el-tag>
+                <span class="demo-desc">{{ demo.description }}</span>
+              </div>
+              <pre class="demo-json"><code>{{ demo.payload }}</code></pre>
+            </div>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+    </div>
+
     <!-- Create/Edit Dialog -->
     <el-dialog
       v-model="dialogVisible"
@@ -94,6 +115,7 @@ const systemId = computed(() => Number(route.params.id))
 
 const webhooks = ref<Webhook[]>([])
 const loading = ref(false)
+const activeDemo = ref<string[]>([])
 
 const dialogVisible = ref(false)
 const isEditing = ref(false)
@@ -110,6 +132,55 @@ const rules: FormRules = {
   ],
   events: [{ type: 'array', required: true, message: '请选择至少一个事件', trigger: 'change' }]
 }
+
+function jsonStr(obj: any): string {
+  return JSON.stringify(obj, null, 2)
+}
+
+const eventDemoGroups = computed(() => [
+  {
+    category: 'role',
+    label: '角色事件',
+    events: [
+      { event: 'role.created', description: '角色创建', payload: jsonStr({ event: 'role.created', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { role_id: 1, role_name: '运维', role_code: 'ops' } }) },
+      { event: 'role.updated', description: '角色更新', payload: jsonStr({ event: 'role.updated', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { role_id: 1, role_name: '运维' } }) },
+      { event: 'role.deleted', description: '角色删除', payload: jsonStr({ event: 'role.deleted', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { role_id: 1, role_name: '运维' } }) },
+      { event: 'role.menus_assigned', description: '分配菜单', payload: jsonStr({ event: 'role.menus_assigned', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { role_id: 1, menu_ids: [1, 2, 3] } }) },
+      { event: 'role.permissions_assigned', description: '分配权限', payload: jsonStr({ event: 'role.permissions_assigned', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { role_id: 1, permission_ids: [1, 2] } }) },
+      { event: 'role.users_assigned', description: '分配用户', payload: jsonStr({ event: 'role.users_assigned', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { role_id: 1, user_ids: [1, 2, 3] } }) },
+      { event: 'role.user_removed', description: '移除用户', payload: jsonStr({ event: 'role.user_removed', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { role_id: 1, user_id: 2 } }) },
+    ]
+  },
+  {
+    category: 'menu',
+    label: '菜单事件',
+    events: [
+      { event: 'menu.created', description: '菜单创建', payload: jsonStr({ event: 'menu.created', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { menu_id: 1, menu_name: '用户管理' } }) },
+      { event: 'menu.updated', description: '菜单更新', payload: jsonStr({ event: 'menu.updated', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { menu_id: 1, menu_name: '用户管理' } }) },
+      { event: 'menu.deleted', description: '菜单删除', payload: jsonStr({ event: 'menu.deleted', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { menu_id: 1, menu_name: '用户管理' } }) },
+    ]
+  },
+  {
+    category: 'permission',
+    label: '权限事件',
+    events: [
+      { event: 'permission.created', description: '权限创建', payload: jsonStr({ event: 'permission.created', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { permission_id: 1, permission_code: 'user:list', path: '/api/users', method: 'GET' } }) },
+      { event: 'permission.updated', description: '权限更新', payload: jsonStr({ event: 'permission.updated', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { permission_id: 1, permission_code: 'user:list', path: '/api/users', method: 'GET' } }) },
+      { event: 'permission.deleted', description: '权限删除', payload: jsonStr({ event: 'permission.deleted', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { permission_id: 1, permission_code: 'user:list', path: '/api/users', method: 'GET' } }) },
+    ]
+  },
+  {
+    category: 'system',
+    label: '系统事件',
+    events: [
+      { event: 'system.created', description: '系统创建', payload: jsonStr({ event: 'system.created', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { system_name: '示例系统' } }) },
+      { event: 'system.updated', description: '系统更新', payload: jsonStr({ event: 'system.updated', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { system_name: '示例系统' } }) },
+      { event: 'system.deleted', description: '系统删除', payload: jsonStr({ event: 'system.deleted', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: {} }) },
+      { event: 'system.member_added', description: '添加成员', payload: jsonStr({ event: 'system.member_added', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { user_id: 1, role: 'admin' } }) },
+      { event: 'system.member_removed', description: '移除成员', payload: jsonStr({ event: 'system.member_removed', timestamp: '2026-05-14T10:30:00Z', system_code: 'ABC12345', data: { user_id: 1 } }) },
+    ]
+  }
+])
 
 function parseEvents(eventsStr: string): string[] {
   if (!eventsStr) return []
@@ -200,5 +271,54 @@ onMounted(() => { fetchWebhooks() })
 <style scoped>
 .webhook-view {
   padding: 0;
+}
+.demo-section {
+  margin-top: 24px;
+}
+.demo-hint {
+  color: var(--color-text-regular);
+  font-size: 14px;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.demo-hint code {
+  background: var(--el-fill-color-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.demo-group {
+  margin-bottom: 20px;
+}
+.demo-group h4 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+.demo-item {
+  margin-bottom: 12px;
+}
+.demo-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.demo-desc {
+  font-size: 13px;
+  color: var(--color-text-regular);
+}
+.demo-json {
+  background: var(--el-fill-color-dark);
+  border-radius: 6px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+.demo-json code {
+  color: var(--color-text-primary);
+  font-family: 'Courier New', Courier, monospace;
 }
 </style>

@@ -32,7 +32,7 @@ const router = createRouter({
           path: 'systems',
           name: 'Systems',
           component: () => import('@/views/system/SystemView.vue'),
-          meta: { title: '系统管理', icon: 'Monitor', superAdmin: true },
+          meta: { title: '系统管理', icon: 'Monitor' },
         },
         {
           path: 'systems/:id/roles',

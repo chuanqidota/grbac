@@ -7,6 +7,7 @@ export const createRole = (systemId: number, data: {
   name: string
   code: string
   description?: string
+  is_default?: number
 }) => request.post(`/systems/${systemId}/roles`, data)
 
 export const updateRole = (systemId: number, rid: number, data: {

@@ -1,10 +1,16 @@
 package menu
 
 import (
+	"context"
+	"time"
+
 	"grbac/internal/model"
 	"grbac/internal/pkg/errors"
 	menuRepo "grbac/internal/repository/menu"
 )
+
+// DispatchFn is the signature for async webhook event dispatch.
+type DispatchFn func(ctx context.Context, event string, payload interface{})
 
 // CreateRequest holds the payload for creating or updating a menu.
 type CreateRequest struct {
@@ -23,12 +29,13 @@ type Tree struct {
 
 // Service provides menu CRUD and tree-building operations.
 type Service struct {
-	menuRepo *menuRepo.Repo
+	menuRepo   *menuRepo.Repo
+	dispatchFn DispatchFn
 }
 
 // NewService creates a new Service.
-func NewService(menuRepo *menuRepo.Repo) *Service {
-	return &Service{menuRepo: menuRepo}
+func NewService(menuRepo *menuRepo.Repo, dispatchFn DispatchFn) *Service {
+	return &Service{menuRepo: menuRepo, dispatchFn: dispatchFn}
 }
 
 // Create registers a new menu within a system.
@@ -45,6 +52,15 @@ func (s *Service) Create(systemID int64, req *CreateRequest) (*model.Menu, error
 
 	if err := s.menuRepo.Create(menu); err != nil {
 		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "menu.created", map[string]interface{}{
+			"event":     "menu.created",
+			"timestamp": time.Now(),
+			"system_id": systemID,
+			"data":      map[string]interface{}{"menu_id": menu.ID, "menu_name": menu.Name},
+		})
 	}
 
 	return menu, nil
@@ -86,6 +102,15 @@ func (s *Service) Update(id int64, req *CreateRequest) (*model.Menu, error) {
 		return nil, errors.ErrInternal.Wrap(err.Error())
 	}
 
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "menu.updated", map[string]interface{}{
+			"event":     "menu.updated",
+			"timestamp": time.Now(),
+			"system_id": menu.SystemID,
+			"data":      map[string]interface{}{"menu_id": menu.ID, "menu_name": menu.Name},
+		})
+	}
+
 	return menu, nil
 }
 
@@ -110,6 +135,15 @@ func (s *Service) Delete(systemID, id int64) error {
 
 	if err := s.menuRepo.Delete(id); err != nil {
 		return errors.ErrInternal.Wrap(err.Error())
+	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "menu.deleted", map[string]interface{}{
+			"event":     "menu.deleted",
+			"timestamp": time.Now(),
+			"system_id": systemID,
+			"data":      map[string]interface{}{"menu_id": id, "menu_name": menu.Name},
+		})
 	}
 
 	return nil

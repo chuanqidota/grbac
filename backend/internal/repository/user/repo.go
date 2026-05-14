@@ -101,8 +101,8 @@ func (r *Repo) RemoveUsersByRoleIDTx(tx *gorm.DB, roleID int64) error {
 	return tx.Where("role_id = ?", roleID).Delete(&model.UserRole{}).Error
 }
 
-// GetRolesInSystem returns all roles assigned to the user within the specified system.
-// Uses a single JOIN query instead of loading all user roles then filtering.
+// GetRolesInSystem returns all roles assigned to the user within the specified system,
+// including the system's default role (is_default=1) which applies to all users.
 func (r *Repo) GetRolesInSystem(userID, systemID int64) ([]model.Role, error) {
 	var roles []model.Role
 	err := r.db.Model(&model.Role{}).
@@ -112,6 +112,19 @@ func (r *Repo) GetRolesInSystem(userID, systemID int64) ([]model.Role, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Include the default role for this system.
+	var defaultRole model.Role
+	if err := r.db.Where("system_id = ? AND is_default = 1 AND status = 1", systemID).First(&defaultRole).Error; err == nil {
+		exists := make(map[int64]bool, len(roles))
+		for _, role := range roles {
+			exists[role.ID] = true
+		}
+		if !exists[defaultRole.ID] {
+			roles = append(roles, defaultRole)
+		}
+	}
+
 	return roles, nil
 }
 

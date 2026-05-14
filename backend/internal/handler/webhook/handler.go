@@ -37,6 +37,7 @@ func (h *Handler) Create(c *gin.Context) {
 		response.Fail(c, errors.ErrInternal.Wrap("无效的事件类型"))
 		return
 	}
+	req.Events, _ = webhookService.ParseEvents(req.Events)
 
 	webhook, err := h.webhookSvc.Create(systemID, &req)
 	if err != nil {
@@ -78,9 +79,12 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	if req.Events != "" && !webhookService.ValidateEvents(req.Events) {
-		response.Fail(c, errors.ErrInternal.Wrap("无效的事件类型"))
-		return
+	if req.Events != "" {
+		if !webhookService.ValidateEvents(req.Events) {
+			response.Fail(c, errors.ErrInternal.Wrap("无效的事件类型"))
+			return
+		}
+		req.Events, _ = webhookService.ParseEvents(req.Events)
 	}
 
 	webhook, err := h.webhookSvc.Update(id, &req)

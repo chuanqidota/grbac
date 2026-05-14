@@ -118,6 +118,7 @@
             show-password
             placeholder="请输入密码"
           />
+          <div class="form-tip">默认密码: grbac@2024</div>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" placeholder="请输入邮箱" />
@@ -428,5 +429,11 @@ onMounted(() => {
   margin-top: var(--space-md);
   display: flex;
   justify-content: flex-end;
+}
+
+.form-tip {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: 4px;
 }
 </style>

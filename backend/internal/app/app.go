@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -57,13 +58,25 @@ func Run(cfg *config.Config) error {
 	auditRepo := auditR.NewRepo(db)
 
 	// Services
+	webhookService := webhookSvc.NewService(webhookRepo)
+	dispatchFn := func(ctx context.Context, event string, payload interface{}) {
+		if m, ok := payload.(map[string]interface{}); ok {
+			if sid, ok := m["system_id"].(int64); ok {
+				if sys, err := sysRepo.GetByID(sid); err == nil {
+					m["system_code"] = sys.Code
+				}
+				delete(m, "system_id")
+			}
+		}
+		webhookService.DispatchEvent(ctx, event, payload)
+	}
+
 	authService := authSvc.NewService(userRepo, redis, cfg.JWT.Secret, cfg.Password)
 	userService := userSvc.NewService(db, userRepo, roleRepo, sysRepo)
-	systemService := systemSvc.NewService(sysRepo, userRepo, roleRepo, menuRepo, permRepo)
-	roleService := roleSvc.NewService(db, roleRepo, userRepo)
-	menuService := menuSvc.NewService(menuRepo)
-	permService := permSvc.NewService(permRepo)
-	webhookService := webhookSvc.NewService(webhookRepo)
+	systemService := systemSvc.NewService(sysRepo, userRepo, roleRepo, menuRepo, permRepo, dispatchFn)
+	roleService := roleSvc.NewService(db, roleRepo, userRepo, dispatchFn)
+	menuService := menuSvc.NewService(menuRepo, dispatchFn)
+	permService := permSvc.NewService(permRepo, dispatchFn)
 	auditService := auditSvc.NewService(auditRepo)
 	extService := extSvc.NewService(
 		userRepo, sysRepo, roleRepo, menuRepo, permRepo,

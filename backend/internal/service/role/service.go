@@ -1,6 +1,9 @@
 package role
 
 import (
+	"context"
+	"time"
+
 	"grbac/internal/model"
 	"grbac/internal/pkg/errors"
 	roleRepo "grbac/internal/repository/role"
@@ -8,26 +11,32 @@ import (
 	"gorm.io/gorm"
 )
 
+// DispatchFn is the signature for async webhook event dispatch.
+type DispatchFn func(ctx context.Context, event string, payload interface{})
+
 // CreateRequest holds the payload for creating a new role.
 type CreateRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Code        string `json:"code" binding:"required"`
 	Description string `json:"description"`
+	IsDefault   int8   `json:"is_default"`
 }
 
 // Service provides role CRUD, menu/permission assignment, and user assignment operations.
 type Service struct {
-	db       *gorm.DB
-	roleRepo *roleRepo.Repo
-	userRepo *userRepo.Repo
+	db         *gorm.DB
+	roleRepo   *roleRepo.Repo
+	userRepo   *userRepo.Repo
+	dispatchFn DispatchFn
 }
 
 // NewService creates a new Service.
-func NewService(db *gorm.DB, roleRepo *roleRepo.Repo, userRepo *userRepo.Repo) *Service {
+func NewService(db *gorm.DB, roleRepo *roleRepo.Repo, userRepo *userRepo.Repo, dispatchFn DispatchFn) *Service {
 	return &Service{
-		db:       db,
-		roleRepo: roleRepo,
-		userRepo: userRepo,
+		db:         db,
+		roleRepo:   roleRepo,
+		userRepo:   userRepo,
+		dispatchFn: dispatchFn,
 	}
 }
 
@@ -38,16 +47,33 @@ func (s *Service) Create(systemID int64, req *CreateRequest) (*model.Role, error
 		return nil, errors.ErrRoleCodeExists
 	}
 
+	if req.IsDefault == 1 {
+		defaultRole, _ := s.roleRepo.GetDefaultRoleBySystem(systemID)
+		if defaultRole != nil {
+			return nil, errors.ErrInternal.Wrap("该系统已存在默认角色")
+		}
+	}
+
 	role := &model.Role{
 		SystemID:    systemID,
 		Name:        req.Name,
 		Code:        req.Code,
 		Description: req.Description,
+		IsDefault:   req.IsDefault,
 		Status:      1,
 	}
 
 	if err := s.roleRepo.Create(role); err != nil {
 		return nil, errors.ErrInternal.Wrap(err.Error())
+	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "role.created", map[string]interface{}{
+			"event":     "role.created",
+			"timestamp": time.Now(),
+			"system_id": systemID,
+			"data":      map[string]interface{}{"role_id": role.ID, "role_name": role.Name, "role_code": role.Code},
+		})
 	}
 
 	return role, nil
@@ -89,13 +115,27 @@ func (s *Service) Update(id int64, name, description string) (*model.Role, error
 		return nil, errors.ErrInternal.Wrap(err.Error())
 	}
 
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "role.updated", map[string]interface{}{
+			"event":     "role.updated",
+			"timestamp": time.Now(),
+			"system_id": role.SystemID,
+			"data":      map[string]interface{}{"role_id": role.ID, "role_name": role.Name},
+		})
+	}
+
 	return role, nil
 }
 
 // Delete removes a role and its associations within a transaction.
 func (s *Service) Delete(id int64) error {
-	if _, err := s.roleRepo.GetByID(id); err != nil {
+	role, err := s.roleRepo.GetByID(id)
+	if err != nil {
 		return errors.ErrRoleNotFound
+	}
+
+	if role.IsDefault == 1 {
+		return errors.ErrInternal.Wrap("默认角色不可删除")
 	}
 
 	hasUsers, err := s.roleRepo.HasUsers(id)
@@ -106,7 +146,7 @@ func (s *Service) Delete(id int64) error {
 		return errors.ErrInternal.Wrap("角色下存在用户，无法删除")
 	}
 
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
 		if err := s.roleRepo.RemoveRoleMenusTx(tx, id); err != nil {
 			return err
 		}
@@ -115,15 +155,30 @@ func (s *Service) Delete(id int64) error {
 		}
 		return s.roleRepo.Delete(id)
 	})
+	if err != nil {
+		return err
+	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "role.deleted", map[string]interface{}{
+			"event":     "role.deleted",
+			"timestamp": time.Now(),
+			"system_id": role.SystemID,
+			"data":      map[string]interface{}{"role_id": id, "role_name": role.Name},
+		})
+	}
+
+	return nil
 }
 
 // AssignMenus replaces the menu set of a role within a transaction.
 func (s *Service) AssignMenus(roleID int64, menuIDs []int64) error {
-	if _, err := s.roleRepo.GetByID(roleID); err != nil {
+	role, err := s.roleRepo.GetByID(roleID)
+	if err != nil {
 		return errors.ErrRoleNotFound
 	}
 
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
 		if err := s.roleRepo.RemoveRoleMenusTx(tx, roleID); err != nil {
 			return err
 		}
@@ -138,6 +193,20 @@ func (s *Service) AssignMenus(roleID int64, menuIDs []int64) error {
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "role.menus_assigned", map[string]interface{}{
+			"event":     "role.menus_assigned",
+			"timestamp": time.Now(),
+			"system_id": role.SystemID,
+			"data":      map[string]interface{}{"role_id": roleID, "menu_ids": menuIDs},
+		})
+	}
+
+	return nil
 }
 
 // GetRoleMenus returns the menu IDs assigned to a role.
@@ -151,11 +220,12 @@ func (s *Service) GetRoleMenus(roleID int64) ([]int64, error) {
 
 // AssignPermissions replaces the permission set of a role within a transaction.
 func (s *Service) AssignPermissions(roleID int64, permIDs []int64) error {
-	if _, err := s.roleRepo.GetByID(roleID); err != nil {
+	role, err := s.roleRepo.GetByID(roleID)
+	if err != nil {
 		return errors.ErrRoleNotFound
 	}
 
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
 		if err := s.roleRepo.RemoveRolePermissionsTx(tx, roleID); err != nil {
 			return err
 		}
@@ -170,6 +240,20 @@ func (s *Service) AssignPermissions(roleID int64, permIDs []int64) error {
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "role.permissions_assigned", map[string]interface{}{
+			"event":     "role.permissions_assigned",
+			"timestamp": time.Now(),
+			"system_id": role.SystemID,
+			"data":      map[string]interface{}{"role_id": roleID, "permission_ids": permIDs},
+		})
+	}
+
+	return nil
 }
 
 // GetRolePermissions returns the permission IDs assigned to a role.
@@ -183,11 +267,12 @@ func (s *Service) GetRolePermissions(roleID int64) ([]int64, error) {
 
 // AssignUsers replaces the user set of a role within a transaction.
 func (s *Service) AssignUsers(roleID int64, userIDs []int64) error {
-	if _, err := s.roleRepo.GetByID(roleID); err != nil {
+	role, err := s.roleRepo.GetByID(roleID)
+	if err != nil {
 		return errors.ErrRoleNotFound
 	}
 
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
 		if err := s.userRepo.RemoveUsersByRoleIDTx(tx, roleID); err != nil {
 			return err
 		}
@@ -202,13 +287,42 @@ func (s *Service) AssignUsers(roleID int64, userIDs []int64) error {
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "role.users_assigned", map[string]interface{}{
+			"event":     "role.users_assigned",
+			"timestamp": time.Now(),
+			"system_id": role.SystemID,
+			"data":      map[string]interface{}{"role_id": roleID, "user_ids": userIDs},
+		})
+	}
+
+	return nil
 }
 
 // RemoveUser removes a single user from a role.
 func (s *Service) RemoveUser(roleID, userID int64) error {
+	role, err := s.roleRepo.GetByID(roleID)
+	if err != nil {
+		return errors.ErrRoleNotFound
+	}
+
 	if err := s.userRepo.RemoveUserRole(userID, roleID); err != nil {
 		return errors.ErrInternal.Wrap(err.Error())
 	}
+
+	if s.dispatchFn != nil {
+		s.dispatchFn(context.Background(), "role.user_removed", map[string]interface{}{
+			"event":     "role.user_removed",
+			"timestamp": time.Now(),
+			"system_id": role.SystemID,
+			"data":      map[string]interface{}{"role_id": roleID, "user_id": userID},
+		})
+	}
+
 	return nil
 }
 

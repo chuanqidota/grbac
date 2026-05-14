@@ -8,6 +8,7 @@ interface System {
   code: string
   description: string
   status: number
+  current_user_role?: string
 }
 
 export const useSystemStore = defineStore('system', () => {

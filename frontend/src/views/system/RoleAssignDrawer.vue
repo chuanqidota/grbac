@@ -13,7 +13,11 @@
             <h4>已分配用户</h4>
             <el-table :data="assignedUsers" v-loading="loadingUsers" border size="small">
               <el-table-column prop="id" label="ID" width="80" />
-              <el-table-column prop="username" label="用户名" />
+              <el-table-column label="用户">
+                <template #default="{ row }">
+                  {{ row.chinese_name ? `${row.chinese_name}(${row.username})` : row.username }}
+                </template>
+              </el-table-column>
               <el-table-column label="操作" width="100">
                 <template #default="{ row }">
                   <el-button type="danger" link @click="removeUser(row)">
@@ -38,7 +42,7 @@
               <el-option
                 v-for="user in availableUsers"
                 :key="user.id"
-                :label="user.username"
+                :label="user.chinese_name ? `${user.chinese_name}(${user.username})` : user.username"
                 :value="user.id"
               />
             </el-select>
@@ -126,6 +130,7 @@ interface Role {
 interface User {
   id: number
   username: string
+  chinese_name?: string
 }
 
 interface Menu {
@@ -230,7 +235,8 @@ async function searchUsers(query: string) {
     const data: any = await getUsers({ page: 1, page_size: 50 })
     const users = data.list || []
     availableUsers.value = users.filter((u: User) =>
-      u.username.toLowerCase().includes(query.toLowerCase())
+      u.username.toLowerCase().includes(query.toLowerCase()) ||
+      (u.chinese_name && u.chinese_name.toLowerCase().includes(query.toLowerCase()))
     )
   } catch (error: any) {
     ElMessage.error(error.message || '搜索用户失败')
@@ -242,8 +248,9 @@ async function searchUsers(query: string) {
 async function assignUsers() {
   if (!props.role || selectedUserIds.value.length === 0) return
   try {
-    console.log('[DEBUG] assignUsers sending:', { systemId: props.systemId, roleId: props.role.id, userIds: selectedUserIds.value })
-    await assignUsersApi(props.systemId, props.role.id, selectedUserIds.value)
+    const existingIds = assignedUsers.value.map(u => u.id)
+    const allIds = [...new Set([...existingIds, ...selectedUserIds.value])]
+    await assignUsersApi(props.systemId, props.role.id, allIds)
     console.log('[DEBUG] assignUsers success')
     ElMessage.success('用户分配成功')
     selectedUserIds.value = []
@@ -431,5 +438,23 @@ onMounted(() => {
   margin-top: var(--space-md);
   display: flex;
   justify-content: flex-end;
+}
+
+.assign-section :deep(.el-transfer) {
+  display: flex;
+  align-items: center;
+}
+
+.assign-section :deep(.el-transfer-panel) {
+  width: 320px;
+  height: 450px;
+}
+
+.assign-section :deep(.el-transfer-panel__body) {
+  height: calc(100% - 40px);
+}
+
+.assign-section :deep(.el-transfer-panel__list) {
+  height: 100%;
 }
 </style>

@@ -24,7 +24,7 @@
           <template #title>用户管理</template>
         </el-menu-item>
 
-        <el-menu-item v-if="userStore.isSuperAdmin()" index="/systems">
+        <el-menu-item v-if="userStore.isSuperAdmin() || isSystemAdmin" index="/systems">
           <el-icon><Monitor /></el-icon>
           <template #title>系统管理</template>
         </el-menu-item>
@@ -108,7 +108,7 @@
           <el-dropdown trigger="click" @command="handleCommand">
             <span class="user-dropdown">
               <el-icon><UserFilled /></el-icon>
-              <span class="username">{{ userStore.userInfo?.username ?? '用户' }}</span>
+              <span class="username">{{ userStore.userInfo?.chinese_name ? `${userStore.userInfo.chinese_name}(${userStore.userInfo.username})` : (userStore.userInfo?.username ?? '用户') }}</span>
               <el-icon class="el-icon--right"><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
@@ -147,6 +147,9 @@ const systemStore = useSystemStore()
 
 const isCollapsed = ref(false)
 const activeMenu = computed(() => route.path)
+const isSystemAdmin = computed(() =>
+  systemStore.systems.some(s => s.current_user_role === 'admin')
+)
 
 onMounted(async () => {
   try {

@@ -94,7 +94,7 @@ func (r *Repo) IsUsedByRole(permID int64) (bool, error) {
 
 // HasUserPermission checks directly in the database whether the user has a permission
 // matching the given method and path within the specified system.
-// This avoids loading all permission codes into memory.
+// This includes permissions from the user's explicitly assigned roles AND the system's default role.
 func (r *Repo) HasUserPermission(userID, systemID int64, method, path string) (bool, error) {
 	var count int64
 	err := r.db.Model(&model.RolePermission{}).
@@ -102,6 +102,20 @@ func (r *Repo) HasUserPermission(userID, systemID int64, method, path string) (b
 		Joins("JOIN user_roles ON user_roles.role_id = role_permissions.role_id").
 		Where("user_roles.user_id = ? AND permissions.system_id = ? AND permissions.method = ? AND permissions.path = ?",
 			userID, systemID, method, path).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	if count > 0 {
+		return true, nil
+	}
+
+	// Also check the system's default role.
+	err = r.db.Model(&model.RolePermission{}).
+		Joins("JOIN permissions ON permissions.id = role_permissions.permission_id").
+		Joins("JOIN roles ON roles.id = role_permissions.role_id").
+		Where("roles.system_id = ? AND roles.is_default = 1 AND roles.status = 1 AND permissions.method = ? AND permissions.path = ?",
+			systemID, method, path).
 		Count(&count).Error
 	if err != nil {
 		return false, err

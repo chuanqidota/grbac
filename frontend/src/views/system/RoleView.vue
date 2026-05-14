@@ -42,6 +42,12 @@
         </template>
       </el-table-column>
       <el-table-column prop="description" label="描述" min-width="180" show-overflow-tooltip />
+      <el-table-column label="类型" width="100">
+        <template #default="{ row }">
+          <el-tag v-if="row.is_default === 1" type="warning">默认</el-tag>
+          <el-tag v-else type="info">普通</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="160" fixed="right">
         <template #default="{ row }">
           <el-button type="success" link @click="showAssignDrawer(row)">
@@ -50,7 +56,7 @@
           <el-button type="primary" link @click="showEditDialog(row)">
             编辑
           </el-button>
-          <el-button type="danger" link @click="handleDelete(row)">
+          <el-button type="danger" link @click="handleDelete(row)" :disabled="row.is_default === 1">
             删除
           </el-button>
         </template>
@@ -87,6 +93,10 @@
             placeholder="请输入角色描述"
           />
         </el-form-item>
+        <el-form-item v-if="!isEditing" label="默认角色">
+          <el-switch v-model="form.is_default" />
+          <span class="form-tip">开启后，该角色的菜单和接口权限自动对系统内所有用户生效</span>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -121,6 +131,7 @@ interface Role {
   name: string
   code: string
   description?: string
+  is_default: number
   created_at: string
 }
 
@@ -143,7 +154,8 @@ const formRef = ref<FormInstance>()
 const form = ref({
   name: '',
   code: '',
-  description: ''
+  description: '',
+  is_default: false
 })
 
 const rules: FormRules = {
@@ -183,7 +195,7 @@ function handleSelectionChange(selection: Role[]) {
 function showCreateDialog() {
   isEditing.value = false
   editingId.value = null
-  form.value = { name: '', code: '', description: '' }
+  form.value = { name: '', code: '', description: '', is_default: false }
   dialogVisible.value = true
 }
 
@@ -193,7 +205,8 @@ function showEditDialog(role: Role) {
   form.value = {
     name: role.name,
     code: role.code,
-    description: role.description || ''
+    description: role.description || '',
+    is_default: role.is_default === 1
   }
   dialogVisible.value = true
 }
@@ -222,7 +235,8 @@ async function handleSubmit() {
       await createRole(systemId.value, {
         name: form.value.name,
         code: form.value.code,
-        description: form.value.description
+        description: form.value.description,
+        is_default: form.value.is_default ? 1 : 0
       })
       ElMessage.success('创建成功')
     }
@@ -266,5 +280,10 @@ onMounted(() => {
 <style scoped>
 .role-view {
   padding: 0;
+}
+.form-tip {
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--color-text-regular);
 }
 </style>

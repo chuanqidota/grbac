@@ -80,20 +80,21 @@ func (r *Repo) GetMembers(systemID int64) ([]model.SystemMember, error) {
 
 // MemberInfo is a SystemMember enriched with user fields.
 type MemberInfo struct {
-	ID        int64  `json:"id"`
-	SystemID  int64  `json:"system_id"`
-	UserID    int64  `json:"user_id"`
-	Role      string `json:"role"`
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	CreatedAt string `json:"created_at"`
+	ID          int64  `json:"id"`
+	SystemID    int64  `json:"system_id"`
+	UserID      int64  `json:"user_id"`
+	Role        string `json:"role"`
+	Username    string `json:"username"`
+	ChineseName string `json:"chinese_name"`
+	Email       string `json:"email"`
+	CreatedAt   string `json:"created_at"`
 }
 
 // GetMembersWithUser returns system members joined with user info.
 func (r *Repo) GetMembersWithUser(systemID int64) ([]MemberInfo, error) {
 	var results []MemberInfo
 	err := r.db.Table("system_members sm").
-		Select("sm.id, sm.system_id, sm.user_id, sm.role, u.username, u.email, sm.created_at").
+		Select("sm.id, sm.system_id, sm.user_id, sm.role, u.username, u.chinese_name, u.email, sm.created_at").
 		Joins("LEFT JOIN users u ON u.id = sm.user_id").
 		Where("sm.system_id = ?", systemID).
 		Order("sm.id DESC").
@@ -134,18 +135,37 @@ func (r *Repo) ListByUserID(userID int64) ([]model.System, error) {
 	return systems, err
 }
 
+// SystemWithRole extends System with the current user's role in that system.
+type SystemWithRole struct {
+	model.System
+	CurrentUserRole string `json:"current_user_role"`
+}
+
+// ListByUserIDWithRole returns systems where the user is a member, enriched with their role.
+func (r *Repo) ListByUserIDWithRole(userID int64) ([]SystemWithRole, error) {
+	var results []SystemWithRole
+	err := r.db.Table("systems s").
+		Select("s.*, sm.role AS current_user_role").
+		Joins("JOIN system_members sm ON sm.system_id = s.id").
+		Where("sm.user_id = ?", userID).
+		Order("s.id DESC").
+		Scan(&results).Error
+	return results, err
+}
+
 // RoleMemberInfo is a user enriched with their roles in a system.
 type RoleMemberInfo struct {
-	UserID   int64  `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	UserID      int64  `json:"user_id"`
+	Username    string `json:"username"`
+	ChineseName string `json:"chinese_name"`
+	Email       string `json:"email"`
 }
 
 // GetUsersWithRoles returns distinct users who have at least one role in the system.
 func (r *Repo) GetUsersWithRoles(systemID int64) ([]RoleMemberInfo, error) {
 	var results []RoleMemberInfo
 	err := r.db.Table("users u").
-		Select("DISTINCT u.id AS user_id, u.username, u.email").
+		Select("DISTINCT u.id AS user_id, u.username, u.chinese_name, u.email").
 		Joins("JOIN user_roles ur ON ur.user_id = u.id").
 		Joins("JOIN roles r ON r.id = ur.role_id").
 		Where("r.system_id = ?", systemID).
