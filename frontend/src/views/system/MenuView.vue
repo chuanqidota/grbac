@@ -104,6 +104,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { getMenus, createMenu, updateMenu, deleteMenu } from '@/api/menu'
+import { formatDate } from '@/utils/format'
 
 interface Menu {
   id: number
@@ -168,11 +169,6 @@ const menuOptions = computed(() => {
   }
   return [{ id: 0, name: '顶级菜单', children: buildOptions(menus.value) }]
 })
-
-function formatDate(dateStr: string) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleString('zh-CN')
-}
 
 async function fetchMenus() {
   if (!systemId.value) return

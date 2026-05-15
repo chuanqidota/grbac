@@ -73,6 +73,13 @@ func (r *Repo) ListByIDs(ids []int64) ([]model.Permission, error) {
 	return perms, nil
 }
 
+// ListAllBySystem returns all permissions for a system without pagination.
+func (r *Repo) ListAllBySystem(systemID int64) ([]model.Permission, error) {
+	var perms []model.Permission
+	err := r.db.Where("system_id = ?", systemID).Order("id DESC").Find(&perms).Error
+	return perms, err
+}
+
 func (r *Repo) Update(perm *model.Permission) error {
 	return r.db.Save(perm).Error
 }

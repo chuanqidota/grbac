@@ -109,6 +109,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getUserRoles } from '@/api/user'
 import { getSystems } from '@/api/system'
 import { getRoles, assignUsers, removeRoleUser } from '@/api/role'
+import { formatDate } from '@/utils/format'
 
 interface UserInfo {
   id: number
@@ -162,11 +163,6 @@ const systemRoles = ref<Role[]>([])
 const selectedSystemId = ref<number | null>(null)
 const selectedRoleIds = ref<number[]>([])
 const assigning = ref(false)
-
-function formatDate(dateStr?: string) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleString('zh-CN')
-}
 
 async function fetchUserRoles() {
   if (!props.user) return

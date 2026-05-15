@@ -26,7 +26,7 @@
           <el-icon><Search /></el-icon>
         </template>
       </el-input>
-      <el-radio-group v-model="filterMethod" @change="fetchPermissions">
+      <el-radio-group v-model="filterMethod" @change="handleMethodChange">
         <el-radio-button label="">全部</el-radio-button>
         <el-radio-button label="GET">GET</el-radio-button>
         <el-radio-button label="POST">POST</el-radio-button>
@@ -36,9 +36,22 @@
       </el-radio-group>
     </div>
 
+    <el-skeleton :loading="loading" animated :count="5">
+      <template #template>
+        <el-skeleton-item variant="text" style="width: 40%; height: 32px; margin-bottom: 16px;" />
+        <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
+          <el-skeleton-item variant="text" style="width: 3%;" />
+          <el-skeleton-item variant="text" style="width: 5%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+          <el-skeleton-item variant="text" style="width: 10%;" />
+          <el-skeleton-item variant="text" style="width: 25%;" />
+          <el-skeleton-item variant="text" style="width: 12%;" />
+        </div>
+      </template>
+      <template #default>
     <el-table
       :data="permissions"
-      v-loading="loading"
       border
       stripe
       @selection-change="handleSelectionChange"
@@ -77,6 +90,8 @@
         @current-change="handleCurrentChange"
       />
     </div>
+      </template>
+    </el-skeleton>
 
     <!-- Create/Edit Dialog -->
     <el-dialog
@@ -122,6 +137,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { getPermissions, createPermission, updatePermission, deletePermission } from '@/api/permission'
+import { formatDate } from '@/utils/format'
 
 interface Permission {
   id: number
@@ -165,12 +181,12 @@ function getMethodTagType(method: string) {
   return types[method] || ''
 }
 
-function formatDate(dateStr: string) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleString('zh-CN')
+function handleSearch() {
+  currentPage.value = 1
+  fetchPermissions()
 }
 
-function handleSearch() {
+function handleMethodChange() {
   currentPage.value = 1
   fetchPermissions()
 }

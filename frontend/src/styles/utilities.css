@@ -47,3 +47,29 @@
 .page-content {
   padding: var(--space-lg);
 }
+
+/* Responsive: tables don't overflow, content adapts */
+.el-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 1024px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+
+  .page-header .header-actions {
+    width: 100%;
+  }
+
+  .search-bar {
+    flex-wrap: wrap;
+  }
+
+  .filter-bar {
+    flex-wrap: wrap;
+  }
+}

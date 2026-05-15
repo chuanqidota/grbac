@@ -1,4 +1,12 @@
 /**
+ * Format a date string to a localized display string.
+ */
+export function formatDate(dateStr?: string): string {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('zh-CN')
+}
+
+/**
  * Format a user's display name as "中文名(username)" or just "username"
  * when chinese_name is not set.
  */

@@ -90,6 +90,7 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getAuditLogs } from '@/api/audit'
 import { getSystems } from '@/api/system'
+import { formatDate } from '@/utils/format'
 
 interface AuditLog {
   id: number
@@ -124,11 +125,6 @@ function getActionTagType(action: string) {
   if (action.includes('update')) return 'primary'
   if (action.includes('delete')) return 'danger'
   return 'info'
-}
-
-function formatDate(dateStr?: string) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleString('zh-CN')
 }
 
 function formatJson(jsonStr: string) {

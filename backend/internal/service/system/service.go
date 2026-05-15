@@ -425,9 +425,9 @@ func (s *Service) GetMemberPermissions(systemID, userID int64) ([]model.Permissi
 		return nil, errors.ErrUserNotFound
 	}
 
-	// Super admin has no explicit permissions (they bypass checks).
+	// Super admin gets all system permissions.
 	if user.IsSuperAdmin == 1 {
-		return []model.Permission{}, nil
+		return s.permissionRepo.ListAllBySystem(systemID)
 	}
 
 	roles, err := s.userRepo.GetRolesInSystem(userID, systemID)

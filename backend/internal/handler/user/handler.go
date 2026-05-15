@@ -17,7 +17,7 @@ type StatusUpdateRequest struct {
 
 // SuperAdminUpdateRequest holds the new super-admin flag for a user.
 type SuperAdminUpdateRequest struct {
-	IsSuperAdmin int8 `json:"is_super_admin" binding:"required"`
+	IsSuperAdmin int8 `json:"is_super_admin"`
 }
 
 // ResetPasswordRequest holds the new password for a user.
@@ -201,6 +201,11 @@ func (h *Handler) UpdateSuperAdmin(c *gin.Context) {
 	var req SuperAdminUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Fail(c, errors.ErrInternal)
+		return
+	}
+
+	if req.IsSuperAdmin != 0 && req.IsSuperAdmin != 1 {
+		response.Fail(c, errors.ErrInternal.Wrap("is_super_admin 必须为 0 或 1"))
 		return
 	}
 

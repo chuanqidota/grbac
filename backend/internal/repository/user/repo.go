@@ -163,3 +163,10 @@ func (r *Repo) GetByRoleID(roleID int64) ([]model.User, error) {
 		Find(&users).Error
 	return users, err
 }
+
+// CountSuperAdmins returns the number of users with super-admin flag set.
+func (r *Repo) CountSuperAdmins() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.User{}).Where("is_super_admin = 1").Count(&count).Error
+	return count, err
+}

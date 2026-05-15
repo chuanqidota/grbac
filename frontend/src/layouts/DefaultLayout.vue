@@ -124,6 +124,17 @@
           </el-dropdown>
         </div>
       </el-header>
+      <div class="breadcrumb-bar">
+        <el-breadcrumb separator="/">
+          <el-breadcrumb-item
+            v-for="item in breadcrumbs"
+            :key="item.path"
+            :to="item.path ? { path: item.path } : undefined"
+          >
+            {{ item.title }}
+          </el-breadcrumb-item>
+        </el-breadcrumb>
+      </div>
       <el-main class="layout-main">
         <router-view :key="route.fullPath" />
       </el-main>
@@ -150,6 +161,32 @@ const activeMenu = computed(() => route.path)
 const isSystemAdmin = computed(() =>
   systemStore.systems.some(s => s.current_user_role === 'admin')
 )
+
+const breadcrumbs = computed(() => {
+  const items: { title: string; path?: string }[] = [{ title: '首页', path: '/dashboard' }]
+  const path = route.path
+
+  // System-scoped routes: /systems/:id/xxx
+  const sysMatch = path.match(/^\/systems\/(\d+)(?:\/(.+))?$/)
+  if (sysMatch) {
+    items.push({ title: '系统管理', path: '/systems' })
+    const sys = systemStore.systems.find(s => s.id === Number(sysMatch[1]))
+    if (sys) {
+      items.push({ title: sys.name })
+    }
+    if (sysMatch[2] && route.meta.title) {
+      items.push({ title: route.meta.title as string })
+    }
+    return items
+  }
+
+  // Non-system routes: use route title
+  if (path === '/dashboard') return items
+  if (route.meta.title) {
+    items.push({ title: route.meta.title as string })
+  }
+  return items
+})
 
 onMounted(async () => {
   try {
@@ -314,9 +351,29 @@ async function handleCommand(command: string) {
   font-size: var(--font-size-base);
 }
 
+.breadcrumb-bar {
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
 .layout-main {
   background: var(--color-bg-page);
   overflow: auto;
   padding: var(--space-lg);
+}
+
+@media (max-width: 1024px) {
+  .header-left {
+    width: auto;
+  }
+
+  .system-label {
+    display: none;
+  }
+
+  .breadcrumb-bar {
+    padding: var(--space-xs) var(--space-md);
+  }
 }
 </style>

@@ -26,9 +26,22 @@
       </el-input>
     </div>
 
+    <el-skeleton :loading="loading" animated :count="5">
+      <template #template>
+        <el-skeleton-item variant="text" style="width: 40%; height: 32px; margin-bottom: 16px;" />
+        <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
+          <el-skeleton-item variant="text" style="width: 3%;" />
+          <el-skeleton-item variant="text" style="width: 5%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+          <el-skeleton-item variant="text" style="width: 25%;" />
+          <el-skeleton-item variant="text" style="width: 10%;" />
+          <el-skeleton-item variant="text" style="width: 12%;" />
+        </div>
+      </template>
+      <template #default>
     <el-table
       :data="filteredRoles"
-      v-loading="loading"
       border
       stripe
       @selection-change="handleSelectionChange"
@@ -62,6 +75,8 @@
         </template>
       </el-table-column>
     </el-table>
+      </template>
+    </el-skeleton>
 
     <!-- Create/Edit Dialog -->
     <el-dialog

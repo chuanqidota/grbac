@@ -178,6 +178,17 @@ func (s *Service) UpdateSuperAdmin(id int64, isSuperAdmin int8) error {
 		return errors.ErrUserNotFound
 	}
 
+	// When revoking super admin, ensure at least one remains.
+	if isSuperAdmin == 0 && user.IsSuperAdmin == 1 {
+		count, err := s.userRepo.CountSuperAdmins()
+		if err != nil {
+			return errors.ErrInternal.Wrap(err.Error())
+		}
+		if count <= 1 {
+			return errors.ErrInternal.Wrap("系统至少需要保留一个超管")
+		}
+	}
+
 	user.IsSuperAdmin = isSuperAdmin
 	if err := s.userRepo.Update(user); err != nil {
 		return errors.ErrInternal.Wrap(err.Error())

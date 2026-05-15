@@ -8,7 +8,20 @@
       </el-button>
     </div>
 
-    <el-table :data="systems" v-loading="loading" border stripe>
+    <el-skeleton :loading="loading" animated :count="5">
+      <template #template>
+        <el-skeleton-item variant="text" style="width: 40%; height: 32px; margin-bottom: 16px;" />
+        <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
+          <el-skeleton-item variant="text" style="width: 5%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+          <el-skeleton-item variant="text" style="width: 12%;" />
+          <el-skeleton-item variant="text" style="width: 25%;" />
+          <el-skeleton-item variant="text" style="width: 20%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+        </div>
+      </template>
+      <template #default>
+    <el-table :data="systems" border stripe>
       <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="name" label="系统名称" min-width="140" />
       <el-table-column prop="code" label="系统编码" min-width="120">
@@ -54,6 +67,8 @@
         </template>
       </el-table-column>
     </el-table>
+      </template>
+    </el-skeleton>
 
     <!-- Create Dialog -->
     <el-dialog
@@ -173,6 +188,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { getSystems, createSystem, updateSystem, deleteSystem, getSystemMembers, addSystemMember, removeSystemMember } from '@/api/system'
 import { getUsers } from '@/api/user'
 import { useUserStore } from '@/stores/user'
+import { formatDate } from '@/utils/format'
 
 const userStore = useUserStore()
 
@@ -223,30 +239,27 @@ const rules: FormRules = {
   ]
 }
 
-function formatDate(dateStr: string) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleString('zh-CN')
-}
-
 async function fetchSystems() {
   loading.value = true
   try {
     const data: any = await getSystems()
     const list = data.list || []
-    // Fetch admins for each system
-    for (const sys of list) {
-      try {
-        const membersData: any = await getSystemMembers(sys.id)
-        const members = membersData.list || membersData || []
-        sys._admins = members.filter((m: any) => m.role === 'admin').map((m: any) => ({
-          user_id: m.user_id,
-          username: m.username,
-          chinese_name: m.chinese_name
-        }))
-      } catch {
-        sys._admins = []
-      }
-    }
+    // Fetch admins for all systems in parallel
+    const memberPromises = list.map((sys: System) =>
+      getSystemMembers(sys.id)
+        .then((membersData: any) => {
+          const members = membersData.list || membersData || []
+          sys._admins = members.filter((m: any) => m.role === 'admin').map((m: any) => ({
+            user_id: m.user_id,
+            username: m.username,
+            chinese_name: m.chinese_name
+          }))
+        })
+        .catch(() => {
+          sys._admins = []
+        })
+    )
+    await Promise.all(memberPromises)
     systems.value = list
   } catch (error: any) {
     ElMessage.error(error.message || '获取系统列表失败')

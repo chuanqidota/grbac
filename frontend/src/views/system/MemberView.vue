@@ -30,7 +30,6 @@
           <span v-if="!row.roles || row.roles.length === 0" style="color: #999;">-</span>
         </template>
       </el-table-column>
-      <el-table-column prop="permission_count" label="权限数" width="100" align="center" />
       <el-table-column label="操作" width="100" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" link @click="showDetail(row)">授权</el-button>
@@ -201,16 +200,6 @@ function showDetail(member: MemberUser) {
 function showAssignDialog() {
   assignForm.value = { user_id: null, role_ids: [], _fixedUser: false }
   availableUsers.value = []
-  assignDialogVisible.value = true
-}
-
-function showAssignDialogForUser(member: MemberUser) {
-  assignForm.value = {
-    user_id: member.user_id,
-    role_ids: [],
-    _fixedUser: true
-  }
-  availableUsers.value = [{ id: member.user_id, username: member.username, chinese_name: member.chinese_name }]
   assignDialogVisible.value = true
 }
 

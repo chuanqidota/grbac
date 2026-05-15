@@ -101,6 +101,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getWebhooks, createWebhook, updateWebhook, deleteWebhook } from '@/api/webhook'
+import { formatDate } from '@/utils/format'
 
 interface Webhook {
   id: number
@@ -185,11 +186,6 @@ const eventDemoGroups = computed(() => [
 function parseEvents(eventsStr: string): string[] {
   if (!eventsStr) return []
   try { return JSON.parse(eventsStr) } catch { return eventsStr.split(',').map(e => e.trim()) }
-}
-
-function formatDate(dateStr: string) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleString('zh-CN')
 }
 
 async function fetchWebhooks() {
