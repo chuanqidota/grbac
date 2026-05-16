@@ -9,7 +9,6 @@
 | 后端 | Go + Gin + GORM |
 | 前端 | Vue 3 + TypeScript + Element Plus + Pinia |
 | 数据库 | MySQL 8.0 |
-| 缓存 | Redis 7 |
 | 部署 | Docker + docker-compose |
 
 ## 项目结构
