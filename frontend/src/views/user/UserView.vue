@@ -114,7 +114,7 @@
             v-model="form.username"
             :disabled="isEditing"
             placeholder="请输入用户名（英文名）"
-            autofocus
+            :autofocus="!isEditing"
           />
         </el-form-item>
         <el-form-item label="中文名" prop="chinese_name">
@@ -140,7 +140,7 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="handleDialogClose(() => { dialogVisible = false })">取消</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitting">
           确定
         </el-button>
@@ -174,7 +174,7 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="resetPasswordVisible = false">取消</el-button>
+        <el-button @click="handleResetDialogClose(() => { resetPasswordVisible = false })">取消</el-button>
         <el-button type="primary" @click="handleResetPassword" :loading="resetSubmitting">
           确定
         </el-button>

@@ -83,7 +83,7 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="assignDialogVisible = false">取消</el-button>
+        <el-button @click="handleAssignDialogClose(() => { assignDialogVisible = false })">取消</el-button>
         <el-button type="primary" @click="handleAssign" :loading="assigning">确定</el-button>
       </template>
     </el-dialog>
