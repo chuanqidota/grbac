@@ -34,7 +34,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	menu, err := h.menuSvc.Create(sid, &req)
+	menu, err := h.menuSvc.Create(c.Request.Context(), sid, &req)
 	if err != nil {
 		response.RespondError(c, err)
 		return
@@ -76,7 +76,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	menu, err := h.menuSvc.Update(id, &req)
+	menu, err := h.menuSvc.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		response.RespondError(c, err)
 		return
@@ -99,7 +99,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.menuSvc.Delete(sid, id); err != nil {
+	if err := h.menuSvc.Delete(c.Request.Context(), sid, id); err != nil {
 		response.RespondError(c, err)
 		return
 	}

@@ -33,7 +33,7 @@ func NewService(permRepo *permRepo.Repo, dispatchFn DispatchFn) *Service {
 }
 
 // Create registers a new API permission within a system.
-func (s *Service) Create(systemID int64, req *CreateRequest) (*model.Permission, error) {
+func (s *Service) Create(ctx context.Context, systemID int64, req *CreateRequest) (*model.Permission, error) {
 	existing, _ := s.permRepo.GetByMethodPath(systemID, req.Method, req.Path)
 	if existing != nil {
 		return nil, errors.ErrPermPathExists
@@ -53,7 +53,7 @@ func (s *Service) Create(systemID int64, req *CreateRequest) (*model.Permission,
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "permission.created", map[string]interface{}{
+		s.dispatchFn(ctx, "permission.created", map[string]interface{}{
 			"event":     "permission.created",
 			"timestamp": time.Now(),
 			"system_id": systemID,
@@ -83,10 +83,18 @@ func (s *Service) ListBySystem(systemID int64, page, pageSize int, method, keywo
 }
 
 // Update modifies the fields of an existing permission and increments its version.
-func (s *Service) Update(id int64, req *CreateRequest) (*model.Permission, error) {
+func (s *Service) Update(ctx context.Context, id int64, req *CreateRequest) (*model.Permission, error) {
 	perm, err := s.permRepo.GetByID(id)
 	if err != nil {
 		return nil, errors.ErrPermNotFound
+	}
+
+	// If method or path changed, check for uniqueness.
+	if req.Method != perm.Method || req.Path != perm.Path {
+		existing, _ := s.permRepo.GetByMethodPath(perm.SystemID, req.Method, req.Path)
+		if existing != nil && existing.ID != perm.ID {
+			return nil, errors.ErrPermPathExists
+		}
 	}
 
 	perm.Code = req.Code
@@ -101,7 +109,7 @@ func (s *Service) Update(id int64, req *CreateRequest) (*model.Permission, error
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "permission.updated", map[string]interface{}{
+		s.dispatchFn(ctx, "permission.updated", map[string]interface{}{
 			"event":     "permission.updated",
 			"timestamp": time.Now(),
 			"system_id": perm.SystemID,
@@ -113,7 +121,7 @@ func (s *Service) Update(id int64, req *CreateRequest) (*model.Permission, error
 }
 
 // Delete removes a permission after verifying it is not in use by any role.
-func (s *Service) Delete(id int64) error {
+func (s *Service) Delete(ctx context.Context, id int64) error {
 	perm, err := s.permRepo.GetByID(id)
 	if err != nil {
 		return errors.ErrPermNotFound
@@ -132,7 +140,7 @@ func (s *Service) Delete(id int64) error {
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "permission.deleted", map[string]interface{}{
+		s.dispatchFn(ctx, "permission.deleted", map[string]interface{}{
 			"event":     "permission.deleted",
 			"timestamp": time.Now(),
 			"system_id": perm.SystemID,

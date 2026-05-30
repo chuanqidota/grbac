@@ -34,7 +34,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	perm, err := h.permSvc.Create(sid, &req)
+	perm, err := h.permSvc.Create(c.Request.Context(), sid, &req)
 	if err != nil {
 		response.RespondError(c, err)
 		return
@@ -89,7 +89,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	perm, err := h.permSvc.Update(id, &req)
+	perm, err := h.permSvc.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		response.RespondError(c, err)
 		return
@@ -106,7 +106,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.permSvc.Delete(id); err != nil {
+	if err := h.permSvc.Delete(c.Request.Context(), id); err != nil {
 		response.RespondError(c, err)
 		return
 	}

@@ -54,7 +54,7 @@ func NewService(
 }
 
 // Create registers a new system with an auto-generated code.
-func (s *Service) Create(req *CreateRequest) (*model.System, error) {
+func (s *Service) Create(ctx context.Context, req *CreateRequest) (*model.System, error) {
 	code, err := s.generateUniqueCode()
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (s *Service) Create(req *CreateRequest) (*model.System, error) {
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "system.created", map[string]interface{}{
+		s.dispatchFn(ctx, "system.created", map[string]interface{}{
 			"event":     "system.created",
 			"timestamp": time.Now(),
 			"system_id": system.ID,
@@ -143,15 +143,15 @@ func (s *Service) ListForUser(userID int64, isSuperAdmin bool, page, pageSize in
 		return result, total, nil
 	}
 
-	systems, err := s.systemRepo.ListByUserIDWithRole(userID)
+	systems, total, err := s.systemRepo.ListByUserIDWithRole(userID, page, pageSize)
 	if err != nil {
 		return nil, 0, errors.ErrInternal.Wrap(err.Error())
 	}
-	return systems, int64(len(systems)), nil
+	return systems, total, nil
 }
 
 // Update modifies the name and description of an existing system.
-func (s *Service) Update(id int64, name, description string) (*model.System, error) {
+func (s *Service) Update(ctx context.Context, id int64, name, description string) (*model.System, error) {
 	system, err := s.systemRepo.GetByID(id)
 	if err != nil {
 		return nil, errors.ErrSystemNotFound
@@ -169,7 +169,7 @@ func (s *Service) Update(id int64, name, description string) (*model.System, err
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "system.updated", map[string]interface{}{
+		s.dispatchFn(ctx, "system.updated", map[string]interface{}{
 			"event":     "system.updated",
 			"timestamp": time.Now(),
 			"system_id": system.ID,
@@ -181,7 +181,7 @@ func (s *Service) Update(id int64, name, description string) (*model.System, err
 }
 
 // Delete removes a system and all associated data (roles, menus, permissions, members).
-func (s *Service) Delete(id int64) error {
+func (s *Service) Delete(ctx context.Context, id int64) error {
 	_, err := s.systemRepo.GetByID(id)
 	if err != nil {
 		return errors.ErrSystemNotFound
@@ -192,7 +192,7 @@ func (s *Service) Delete(id int64) error {
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "system.deleted", map[string]interface{}{
+		s.dispatchFn(ctx, "system.deleted", map[string]interface{}{
 			"event":     "system.deleted",
 			"timestamp": time.Now(),
 			"system_id": id,
@@ -204,7 +204,7 @@ func (s *Service) Delete(id int64) error {
 }
 
 // AddMember adds a user to a system with the specified role (admin / member).
-func (s *Service) AddMember(systemID, userID int64, role string) error {
+func (s *Service) AddMember(ctx context.Context, systemID, userID int64, role string) error {
 	if role != "admin" && role != "member" {
 		return errors.ErrInternal.Wrap("无效的角色值，必须是 admin 或 member")
 	}
@@ -228,7 +228,7 @@ func (s *Service) AddMember(systemID, userID int64, role string) error {
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "system.member_added", map[string]interface{}{
+		s.dispatchFn(ctx, "system.member_added", map[string]interface{}{
 			"event":     "system.member_added",
 			"timestamp": time.Now(),
 			"system_id": systemID,
@@ -240,13 +240,13 @@ func (s *Service) AddMember(systemID, userID int64, role string) error {
 }
 
 // RemoveMember removes a user from a system.
-func (s *Service) RemoveMember(systemID, userID int64) error {
+func (s *Service) RemoveMember(ctx context.Context, systemID, userID int64) error {
 	if err := s.systemRepo.RemoveMember(systemID, userID); err != nil {
 		return errors.ErrInternal.Wrap(err.Error())
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "system.member_removed", map[string]interface{}{
+		s.dispatchFn(ctx, "system.member_removed", map[string]interface{}{
 			"event":     "system.member_removed",
 			"timestamp": time.Now(),
 			"system_id": systemID,
@@ -344,17 +344,29 @@ type MenuTree struct {
 }
 
 func buildMenuTree(menus []model.Menu, parentID int64) []*MenuTree {
-	var trees []*MenuTree
+	index := make(map[int64][]model.Menu)
 	for _, m := range menus {
-		if m.ParentID == parentID {
+		index[m.ParentID] = append(index[m.ParentID], m)
+	}
+
+	var build func(pid int64) []*MenuTree
+	build = func(pid int64) []*MenuTree {
+		children := index[pid]
+		if len(children) == 0 {
+			return nil
+		}
+		trees := make([]*MenuTree, 0, len(children))
+		for _, m := range children {
 			node := &MenuTree{
 				Menu:     m,
-				Children: buildMenuTree(menus, m.ID),
+				Children: build(m.ID),
 			}
 			trees = append(trees, node)
 		}
+		return trees
 	}
-	return trees
+
+	return build(parentID)
 }
 
 // GetMemberMenus returns the effective menu tree for a user within a system.

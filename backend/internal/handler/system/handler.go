@@ -40,7 +40,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	system, err := h.systemSvc.Create(&req)
+	system, err := h.systemSvc.Create(c.Request.Context(), &req)
 	if err != nil {
 		response.RespondError(c, err)
 		return
@@ -108,7 +108,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	system, err := h.systemSvc.Update(id, req.Name, req.Description)
+	system, err := h.systemSvc.Update(c.Request.Context(), id, req.Name, req.Description)
 	if err != nil {
 		response.RespondError(c, err)
 		return
@@ -125,7 +125,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.systemSvc.Delete(id); err != nil {
+	if err := h.systemSvc.Delete(c.Request.Context(), id); err != nil {
 		response.RespondError(c, err)
 		return
 	}
@@ -147,7 +147,7 @@ func (h *Handler) AddMember(c *gin.Context) {
 		return
 	}
 
-	if err := h.systemSvc.AddMember(systemID, req.UserID, req.Role); err != nil {
+	if err := h.systemSvc.AddMember(c.Request.Context(), systemID, req.UserID, req.Role); err != nil {
 		response.RespondError(c, err)
 		return
 	}
@@ -169,7 +169,7 @@ func (h *Handler) RemoveMember(c *gin.Context) {
 		return
 	}
 
-	if err := h.systemSvc.RemoveMember(systemID, userID); err != nil {
+	if err := h.systemSvc.RemoveMember(c.Request.Context(), systemID, userID); err != nil {
 		response.RespondError(c, err)
 		return
 	}

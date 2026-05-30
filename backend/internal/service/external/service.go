@@ -240,9 +240,16 @@ func (s *Service) GetUserPermissions(ctx context.Context, userID int64, systemCo
 	}
 
 	if user.IsSuperAdmin == 1 {
-		empty := []string{}
-		s.cacheResult(ctx, cacheKey, empty)
-		return empty, nil
+		perms, err := s.permissionRepo.ListAllBySystem(system.ID)
+		if err != nil {
+			return nil, errors.ErrInternal.Wrap(err.Error())
+		}
+		codes := make([]string, 0, len(perms))
+		for _, p := range perms {
+			codes = append(codes, p.Code)
+		}
+		s.cacheResult(ctx, cacheKey, codes)
+		return codes, nil
 	}
 
 	roles, err := s.userRepo.GetRolesInSystem(userID, system.ID)

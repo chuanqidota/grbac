@@ -63,8 +63,18 @@ func (r *Repo) Delete(id int64) error {
 // GetByEvent returns all active webhooks subscribed to the given event type.
 func (r *Repo) GetByEvent(event string) ([]model.Webhook, error) {
 	var webhooks []model.Webhook
-	err := r.db.Where("status = 1 AND events LIKE ?", "%"+event+"%").
-		Find(&webhooks).Error
+	query := `status = 1 AND (
+		events = ? OR
+		events LIKE ? OR
+		events LIKE ? OR
+		events LIKE ?
+	)`
+	err := r.db.Where(query,
+		event,             // exact match: "role.created"
+		event+",%",        // prefix: "role.created,menu.updated"
+		"%,"+event,        // suffix: "menu.updated,role.created"
+		"%,"+event+",%",   // middle: "a,role.created,b"
+	).Find(&webhooks).Error
 	if err != nil {
 		return nil, err
 	}

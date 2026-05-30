@@ -39,7 +39,7 @@ func NewService(menuRepo *menuRepo.Repo, dispatchFn DispatchFn) *Service {
 }
 
 // Create registers a new menu within a system.
-func (s *Service) Create(systemID int64, req *CreateRequest) (*model.Menu, error) {
+func (s *Service) Create(ctx context.Context, systemID int64, req *CreateRequest) (*model.Menu, error) {
 	menu := &model.Menu{
 		SystemID:  systemID,
 		ParentID:  req.ParentID,
@@ -55,7 +55,7 @@ func (s *Service) Create(systemID int64, req *CreateRequest) (*model.Menu, error
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "menu.created", map[string]interface{}{
+		s.dispatchFn(ctx, "menu.created", map[string]interface{}{
 			"event":     "menu.created",
 			"timestamp": time.Now(),
 			"system_id": systemID,
@@ -86,7 +86,7 @@ func (s *Service) GetTree(systemID int64) ([]*Tree, error) {
 }
 
 // Update modifies an existing menu.
-func (s *Service) Update(id int64, req *CreateRequest) (*model.Menu, error) {
+func (s *Service) Update(ctx context.Context, id int64, req *CreateRequest) (*model.Menu, error) {
 	menu, err := s.menuRepo.GetByID(id)
 	if err != nil {
 		return nil, errors.ErrMenuNotFound
@@ -103,7 +103,7 @@ func (s *Service) Update(id int64, req *CreateRequest) (*model.Menu, error) {
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "menu.updated", map[string]interface{}{
+		s.dispatchFn(ctx, "menu.updated", map[string]interface{}{
 			"event":     "menu.updated",
 			"timestamp": time.Now(),
 			"system_id": menu.SystemID,
@@ -115,7 +115,7 @@ func (s *Service) Update(id int64, req *CreateRequest) (*model.Menu, error) {
 }
 
 // Delete removes a menu after verifying it has no children.
-func (s *Service) Delete(systemID, id int64) error {
+func (s *Service) Delete(ctx context.Context, systemID, id int64) error {
 	menu, err := s.menuRepo.GetByID(id)
 	if err != nil {
 		return errors.ErrMenuNotFound
@@ -138,7 +138,7 @@ func (s *Service) Delete(systemID, id int64) error {
 	}
 
 	if s.dispatchFn != nil {
-		s.dispatchFn(context.Background(), "menu.deleted", map[string]interface{}{
+		s.dispatchFn(ctx, "menu.deleted", map[string]interface{}{
 			"event":     "menu.deleted",
 			"timestamp": time.Now(),
 			"system_id": systemID,
@@ -150,15 +150,27 @@ func (s *Service) Delete(systemID, id int64) error {
 }
 
 func buildTree(menus []model.Menu, parentID int64) []*Tree {
-	var trees []*Tree
+	index := make(map[int64][]model.Menu)
 	for _, m := range menus {
-		if m.ParentID == parentID {
+		index[m.ParentID] = append(index[m.ParentID], m)
+	}
+
+	var build func(pid int64) []*Tree
+	build = func(pid int64) []*Tree {
+		children := index[pid]
+		if len(children) == 0 {
+			return nil
+		}
+		trees := make([]*Tree, 0, len(children))
+		for _, m := range children {
 			node := &Tree{
 				Menu:     m,
-				Children: buildTree(menus, m.ID),
+				Children: build(m.ID),
 			}
 			trees = append(trees, node)
 		}
+		return trees
 	}
-	return trees
+
+	return build(parentID)
 }

@@ -53,7 +53,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	role, err := h.roleSvc.Create(sid, &req)
+	role, err := h.roleSvc.Create(c.Request.Context(), sid, &req)
 	if err != nil {
 		response.RespondError(c, err)
 		return
@@ -93,7 +93,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	role, err := h.roleSvc.Update(id, req.Name, req.Description)
+	role, err := h.roleSvc.Update(c.Request.Context(), id, req.Name, req.Description)
 	if err != nil {
 		response.RespondError(c, err)
 		return
@@ -110,7 +110,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.roleSvc.Delete(id); err != nil {
+	if err := h.roleSvc.Delete(c.Request.Context(), id); err != nil {
 		response.RespondError(c, err)
 		return
 	}
@@ -134,7 +134,7 @@ func (h *Handler) AssignMenus(c *gin.Context) {
 	}
 
 	log.Printf("[DEBUG] AssignMenus: roleID=%d, menuIDs=%v", id, req.MenuIDs)
-	if err := h.roleSvc.AssignMenus(id, req.MenuIDs); err != nil {
+	if err := h.roleSvc.AssignMenus(c.Request.Context(), id, req.MenuIDs); err != nil {
 		log.Printf("[DEBUG] AssignMenus service error: %v", err)
 		response.RespondError(c, err)
 		return
@@ -177,7 +177,7 @@ func (h *Handler) AssignPermissions(c *gin.Context) {
 		return
 	}
 
-	if err := h.roleSvc.AssignPermissions(id, req.PermissionIDs); err != nil {
+	if err := h.roleSvc.AssignPermissions(c.Request.Context(), id, req.PermissionIDs); err != nil {
 		response.RespondError(c, err)
 		return
 	}
@@ -220,7 +220,7 @@ func (h *Handler) AssignUsers(c *gin.Context) {
 	}
 
 	log.Printf("[DEBUG] AssignUsers: roleID=%d, userIDs=%v", id, req.UserIDs)
-	if err := h.roleSvc.AssignUsers(id, req.UserIDs); err != nil {
+	if err := h.roleSvc.AssignUsers(c.Request.Context(), id, req.UserIDs); err != nil {
 		log.Printf("[DEBUG] AssignUsers service error: %v", err)
 		response.RespondError(c, err)
 		return
@@ -244,7 +244,7 @@ func (h *Handler) RemoveUser(c *gin.Context) {
 		return
 	}
 
-	if err := h.roleSvc.RemoveUser(roleID, userID); err != nil {
+	if err := h.roleSvc.RemoveUser(c.Request.Context(), roleID, userID); err != nil {
 		response.RespondError(c, err)
 		return
 	}

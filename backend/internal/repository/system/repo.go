@@ -142,15 +142,26 @@ type SystemWithRole struct {
 }
 
 // ListByUserIDWithRole returns systems where the user is a member, enriched with their role.
-func (r *Repo) ListByUserIDWithRole(userID int64) ([]SystemWithRole, error) {
-	var results []SystemWithRole
-	err := r.db.Table("systems s").
-		Select("s.*, sm.role AS current_user_role").
+func (r *Repo) ListByUserIDWithRole(userID int64, page, pageSize int) ([]SystemWithRole, int64, error) {
+	var total int64
+	base := r.db.Table("systems s").
 		Joins("JOIN system_members sm ON sm.system_id = s.id").
-		Where("sm.user_id = ?", userID).
+		Where("sm.user_id = ?", userID)
+
+	if err := base.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var results []SystemWithRole
+	offset := (page - 1) * pageSize
+	err := base.Select("s.*, sm.role AS current_user_role").
 		Order("s.id DESC").
+		Offset(offset).Limit(pageSize).
 		Scan(&results).Error
-	return results, err
+	if err != nil {
+		return nil, 0, err
+	}
+	return results, total, nil
 }
 
 // RoleMemberInfo is a user enriched with their roles in a system.
