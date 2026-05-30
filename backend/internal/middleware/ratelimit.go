@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"crypto/rand"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -34,10 +35,13 @@ func RateLimitMiddleware(rdb *redis.Client, cfg RateLimitConfig) gin.HandlerFunc
 			strconv.FormatInt(windowStart, 10))
 		// Count current entries.
 		countCmd := pipe.ZCard(c.Request.Context(), key)
-		// Add current request.
+		// Add current request with random suffix to avoid overwrites on same microsecond.
+		randBytes := make([]byte, 4)
+		_, _ = rand.Read(randBytes)
+		member := fmt.Sprintf("%d:%x", now, randBytes)
 		pipe.ZAdd(c.Request.Context(), key, redis.Z{
 			Score:  float64(now),
-			Member: fmt.Sprintf("%d", now),
+			Member: member,
 		})
 		// Set TTL so keys don't accumulate forever.
 		pipe.Expire(c.Request.Context(), key, cfg.Window+time.Minute)

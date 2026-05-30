@@ -3,6 +3,8 @@ package middleware
 import (
 	"bytes"
 	"io"
+	"log"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -42,8 +44,8 @@ func AuditMiddleware(auditSvc *auditService.Service) gin.HandlerFunc {
 		// Determine action from HTTP method.
 		action := methodToAction(method)
 
-		// Extract resource from URL path.
-		resource, resourceID := extractResource(c.FullPath())
+		// Extract resource from URL route pattern.
+		resource, resourceID := extractResource(c)
 
 		// Build detail from request body.
 		detail := string(bodyBytes)
@@ -54,7 +56,7 @@ func AuditMiddleware(auditSvc *auditService.Service) gin.HandlerFunc {
 		// Resolve system ID if present.
 		var systemID *int64
 		if sid := c.Param("id"); sid != "" {
-			if id, err := parseID(sid); err == nil {
+			if id, err := strconv.ParseInt(sid, 10, 64); err == nil {
 				systemID = &id
 			}
 		}
@@ -71,7 +73,12 @@ func AuditMiddleware(auditSvc *auditService.Service) gin.HandlerFunc {
 		}
 
 		// Record asynchronously to avoid blocking the response.
-		go auditSvc.Record(auditLog)
+		go func() {
+			if err := auditSvc.Record(auditLog); err != nil {
+				log.Printf("[AUDIT] failed to record: user=%d action=%s resource=%s err=%v",
+					auditLog.UserID, auditLog.Action, auditLog.Resource, err)
+			}
+		}()
 
 		c.Next()
 	}
@@ -90,45 +97,33 @@ func methodToAction(method string) string {
 	}
 }
 
-func extractResource(path string) (string, *int64) {
-	parts := strings.Split(strings.Trim(path, "/"), "/")
-	// Typical patterns:
-	// /api/users/:id -> resource=users
-	// /api/systems/:id/roles/:rid -> resource=roles
-	// /api/systems/:id/menus/:mid -> resource=menus
+func extractResource(c *gin.Context) (string, *int64) {
+	pattern := c.FullPath()
+	segments := strings.Split(pattern, "/")
 
+	skipPrefixes := map[string]bool{"api": true, "systems": true, "auth": true, "external": true}
+
+	// Find the last named resource segment (non-parameter, non-prefix).
 	resource := ""
-	var resourceID *int64
+	for i := len(segments) - 1; i >= 0; i-- {
+		seg := segments[i]
+		if strings.HasPrefix(seg, ":") || seg == "" {
+			continue
+		}
+		if skipPrefixes[seg] {
+			continue
+		}
+		resource = seg
+		break
+	}
 
-	for i, part := range parts {
-		if part == "api" || part == "systems" || part == "auth" || part == "external" {
-			continue
-		}
-		if strings.HasPrefix(part, ":") {
-			continue
-		}
-		// This looks like a resource name.
-		if resource == "" {
-			resource = part
-		}
-		// Check if next part is an ID.
-		if i+1 < len(parts) && strings.HasPrefix(parts[i+1], ":") {
-			if id, err := parseID(strings.TrimPrefix(parts[i+1], ":")); err == nil {
-				resourceID = &id
-			}
+	// Extract the last numeric ID from URL parameters.
+	var resourceID *int64
+	for _, param := range c.Params {
+		if id, err := strconv.ParseInt(param.Value, 10, 64); err == nil {
+			resourceID = &id
 		}
 	}
 
 	return resource, resourceID
-}
-
-func parseID(s string) (int64, error) {
-	var id int64
-	for _, c := range s {
-		if c < '0' || c > '9' {
-			return 0, nil
-		}
-		id = id*10 + int64(c-'0')
-	}
-	return id, nil
 }
