@@ -246,24 +246,35 @@ async function handleCommand(command: string) {
   height: 100vh;
 }
 
+/* ========== Sidebar — Soft UI ========== */
 .layout-aside {
-  background-color: var(--sidebar-bg);
-  transition: width 0.3s;
+  background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+  transition: width 0.3s ease;
   overflow: hidden;
   height: 100vh;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .layout-aside :deep(.el-menu) {
   height: calc(100vh - 50px);
   overflow-y: auto;
+  background: transparent;
 }
 
 .layout-aside :deep(.el-menu-item) {
   cursor: pointer;
+  border-radius: var(--radius-md);
+  margin: 2px 8px;
+  transition: background-color var(--transition-base);
 }
 
 .layout-aside :deep(.el-menu-item:hover) {
   background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.layout-aside :deep(.el-menu-item.is-active) {
+  background-color: rgba(37, 99, 235, 0.3) !important;
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.2);
 }
 
 .logo {
@@ -273,8 +284,9 @@ async function handleCommand(command: string) {
   justify-content: center;
   color: #fff;
   font-size: var(--font-size-xl);
-  font-weight: 700;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .aside-menu {
@@ -283,11 +295,11 @@ async function handleCommand(command: string) {
 
 .menu-divider {
   margin: var(--space-sm) var(--space-md);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .menu-divider :deep(.el-divider__text) {
-  background-color: var(--sidebar-bg);
+  background-color: transparent;
   color: rgba(255, 255, 255, 0.3);
   font-size: var(--font-size-xs);
   padding: 0 var(--space-sm);
@@ -301,18 +313,21 @@ async function handleCommand(command: string) {
   display: inline-block;
 }
 
+/* ========== Main Container ========== */
 .main-container {
   overflow: hidden;
 }
 
+/* ========== Header — Soft UI ========== */
 .layout-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: var(--header-bg);
-  box-shadow: var(--shadow-sm);
-  padding: 0 var(--space-md);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  padding: 0 var(--space-lg);
   height: var(--header-height);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .header-left {
@@ -329,14 +344,22 @@ async function handleCommand(command: string) {
 
 .system-label {
   font-size: var(--font-size-base);
-  color: var(--color-text-regular);
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
 .collapse-btn {
   font-size: var(--font-size-xl);
   cursor: pointer;
-  color: var(--color-text-regular);
+  color: var(--color-text-secondary);
+  transition: color var(--transition-base);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+
+.collapse-btn:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-muted);
 }
 
 .user-dropdown {
@@ -345,24 +368,35 @@ async function handleCommand(command: string) {
   gap: var(--space-xs);
   cursor: pointer;
   color: var(--color-text-regular);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-base);
+}
+
+.user-dropdown:hover {
+  background: var(--color-bg-muted);
 }
 
 .username {
   font-size: var(--font-size-base);
+  font-weight: 500;
 }
 
+/* ========== Breadcrumb — Soft UI ========== */
 .breadcrumb-bar {
   padding: var(--space-sm) var(--space-lg);
   background: var(--color-bg-card);
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--color-border);
 }
 
+/* ========== Main Content ========== */
 .layout-main {
   background: var(--color-bg-page);
   overflow: auto;
   padding: var(--space-lg);
 }
 
+/* ========== Responsive ========== */
 @media (max-width: 1024px) {
   .header-left {
     width: auto;

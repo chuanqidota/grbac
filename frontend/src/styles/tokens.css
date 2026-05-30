@@ -1,30 +1,35 @@
 :root {
-  /* Colors */
+  /* ========== Colors ========== */
   --color-primary: #2563EB;
   --color-primary-light: #dbeafe;
   --color-primary-dark: #1d4ed8;
+  --color-primary-glow: rgba(37, 99, 235, 0.25);
   --color-success: #059669;
+  --color-success-light: #d1fae5;
   --color-warning: #e6a23c;
-  --color-danger: #f56c6c;
+  --color-warning-light: #fef3c7;
+  --color-danger: #DC2626;
+  --color-danger-light: #fee2e2;
   --color-info: #909399;
 
   /* Text */
-  --color-text-primary: #303133;
-  --color-text-regular: #606266;
-  --color-text-secondary: #909399;
-  --color-text-placeholder: #c0c4cc;
+  --color-text-primary: #0F172A;
+  --color-text-regular: #334155;
+  --color-text-secondary: #64748B;
+  --color-text-placeholder: #94A3B8;
 
   /* Background */
   --color-bg-page: #F8FAFC;
-  --color-bg-card: #ffffff;
+  --color-bg-card: #FFFFFF;
+  --color-bg-muted: #F1F5FD;
   --color-bg-overlay: rgba(0, 0, 0, 0.5);
 
   /* Border */
-  --color-border: #e4e7ed;
-  --color-border-light: #ebeef5;
-  --color-border-extra-light: #f2f6fc;
+  --color-border: #E4ECFC;
+  --color-border-light: #E4ECFC;
+  --color-border-extra-light: #F1F5FD;
 
-  /* Spacing */
+  /* ========== Spacing (4px grid) ========== */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -32,18 +37,23 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
-  /* Shadows */
+  /* ========== Shadows — Soft UI Evolution ========== */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.03);
+  --shadow-xl: 0 10px 25px rgba(0, 0, 0, 0.08), 0 20px 48px rgba(0, 0, 0, 0.04);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-primary: 0 4px 14px rgba(37, 99, 235, 0.25);
+  --shadow-primary-hover: 0 6px 20px rgba(37, 99, 235, 0.35);
 
-  /* Border radius */
-  --radius-sm: 4px;
+  /* ========== Border Radius ========== */
+  --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --radius-xl: 16px;
 
-  /* Font Family */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* ========== Font ========== */
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Typography */
   --font-size-xs: 12px;
@@ -53,12 +63,15 @@
   --font-size-xl: 20px;
   --font-size-2xl: 24px;
 
-  /* Sidebar */
+  /* ========== Layout ========== */
   --sidebar-bg: #0F172A;
   --sidebar-width: 210px;
   --sidebar-collapsed-width: 64px;
-
-  /* Header */
   --header-height: 56px;
-  --header-bg: #ffffff;
+  --header-bg: #FFFFFF;
+
+  /* ========== Animation ========== */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
 }

@@ -8,65 +8,88 @@
       </el-button>
     </div>
 
-    <el-skeleton :loading="loading" animated :count="5">
+    <el-skeleton :loading="loading" animated :count="3">
       <template #template>
-        <el-skeleton-item variant="text" style="width: 40%; height: 32px; margin-bottom: 16px;" />
-        <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
-          <el-skeleton-item variant="text" style="width: 5%;" />
-          <el-skeleton-item variant="text" style="width: 15%;" />
-          <el-skeleton-item variant="text" style="width: 12%;" />
-          <el-skeleton-item variant="text" style="width: 25%;" />
-          <el-skeleton-item variant="text" style="width: 20%;" />
-          <el-skeleton-item variant="text" style="width: 15%;" />
+        <div class="bento-grid">
+          <div v-for="i in 3" :key="i" class="bento-card">
+            <div class="card-header">
+              <el-skeleton-item variant="circle" style="width: 40px; height: 40px;" />
+              <div style="flex: 1;">
+                <el-skeleton-item variant="text" style="width: 60%; height: 20px;" />
+                <el-skeleton-item variant="text" style="width: 40%; height: 16px; margin-top: 8px;" />
+              </div>
+            </div>
+            <div class="card-body">
+              <el-skeleton-item variant="text" style="width: 100%; height: 16px;" />
+              <el-skeleton-item variant="text" style="width: 80%; height: 16px; margin-top: 8px;" />
+            </div>
+            <div class="card-footer">
+              <el-skeleton-item variant="text" style="width: 30%; height: 32px;" />
+            </div>
+          </div>
         </div>
       </template>
       <template #default>
-    <el-table :data="systems" border stripe>
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="name" label="系统名称" min-width="140" />
-      <el-table-column prop="code" label="系统编码" min-width="120">
-        <template #default="{ row }">
-          <el-tag>{{ row.code }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-      <el-table-column label="管理员" min-width="180">
-        <template #default="{ row }">
-          <div v-if="row._admins && row._admins.length > 0">
-            <el-tag
-              v-for="admin in row._admins"
-              :key="admin.user_id"
-              type="warning"
-              style="margin: 2px 4px 2px 0;"
-            >
-              {{ admin.chinese_name ? `${admin.chinese_name}(${admin.username})` : admin.username }}
-            </el-tag>
-          </div>
-          <span v-else style="color: #999;">未设置</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="created_at" label="创建时间" min-width="180">
-        <template #default="{ row }">
-          {{ formatDate(row.created_at) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="220" fixed="right">
-        <template #default="{ row }">
-          <el-button
-            v-if="userStore.isSuperAdmin() || row.current_user_role === 'admin'"
-            type="primary" link @click="showAdminDialog(row)"
+        <div class="bento-grid" v-if="systems.length > 0">
+          <div
+            v-for="system in systems"
+            :key="system.id"
+            class="bento-card"
           >
-            管理员
-          </el-button>
-          <el-button v-if="userStore.isSuperAdmin()" type="primary" link @click="showEditDialog(row)">
-            编辑
-          </el-button>
-          <el-button v-if="userStore.isSuperAdmin()" type="danger" link @click="handleDelete(row)">
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+            <div class="card-header">
+              <div class="card-icon">
+                <el-icon><Monitor /></el-icon>
+              </div>
+              <div class="card-title-group">
+                <h3 class="card-title">{{ system.name }}</h3>
+                <el-tag size="small" type="info">{{ system.code }}</el-tag>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <p class="card-desc">{{ system.description || '暂无描述' }}</p>
+            </div>
+
+            <div class="card-admins" v-if="system._admins && system._admins.length > 0">
+              <span class="card-admins-label">管理员</span>
+              <div class="card-admins-list">
+                <el-tag
+                  v-for="admin in system._admins"
+                  :key="admin.user_id"
+                  type="warning"
+                  size="small"
+                >
+                  {{ admin.chinese_name ? `${admin.chinese_name}` : admin.username }}
+                </el-tag>
+              </div>
+            </div>
+            <div class="card-admins" v-else>
+              <span class="card-admins-label">管理员</span>
+              <span class="card-admins-empty">未设置</span>
+            </div>
+
+            <div class="card-footer">
+              <el-button
+                v-if="userStore.isSuperAdmin() || system.current_user_role === 'admin'"
+                type="primary"
+                link
+                @click="showAdminDialog(system)"
+              >
+                <el-icon><User /></el-icon>
+                管理员
+              </el-button>
+              <el-button v-if="userStore.isSuperAdmin()" type="primary" link @click="showEditDialog(system)">
+                <el-icon><Edit /></el-icon>
+                编辑
+              </el-button>
+              <el-button v-if="userStore.isSuperAdmin()" type="danger" link @click="handleDelete(system)">
+                <el-icon><Delete /></el-icon>
+                删除
+              </el-button>
+            </div>
+          </div>
+        </div>
+        <el-empty v-else description="暂无系统" />
       </template>
     </el-skeleton>
 
@@ -184,11 +207,10 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Monitor, User, Edit, Delete } from '@element-plus/icons-vue'
 import { getSystems, createSystem, updateSystem, deleteSystem, getSystemMembers, addSystemMember, removeSystemMember } from '@/api/system'
 import { getUsers } from '@/api/user'
 import { useUserStore } from '@/stores/user'
-import { formatDate } from '@/utils/format'
 
 const userStore = useUserStore()
 
@@ -204,6 +226,7 @@ interface System {
   code: string
   description?: string
   created_at: string
+  current_user_role?: string
   _admins?: AdminInfo[]
 }
 
@@ -420,17 +443,154 @@ onMounted(() => {
 .system-view {
   padding: 0;
 }
+
+/* ========== Bento Grid Layout ========== */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* ========== Bento Card — Apple Style ========== */
+.bento-card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(228, 236, 252, 0.8);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.bento-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* ========== Card Header ========== */
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-title-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========== Card Body ========== */
+.card-body {
+  flex: 1;
+}
+
+.card-desc {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ========== Card Admins ========== */
+.card-admins {
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.card-admins-label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  margin-bottom: var(--space-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.card-admins-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.card-admins-empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-placeholder);
+}
+
+/* ========== Card Footer ========== */
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.card-footer .el-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ========== Admin Dialog ========== */
 .admin-section {
   margin-bottom: 16px;
 }
+
 .admin-section h4 {
   margin: 0 0 12px 0;
   font-size: 14px;
-  color: #606266;
+  color: var(--color-text-secondary);
 }
+
 .admin-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>

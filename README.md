@@ -72,7 +72,7 @@ go mod tidy
 
 # 配置数据库（修改 config/config.yaml）
 # 运行迁移
-mysql -u root -p grbac < migrations/001_init.sql
+go run ./cmd/server/main.go migrate
 
 # 启动
 go run ./cmd/server

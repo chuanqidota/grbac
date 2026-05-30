@@ -1,3 +1,4 @@
+/* ========== Page Header ========== */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -8,8 +9,9 @@
 .page-header h2 {
   margin: 0;
   font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-primary);
+  letter-spacing: -0.01em;
 }
 
 .page-header .header-actions {
@@ -17,6 +19,7 @@
   gap: var(--space-sm);
 }
 
+/* ========== Search Bar ========== */
 .search-bar {
   margin-bottom: var(--space-md);
   display: flex;
@@ -24,31 +27,93 @@
   align-items: center;
 }
 
+/* ========== Page Card — Soft UI ========== */
 .page-card {
   background: var(--color-bg-card);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--space-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(228, 236, 252, 0.8);
+  transition: box-shadow var(--transition-base);
 }
 
+.page-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* ========== Stat Card — Soft UI ========== */
 .stat-card {
   background: var(--color-bg-card);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--space-lg);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(228, 236, 252, 0.8);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  cursor: pointer;
 }
 
 .stat-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
 }
 
+/* Stat card icon container — Soft UI style */
+.stat-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base);
+}
+
+.stat-card:hover .stat-card-icon {
+  box-shadow: var(--shadow-md);
+}
+
+/* ========== Action Card — Soft UI ========== */
+.action-card {
+  cursor: pointer;
+  text-align: center;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(228, 236, 252, 0.8);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.action-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* ========== Page Content ========== */
 .page-content {
   padding: var(--space-lg);
 }
 
-/* Responsive: tables don't overflow, content adapts */
+/* ========== Filter Bar ========== */
+.filter-bar {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* ========== Soft UI Divider ========== */
+.soft-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-md) 0;
+  border: none;
+}
+
+/* ========== Responsive ========== */
 .el-table {
   width: 100%;
   overflow-x: auto;

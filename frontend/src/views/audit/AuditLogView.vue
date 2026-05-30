@@ -23,8 +23,12 @@
 
     <el-table :data="logs" v-loading="loading" border stripe>
       <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="system_name" label="系统" min-width="120" />
-      <el-table-column prop="user_name" label="操作人" min-width="100" />
+      <el-table-column label="系统" min-width="120">
+        <template #default="{ row }">
+          {{ getSystemName(row.system_id) }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="username" label="操作人" min-width="100" />
       <el-table-column prop="action" label="操作" min-width="120">
         <template #default="{ row }">
           <el-tag :type="getActionTagType(row.action)">
@@ -32,9 +36,9 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="resource_type" label="资源类型" min-width="100" />
+      <el-table-column prop="resource" label="资源类型" min-width="100" />
       <el-table-column prop="resource_id" label="资源ID" width="100" />
-      <el-table-column prop="ip_address" label="IP地址" min-width="120" />
+      <el-table-column prop="ip" label="IP地址" min-width="120" />
       <el-table-column prop="created_at" label="操作时间" min-width="180">
         <template #default="{ row }">
           {{ formatDate(row.created_at) }}
@@ -69,12 +73,13 @@
     >
       <el-descriptions :column="1" border>
         <el-descriptions-item label="ID">{{ detailLog?.id }}</el-descriptions-item>
-        <el-descriptions-item label="系统">{{ detailLog?.system_name }}</el-descriptions-item>
-        <el-descriptions-item label="操作人">{{ detailLog?.user_name }}</el-descriptions-item>
+        <el-descriptions-item label="系统">{{ getSystemName(detailLog?.system_id) }}</el-descriptions-item>
+        <el-descriptions-item label="操作人">{{ detailLog?.username }}</el-descriptions-item>
         <el-descriptions-item label="操作">{{ detailLog?.action }}</el-descriptions-item>
-        <el-descriptions-item label="资源类型">{{ detailLog?.resource_type }}</el-descriptions-item>
+        <el-descriptions-item label="资源类型">{{ detailLog?.resource }}</el-descriptions-item>
         <el-descriptions-item label="资源ID">{{ detailLog?.resource_id }}</el-descriptions-item>
-        <el-descriptions-item label="IP地址">{{ detailLog?.ip_address }}</el-descriptions-item>
+        <el-descriptions-item label="资源名称">{{ detailLog?.resource_name || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="IP地址">{{ detailLog?.ip }}</el-descriptions-item>
         <el-descriptions-item label="操作时间">{{ formatDate(detailLog?.created_at) }}</el-descriptions-item>
       </el-descriptions>
       <div v-if="detailLog?.detail" class="detail-json">
@@ -94,13 +99,14 @@ import { formatDate } from '@/utils/format'
 
 interface AuditLog {
   id: number
-  system_name: string
-  user_name: string
+  system_id: number | null
+  username: string
   action: string
-  resource_type: string
-  resource_id: number
-  ip_address: string
-  detail?: string
+  resource: string
+  resource_id: number | null
+  resource_name: string
+  detail: string
+  ip: string
   created_at: string
 }
 
@@ -119,6 +125,12 @@ const filterSystemId = ref<number | null>(null)
 
 const detailVisible = ref(false)
 const detailLog = ref<AuditLog | null>(null)
+
+function getSystemName(systemId: number | null | undefined): string {
+  if (!systemId) return '-'
+  const sys = systems.value.find(s => s.id === systemId)
+  return sys ? sys.name : `系统#${systemId}`
+}
 
 function getActionTagType(action: string) {
   if (action.includes('create')) return 'success'
@@ -185,8 +197,8 @@ function showDetail(log: AuditLog) {
   detailVisible.value = true
 }
 
-onMounted(() => {
-  fetchSystems()
+onMounted(async () => {
+  await fetchSystems()
   fetchLogs()
 })
 </script>

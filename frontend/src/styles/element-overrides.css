@@ -1,5 +1,5 @@
 :root {
-  /* Primary color */
+  /* ========== Primary color ========== */
   --el-color-primary: var(--color-primary);
   --el-color-primary-light-3: #7da8f5;
   --el-color-primary-light-5: #a5c4f7;
@@ -8,45 +8,138 @@
   --el-color-primary-light-9: #dbeafe;
   --el-color-primary-dark-2: #1d4ed8;
 
-  /* Border radius */
+  /* ========== Semantic colors ========== */
+  --el-color-success: var(--color-success);
+  --el-color-warning: var(--color-warning);
+  --el-color-danger: var(--color-danger);
+  --el-color-info: var(--color-info);
+
+  /* ========== Border radius ========== */
   --el-border-radius-small: var(--radius-sm);
-  --el-border-radius-base: var(--radius-sm);
+  --el-border-radius-base: var(--radius-md);
   --el-border-radius-medium: var(--radius-md);
   --el-border-radius-large: var(--radius-lg);
 
-  /* Font */
+  /* ========== Font ========== */
   --el-font-size-base: var(--font-size-base);
   --el-font-size-small: var(--font-size-sm);
   --el-font-size-extra-small: var(--font-size-xs);
 
-  /* Background */
+  /* ========== Background ========== */
   --el-bg-color-page: var(--color-bg-page);
 
-  /* Border */
+  /* ========== Border ========== */
   --el-border-color: var(--color-border);
   --el-border-color-light: var(--color-border-light);
   --el-border-color-extra-light: var(--color-border-extra-light);
 
-  /* Text */
+  /* ========== Text ========== */
   --el-text-color-primary: var(--color-text-primary);
   --el-text-color-regular: var(--color-text-regular);
   --el-text-color-secondary: var(--color-text-secondary);
   --el-text-color-placeholder: var(--color-text-placeholder);
 
-  /* Card */
-  --el-card-border-radius: var(--radius-md);
+  /* ========== Card — Soft UI ========== */
+  --el-card-border-radius: var(--radius-lg);
+  --el-card-bg-color: var(--color-bg-card);
+  --el-card-box-shadow: var(--shadow-md);
 
-  /* Dialog */
-  --el-dialog-border-radius: var(--radius-lg);
+  /* ========== Dialog — Soft UI ========== */
+  --el-dialog-border-radius: var(--radius-xl);
+  --el-dialog-box-shadow: var(--shadow-xl);
 
-  /* Table */
-  --el-table-border-color: var(--color-border-light);
-  --el-table-header-bg-color: #fafafa;
+  /* ========== Table ========== */
+  --el-table-border-color: var(--color-border);
+  --el-table-header-bg-color: var(--color-bg-muted);
+  --el-table-row-hover-bg-color: var(--color-bg-muted);
 
-  /* Drawer */
+  /* ========== Drawer ========== */
   --el-drawer-padding-primary: var(--space-lg);
 
-  /* Shadows */
+  /* ========== Shadows ========== */
   --el-box-shadow: var(--shadow-md);
   --el-box-shadow-light: var(--shadow-sm);
+
+  /* ========== Input — Soft UI ========== */
+  --el-input-border-color: var(--color-border);
+  --el-input-hover-border-color: var(--color-primary);
+  --el-input-focus-border-color: var(--color-primary);
+
+  /* ========== Menu ========== */
+  --el-menu-active-color: #FFFFFF;
+}
+
+/* ========== Soft UI Input Focus Ring ========== */
+.el-input__wrapper {
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: var(--radius-md) !important;
+  transition: box-shadow var(--transition-base), border-color var(--transition-base) !important;
+}
+
+.el-input__wrapper:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 3px var(--color-primary-glow), var(--shadow-inner) !important;
+}
+
+/* ========== Soft UI Button ========== */
+.el-button--primary {
+  box-shadow: var(--shadow-primary) !important;
+  transition: box-shadow var(--transition-base), transform var(--transition-fast) !important;
+}
+
+.el-button--primary:hover {
+  box-shadow: var(--shadow-primary-hover) !important;
+  transform: translateY(-1px);
+}
+
+.el-button--primary:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2) !important;
+}
+
+/* ========== Soft UI Card Hover ========== */
+.el-card {
+  border: 1px solid rgba(228, 236, 252, 0.8);
+  transition: box-shadow var(--transition-base), transform var(--transition-base) !important;
+}
+
+.el-card:hover {
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ========== Soft UI Dialog ========== */
+.el-dialog {
+  box-shadow: var(--shadow-xl) !important;
+  border: 1px solid rgba(228, 236, 252, 0.5);
+}
+
+/* ========== Soft UI Table Row Hover ========== */
+.el-table .el-table__row:hover > td {
+  background-color: var(--color-bg-muted) !important;
+}
+
+/* ========== Soft UI Tag ========== */
+.el-tag {
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ========== Soft UI Select Dropdown ========== */
+.el-select-dropdown {
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+/* ========== Soft UI Pagination ========== */
+.el-pagination .el-pager li {
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ========== Soft UI Message ========== */
+.el-message {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
