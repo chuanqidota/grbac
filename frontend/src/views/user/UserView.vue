@@ -29,6 +29,11 @@
         <el-option label="仅超管" :value="1" />
         <el-option label="非超管" :value="0" />
       </el-select>
+      <ColumnSettings
+        :columns="allColumns"
+        storage-key="user-view"
+        @change="handleColumnChange"
+      />
     </div>
 
     <el-skeleton :loading="userTable.skeleton.value" animated :count="5">
@@ -47,12 +52,12 @@
       </template>
       <template #default>
         <el-table v-if="userTable.data.value.length > 0" :data="userTable.data.value" border stripe @sort-change="handleSortChange">
-          <el-table-column prop="id" label="ID" width="80" />
-          <el-table-column prop="username" label="用户名" min-width="120" sortable="custom" />
-          <el-table-column prop="chinese_name" label="中文名" min-width="100" sortable="custom" />
-          <el-table-column prop="email" label="邮箱" min-width="180" />
-          <el-table-column prop="phone" label="手机号" min-width="120" />
-          <el-table-column label="状态" width="100">
+          <el-table-column v-if="visibleColumnKeys.includes('id')" prop="id" label="ID" width="80" />
+          <el-table-column v-if="visibleColumnKeys.includes('username')" prop="username" label="用户名" min-width="120" sortable="custom" />
+          <el-table-column v-if="visibleColumnKeys.includes('chinese_name')" prop="chinese_name" label="中文名" min-width="100" sortable="custom" />
+          <el-table-column v-if="visibleColumnKeys.includes('email')" prop="email" label="邮箱" min-width="180" />
+          <el-table-column v-if="visibleColumnKeys.includes('phone')" prop="phone" label="手机号" min-width="120" />
+          <el-table-column v-if="visibleColumnKeys.includes('status')" label="状态" width="100">
             <template #default="{ row }">
               <el-switch
                 v-model="row.status"
@@ -62,7 +67,7 @@
               />
             </template>
           </el-table-column>
-          <el-table-column label="超管" width="100">
+          <el-table-column v-if="visibleColumnKeys.includes('super_admin')" label="超管" width="100">
             <template #default="{ row }">
               <el-switch
                 v-model="row.is_super_admin"
@@ -74,7 +79,7 @@
               />
             </template>
           </el-table-column>
-          <el-table-column prop="created_at" label="创建时间" min-width="180" sortable="custom">
+          <el-table-column v-if="visibleColumnKeys.includes('created_at')" prop="created_at" label="创建时间" min-width="180" sortable="custom">
             <template #default="{ row }">
               {{ formatDate(row.created_at) }}
             </template>
@@ -212,12 +217,31 @@ import { ref, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
+import ColumnSettings from '@/components/ColumnSettings.vue'
 import { getUsers, createUser, updateUser, deleteUser, updateUserStatus, updateUserSuperAdmin, resetUserPassword } from '@/api/user'
 import { formatDate } from '@/utils/format'
 import { useUrlState, useTable, useFormDialog, useConfirmDelete } from '@/composables'
 import UserDetailDrawer from './UserDetailDrawer.vue'
 
 defineOptions({ name: 'UserView' })
+
+// Column settings
+const allColumns = [
+  { key: 'id', label: 'ID' },
+  { key: 'username', label: '用户名' },
+  { key: 'chinese_name', label: '中文名' },
+  { key: 'email', label: '邮箱' },
+  { key: 'phone', label: '手机号' },
+  { key: 'status', label: '状态' },
+  { key: 'super_admin', label: '超管' },
+  { key: 'created_at', label: '创建时间' },
+]
+
+const visibleColumnKeys = ref<string[]>(allColumns.map(c => c.key))
+
+function handleColumnChange(keys: string[]) {
+  visibleColumnKeys.value = keys
+}
 
 interface User {
   id: number

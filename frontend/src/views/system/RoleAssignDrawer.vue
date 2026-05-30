@@ -1,10 +1,107 @@
 <template>
   <el-drawer
     v-model="visible"
-    :title="`授权 - ${role?.name}`"
+    :title="wizardMode ? '快速创建角色' : `授权 - ${role?.name}`"
     size="70%"
     @close="handleClose"
   >
+    <!-- Wizard mode -->
+    <template v-if="wizardMode">
+      <el-steps :active="wizardStep" finish-status="success" style="margin-bottom: 24px;">
+        <el-step title="基本信息" />
+        <el-step title="分配成员" />
+        <el-step title="分配菜单" />
+        <el-step title="分配权限" />
+      </el-steps>
+
+      <!-- Step 0: basic info form -->
+      <div v-show="wizardStep === 0">
+        <el-form label-width="100px">
+          <el-form-item label="角色名称" required>
+            <el-input v-model="wizardForm.name" placeholder="请输入角色名称" autofocus />
+          </el-form-item>
+          <el-form-item label="角色编码" required>
+            <el-input v-model="wizardForm.code" placeholder="请输入角色编码" />
+          </el-form-item>
+          <el-form-item label="描述">
+            <el-input v-model="wizardForm.description" type="textarea" :rows="3" />
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <!-- Step 1: assign users -->
+      <div v-show="wizardStep === 1">
+        <el-select
+          v-model="wizardForm.userIds"
+          multiple
+          filterable
+          remote
+          :remote-method="searchUsers"
+          :loading="searchingUsers"
+          placeholder="搜索用户名"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="u in availableUsers"
+            :key="u.id"
+            :label="u.chinese_name ? `${u.chinese_name}(${u.username})` : u.username"
+            :value="u.id"
+          />
+        </el-select>
+      </div>
+
+      <!-- Step 2: assign menus -->
+      <div v-show="wizardStep === 2">
+        <el-tree
+          ref="wizardMenuTreeRef"
+          :data="menuTree"
+          :props="{ label: 'name', children: 'children' }"
+          show-checkbox
+          node-key="id"
+          v-loading="loadingMenus"
+        />
+      </div>
+
+      <!-- Step 3: assign permissions -->
+      <div v-show="wizardStep === 3">
+        <el-transfer
+          v-model="wizardForm.permissionIds"
+          :data="transferPermissions"
+          :titles="['未分配', '已分配']"
+          filterable
+          :props="{ key: 'id', label: 'label' }"
+          v-loading="loadingPermissions"
+        />
+      </div>
+
+      <!-- Navigation buttons -->
+      <div style="display: flex; justify-content: space-between; margin-top: 24px;">
+        <el-button v-if="wizardStep > 0" @click="prevWizardStep">上一步</el-button>
+        <div v-else></div>
+        <div>
+          <el-button @click="wizardMode = false">取消</el-button>
+          <el-button
+            v-if="wizardStep < 3"
+            type="primary"
+            @click="nextWizardStep"
+            :disabled="wizardStep === 0 && (!wizardForm.name || !wizardForm.code)"
+          >
+            下一步
+          </el-button>
+          <el-button
+            v-else
+            type="primary"
+            @click="submitWizard"
+            :loading="wizardSubmitting"
+          >
+            完成创建
+          </el-button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Normal mode (existing tabs) -->
+    <template v-else>
     <el-tabs v-model="activeTab">
       <!-- Assign Users -->
       <el-tab-pane label="分配用户" name="user">
@@ -102,12 +199,13 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+    </template>
   </el-drawer>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed, nextTick, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 import {
   getRoleUsers,
   assignUsers as assignUsersApi,
@@ -115,7 +213,8 @@ import {
   getRoleMenus,
   assignMenus as assignMenusApi,
   getRolePermissions,
-  assignPermissions as assignPermissionsApi
+  assignPermissions as assignPermissionsApi,
+  createRole
 } from '@/api/role'
 import { getMenus } from '@/api/menu'
 import { getPermissions } from '@/api/permission'
@@ -208,6 +307,74 @@ const transferPermissions = computed(() =>
     label: `${p.code} (${p.method} ${p.path})`
   }))
 )
+
+// Wizard mode
+const wizardMode = ref(false)
+const wizardStep = ref(0)
+const wizardSubmitting = ref(false)
+const wizardMenuTreeRef = ref()
+
+const wizardForm = ref({
+  name: '',
+  code: '',
+  description: '',
+  is_default: false,
+  userIds: [] as number[],
+  menuIds: [] as number[],
+  permissionIds: [] as number[],
+})
+
+function startWizard() {
+  wizardMode.value = true
+  wizardStep.value = 0
+  wizardForm.value = { name: '', code: '', description: '', is_default: false, userIds: [], menuIds: [], permissionIds: [] }
+  fetchMenuTree()
+  fetchPermissions()
+}
+
+function nextWizardStep() {
+  if (wizardStep.value < 3) wizardStep.value++
+}
+
+function prevWizardStep() {
+  if (wizardStep.value > 0) wizardStep.value--
+}
+
+async function submitWizard() {
+  wizardSubmitting.value = true
+  try {
+    const roleData: any = await createRole(props.systemId, {
+      name: wizardForm.value.name,
+      code: wizardForm.value.code,
+      description: wizardForm.value.description,
+      is_default: wizardForm.value.is_default ? 1 : 0,
+    })
+    const newRoleId = roleData.id
+    if (wizardForm.value.userIds.length > 0) {
+      await assignUsersApi(props.systemId, newRoleId, wizardForm.value.userIds)
+    }
+    // Get checked menu IDs from tree
+    if (wizardMenuTreeRef.value) {
+      const checked = wizardMenuTreeRef.value.getCheckedKeys()
+      const half = wizardMenuTreeRef.value.getHalfCheckedKeys()
+      wizardForm.value.menuIds = [...checked, ...half]
+    }
+    if (wizardForm.value.menuIds.length > 0) {
+      await assignMenusApi(props.systemId, newRoleId, wizardForm.value.menuIds)
+    }
+    if (wizardForm.value.permissionIds.length > 0) {
+      await assignPermissionsApi(props.systemId, newRoleId, wizardForm.value.permissionIds)
+    }
+    ElNotification.success({ title: '创建成功', message: `角色 "${wizardForm.value.name}" 已创建并完成配置` })
+    wizardMode.value = false
+    emit('success')
+    visible.value = false
+  } catch (error: any) {
+    ElNotification.error({ title: '创建失败', message: error.message || '部分步骤失败' })
+  } finally {
+    wizardSubmitting.value = false
+  }
+}
 
 async function fetchAssignedUsers() {
   if (!props.role) return
@@ -356,6 +523,8 @@ function clearData() {
 
 function handleClose() {
   activeTab.value = 'user'
+  wizardMode.value = false
+  wizardStep.value = 0
   clearData()
 }
 
@@ -381,7 +550,11 @@ watch([menuTree, assignedMenuIds], () => {
 
 watch(() => props.modelValue, (val) => {
   if (val && props.role) {
-    loadAllData()
+    if (props.role.id === 0) {
+      startWizard()
+    } else {
+      loadAllData()
+    }
   }
 })
 
