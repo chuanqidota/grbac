@@ -91,6 +91,7 @@
             <span class="system-label">当前系统:</span>
             <el-select
               v-model="systemStore.currentSystemId"
+              :key="systemStore.systems.map(s => s.id).join(',')"
               placeholder="选择系统"
               size="default"
               clearable

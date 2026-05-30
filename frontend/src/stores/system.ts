@@ -21,8 +21,14 @@ export const useSystemStore = defineStore('system', () => {
     try {
       const data: any = await getSystems({ page: 1, page_size: 100 })
       systems.value = data.list || []
-      if (systems.value.length > 0 && !currentSystemId.value) {
-        currentSystemId.value = systems.value[0]?.id ?? null
+      // Auto-select first system if none is selected and list is non-empty
+      // Also re-validate: if currentSystemId no longer exists in the list, reset it
+      if (systems.value.length > 0) {
+        if (!currentSystemId.value || !systems.value.some(s => s.id === currentSystemId.value)) {
+          currentSystemId.value = systems.value[0]?.id ?? null
+        }
+      } else {
+        currentSystemId.value = null
       }
     } finally {
       loading.value = false

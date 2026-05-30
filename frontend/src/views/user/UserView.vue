@@ -21,6 +21,16 @@
           <el-icon><Search /></el-icon>
         </template>
       </el-input>
+      <el-select
+        v-model="filterSuperAdmin"
+        placeholder="超管筛选"
+        clearable
+        style="width: 150px"
+        @change="handleSearch"
+      >
+        <el-option label="仅超管" :value="1" />
+        <el-option label="非超管" :value="0" />
+      </el-select>
     </div>
 
     <el-table :data="users" v-loading="loading" border stripe>
@@ -201,6 +211,7 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
 const searchUsername = ref('')
+const filterSuperAdmin = ref<number | null>(null)
 
 const dialogVisible = ref(false)
 const isEditing = ref(false)
@@ -248,10 +259,14 @@ const rules: FormRules = {
 async function fetchUsers() {
   loading.value = true
   try {
-    const data: any = await getUsers({
+    const params: Record<string, number> = {
       page: currentPage.value,
       page_size: pageSize.value
-    })
+    }
+    if (filterSuperAdmin.value !== null) {
+      params.is_super_admin = filterSuperAdmin.value
+    }
+    const data: any = await getUsers(params)
     users.value = data.list || []
     total.value = data.total || 0
   } catch (error: any) {
@@ -419,6 +434,12 @@ onMounted(() => {
 <style scoped>
 .user-view {
   padding: 0;
+}
+
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: var(--space-md);
 }
 
 .pagination {

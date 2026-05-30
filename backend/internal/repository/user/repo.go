@@ -35,16 +35,26 @@ func (r *Repo) GetByUsername(username string) (*model.User, error) {
 	return &user, nil
 }
 
-func (r *Repo) List(page, pageSize int) ([]model.User, int64, error) {
+// ListQuery holds optional filters for listing users.
+type ListQuery struct {
+	IsSuperAdmin *int // nil = all, 0 = non-super-admin, 1 = super-admin
+}
+
+func (r *Repo) List(page, pageSize int, q *ListQuery) ([]model.User, int64, error) {
 	var users []model.User
 	var total int64
 
-	if err := r.db.Model(&model.User{}).Count(&total).Error; err != nil {
+	tx := r.db.Model(&model.User{})
+	if q != nil && q.IsSuperAdmin != nil {
+		tx = tx.Where("is_super_admin = ?", *q.IsSuperAdmin)
+	}
+
+	if err := tx.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
-	err := r.db.Offset(offset).Limit(pageSize).Order("id DESC").Find(&users).Error
+	err := tx.Offset(offset).Limit(pageSize).Order("id DESC").Find(&users).Error
 	if err != nil {
 		return nil, 0, err
 	}

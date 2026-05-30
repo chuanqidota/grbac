@@ -86,8 +86,8 @@ func (s *Service) GetByID(id int64) (*model.User, error) {
 }
 
 // List returns a paginated list of users and the total count.
-func (s *Service) List(page, pageSize int) ([]model.User, int64, error) {
-	users, total, err := s.userRepo.List(page, pageSize)
+func (s *Service) List(page, pageSize int, q *userRepo.ListQuery) ([]model.User, int64, error) {
+	users, total, err := s.userRepo.List(page, pageSize, q)
 	if err != nil {
 		return nil, 0, errors.ErrInternal.Wrap(err.Error())
 	}

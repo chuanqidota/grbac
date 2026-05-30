@@ -211,8 +211,10 @@ import { Plus, Monitor, User, Edit, Delete } from '@element-plus/icons-vue'
 import { getSystems, createSystem, updateSystem, deleteSystem, getSystemMembers, addSystemMember, removeSystemMember } from '@/api/system'
 import { getUsers } from '@/api/user'
 import { useUserStore } from '@/stores/user'
+import { useSystemStore } from '@/stores/system'
 
 const userStore = useUserStore()
+const systemStore = useSystemStore()
 
 interface AdminInfo {
   user_id: number
@@ -335,6 +337,7 @@ async function handleSubmit() {
       }
       dialogVisible.value = false
       fetchSystems()
+      systemStore.fetchSystems()
     } catch (error: any) {
       ElMessage.error(error.message || '操作失败')
     } finally {
@@ -354,6 +357,7 @@ async function handleDelete(system: System) {
     await deleteSystem(system.id)
     ElMessage.success('删除成功')
     fetchSystems()
+    systemStore.fetchSystems()
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '删除失败')
@@ -407,6 +411,7 @@ async function handleAddAdmin() {
       chinese_name: m.chinese_name
     }))
     fetchSystems()
+    systemStore.fetchSystems()
   } catch (error: any) {
     ElMessage.error(error.message || '添加管理员失败')
   } finally {
@@ -427,6 +432,7 @@ async function handleRemoveAdmin(admin: AdminInfo) {
     ElMessage.success('管理员移除成功')
     adminList.value = adminList.value.filter(a => a.user_id !== admin.user_id)
     fetchSystems()
+    systemStore.fetchSystems()
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '移除管理员失败')

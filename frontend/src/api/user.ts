@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-export const getUsers = (params?: { page?: number; page_size?: number }) =>
+export const getUsers = (params?: { page?: number; page_size?: number; is_super_admin?: number }) =>
   request.get('/users', { params })
 
 export const getUserById = (id: number) => request.get(`/users/${id}`)

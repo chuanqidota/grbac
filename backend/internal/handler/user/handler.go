@@ -7,6 +7,7 @@ import (
 	"grbac/internal/middleware"
 	"grbac/internal/pkg/errors"
 	"grbac/internal/pkg/response"
+	userRepo "grbac/internal/repository/user"
 	userService "grbac/internal/service/user"
 )
 
@@ -98,7 +99,16 @@ func (h *Handler) List(c *gin.Context) {
 		pageSize = 10
 	}
 
-	users, total, err := h.userSvc.List(page, pageSize)
+	// Optional filter: is_super_admin (0 or 1)
+	var q *userRepo.ListQuery
+	if v := c.Query("is_super_admin"); v != "" {
+		val, err := strconv.Atoi(v)
+		if err == nil && (val == 0 || val == 1) {
+			q = &userRepo.ListQuery{IsSuperAdmin: &val}
+		}
+	}
+
+	users, total, err := h.userSvc.List(page, pageSize, q)
 	if err != nil {
 		response.RespondError(c, err)
 		return
