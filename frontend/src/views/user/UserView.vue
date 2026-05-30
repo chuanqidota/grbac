@@ -2,7 +2,7 @@
   <div class="user-view">
     <div class="page-header">
       <h2>用户管理</h2>
-      <el-button type="primary" @click="showCreateDialog">
+      <el-button type="primary" @click="userDialog.open(defaultForm)">
         <el-icon><Plus /></el-icon>
         创建用户
       </el-button>
@@ -10,7 +10,7 @@
 
     <div class="search-bar">
       <el-input
-        v-model="searchUsername"
+        v-model="urlState.keyword"
         placeholder="搜索用户名"
         clearable
         style="width: 300px"
@@ -20,18 +20,18 @@
         </template>
       </el-input>
       <el-select
-        v-model="filterSuperAdmin"
+        v-model="urlState.superAdmin"
         placeholder="超管筛选"
         clearable
         style="width: 150px"
-        @change="handleFilterSuperAdmin"
+        @change="handleFilterChange"
       >
         <el-option label="仅超管" :value="1" />
         <el-option label="非超管" :value="0" />
       </el-select>
     </div>
 
-    <el-skeleton :loading="loading" animated :count="5">
+    <el-skeleton :loading="userTable.skeleton.value" animated :count="5">
       <template #template>
         <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
           <el-skeleton-item variant="text" style="width: 5%;" />
@@ -46,7 +46,7 @@
         </div>
       </template>
       <template #default>
-        <el-table v-if="users.length > 0" :data="users" border stripe>
+        <el-table v-if="userTable.data.value.length > 0" :data="userTable.data.value" border stripe>
           <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="username" label="用户名" min-width="120" />
           <el-table-column prop="chinese_name" label="中文名" min-width="100" />
@@ -84,30 +84,30 @@
               <el-button type="primary" link @click="showDetail(row)">
                 详情
               </el-button>
-              <el-button type="primary" link @click="showEditDialog(row)">
+              <el-button type="primary" link @click="userDialog.open(row)">
                 编辑
               </el-button>
               <el-button type="warning" link @click="showResetPasswordDialog(row)">
                 重置密码
               </el-button>
-              <el-button type="danger" link @click="handleDelete(row)">
+              <el-button type="danger" link @click="confirmDelete.confirmDelete({ id: row.id, name: row.username })">
                 删除
               </el-button>
             </template>
           </el-table-column>
         </el-table>
         <el-empty v-else description="暂无用户">
-          <el-button type="primary" @click="showCreateDialog">创建用户</el-button>
+          <el-button type="primary" @click="userDialog.open(defaultForm)">创建用户</el-button>
         </el-empty>
       </template>
     </el-skeleton>
 
     <div class="pagination">
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        v-model:current-page="userTable.page.value"
+        v-model:page-size="userTable.pageSize.value"
         :page-sizes="[10, 20, 50, 100]"
-        :total="total"
+        :total="userTable.total.value"
         layout="total, sizes, prev, pager, next, jumper"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
@@ -116,34 +116,34 @@
 
     <!-- Create/Edit Dialog -->
     <el-dialog
-      v-model="dialogVisible"
-      :title="isEditing ? '编辑用户' : '创建用户'"
+      v-model="userDialog.visible.value"
+      :title="userDialog.isEditing.value ? '编辑用户' : '创建用户'"
       width="500px"
-      :before-close="handleDialogClose"
+      :before-close="() => userDialog.close()"
     >
       <el-form
         ref="formRef"
-        :model="form"
+        :model="userDialog.formData"
         :rules="rules"
         label-width="100px"
       >
         <el-form-item label="用户名" prop="username">
           <el-input
-            v-model="form.username"
-            :disabled="isEditing"
+            v-model="userDialog.formData.username"
+            :disabled="userDialog.isEditing.value"
             placeholder="请输入用户名（英文名）"
-            :autofocus="!isEditing"
+            :autofocus="!userDialog.isEditing.value"
           />
         </el-form-item>
         <el-form-item label="中文名" prop="chinese_name">
           <el-input
-            v-model="form.chinese_name"
+            v-model="userDialog.formData.chinese_name"
             placeholder="请输入中文名"
           />
         </el-form-item>
-        <el-form-item v-if="!isEditing" label="密码" prop="password">
+        <el-form-item v-if="!userDialog.isEditing.value" label="密码" prop="password">
           <el-input
-            v-model="form.password"
+            v-model="userDialog.formData.password"
             type="password"
             show-password
             placeholder="请输入密码"
@@ -151,15 +151,15 @@
           <div class="form-tip">默认密码: grbac@2024</div>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" placeholder="请输入邮箱" />
+          <el-input v-model="userDialog.formData.email" placeholder="请输入邮箱" />
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
-          <el-input v-model="form.phone" placeholder="请输入手机号" />
+          <el-input v-model="userDialog.formData.phone" placeholder="请输入手机号" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="handleDialogClose(() => { dialogVisible = false })">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitting">
+        <el-button @click="userDialog.close()">取消</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="userDialog.submitting.value">
           确定
         </el-button>
       </template>
@@ -208,14 +208,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { getUsers, createUser, updateUser, deleteUser, updateUserStatus, updateUserSuperAdmin, resetUserPassword } from '@/api/user'
 import { formatDate } from '@/utils/format'
+import { useUrlState, useTable, useFormDialog, useConfirmDelete } from '@/composables'
 import UserDetailDrawer from './UserDetailDrawer.vue'
+
+defineOptions({ name: 'UserView' })
 
 interface User {
   id: number
@@ -228,91 +230,65 @@ interface User {
   created_at: string
 }
 
-const users = ref<User[]>([])
-const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
-const searchUsername = ref('')
-const filterSuperAdmin = ref<number | null>(null)
+// ── URL state (keyword, page, pageSize, superAdmin) ──
+const { state: urlState } = useUrlState(
+  { keyword: '', page: 1, pageSize: 20, superAdmin: null as number | null },
+  { debounce: 0 }
+)
 
-const route = useRoute()
-const router = useRouter()
+// ── Table ──
+const userTable = useTable<User>(
+  async (params) => {
+    const reqParams: Record<string, any> = { ...params }
+    if (urlState.superAdmin !== null) {
+      reqParams.is_super_admin = urlState.superAdmin
+    }
+    return getUsers(reqParams) as any
+  },
+  { defaultPageSize: 20 }
+)
 
-const isRestoring = ref(false)
+// Sync URL page/pageSize when table pagination changes
+watch(() => userTable.page.value, (val) => { urlState.page = val })
+watch(() => userTable.pageSize.value, (val) => { urlState.pageSize = val })
 
-function restoreFromUrl() {
-  isRestoring.value = true
-  const q = route.query
-  if (q.keyword) searchUsername.value = String(q.keyword)
-  if (q.page) currentPage.value = Number(q.page) || 1
-  if (q.pageSize) pageSize.value = Number(q.pageSize) || 20
-  if (q.superAdmin !== undefined && q.superAdmin !== '') {
-    const val = Number(q.superAdmin)
-    if (!isNaN(val)) filterSuperAdmin.value = val
-  }
-  nextTick(() => { isRestoring.value = false })
-}
+// Restore page from URL on mount
+nextTick(() => {
+  if (urlState.page > 1) userTable.page.value = urlState.page
+  if (urlState.pageSize !== 20) userTable.pageSize.value = urlState.pageSize
+  userTable.refresh()
+})
 
-function syncToUrl() {
-  const query: Record<string, string> = {}
-  if (searchUsername.value) query.keyword = searchUsername.value
-  if (currentPage.value > 1) query.page = String(currentPage.value)
-  if (pageSize.value !== 20) query.pageSize = String(pageSize.value)
-  if (filterSuperAdmin.value !== null) query.superAdmin = String(filterSuperAdmin.value)
-  router.replace({ query })
-}
-
+// Debounced keyword search
 let searchTimer: ReturnType<typeof setTimeout> | null = null
-watch(searchUsername, () => {
-  if (isRestoring.value) return
+watch(() => urlState.keyword, () => {
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
-    currentPage.value = 1
-    syncToUrl()
-    fetchUsers()
+    userTable.page.value = 1
+    userTable.refresh()
   }, 300)
 })
 
-function handleFilterSuperAdmin() {
-  currentPage.value = 1
-  syncToUrl()
-  fetchUsers()
+function handleSizeChange(size: number) {
+  userTable.pageSize.value = size
+  userTable.page.value = 1
+  userTable.refresh()
 }
 
-const dialogVisible = ref(false)
-const isEditing = ref(false)
-const submitting = ref(false)
-const editingId = ref<number | null>(null)
-
-const detailVisible = ref(false)
-const selectedUser = ref<User | null>(null)
-
-const resetPasswordVisible = ref(false)
-const resetSubmitting = ref(false)
-const resetPasswordUser = ref<User | null>(null)
-const resetFormRef = ref<FormInstance>()
-const resetForm = ref({ newPassword: '' })
-const originalResetForm = ref<string>('')
-const resetFormDirty = computed(() => JSON.stringify(resetForm.value) !== originalResetForm.value)
-const resetRules: FormRules = {
-  newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 8, message: '密码长度不能少于 8 位', trigger: 'blur' }
-  ]
+function handleCurrentChange(page: number) {
+  userTable.page.value = page
+  userTable.refresh()
 }
+
+function handleFilterChange() {
+  userTable.page.value = 1
+  userTable.refresh()
+}
+
+// ── Create / Edit dialog ──
+const defaultForm = { username: '', chinese_name: '', password: '', email: '', phone: '' }
 
 const formRef = ref<FormInstance>()
-const form = ref({
-  username: '',
-  chinese_name: '',
-  password: '',
-  email: '',
-  phone: ''
-})
-const originalForm = ref<string>('')
-const formDirty = computed(() => JSON.stringify(form.value) !== originalForm.value)
-
 const rules: FormRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -327,154 +303,74 @@ const rules: FormRules = {
   ]
 }
 
-async function fetchUsers() {
-  loading.value = true
-  try {
-    const params: Record<string, number> = {
-      page: currentPage.value,
-      page_size: pageSize.value
+const userDialog = useFormDialog<typeof defaultForm>(
+  async (data) => {
+    if (userDialog.isEditing.value && userDialog.editingId.value) {
+      await updateUser(userDialog.editingId.value, {
+        chinese_name: data.chinese_name,
+        email: data.email,
+        phone: data.phone
+      })
+      ElMessage.success('更新成功')
+    } else {
+      await createUser({
+        username: data.username,
+        chinese_name: data.chinese_name,
+        password: data.password,
+        email: data.email,
+        phone: data.phone
+      })
+      ElMessage.success('创建成功')
     }
-    if (filterSuperAdmin.value !== null) {
-      params.is_super_admin = filterSuperAdmin.value
-    }
-    const data: any = await getUsers(params)
-    users.value = data.list || []
-    total.value = data.total || 0
-  } catch (error: any) {
-    ElMessage.error(error.message || '获取用户列表失败')
-  } finally {
-    loading.value = false
+    userTable.refresh()
+  },
+  {
+    onError: (error) => ElMessage.error(error.message || '操作失败')
   }
+)
+
+async function handleSubmit() {
+  if (!formRef.value) return
+  await formRef.value.validate(async (valid) => {
+    if (!valid) return
+    await userDialog.submit()
+  })
 }
 
-function handleSizeChange(size: number) {
-  pageSize.value = size
-  currentPage.value = 1
-  syncToUrl()
-  fetchUsers()
-}
+// ── Delete ──
+const confirmDelete = useConfirmDelete(
+  (id) => deleteUser(id),
+  {
+    entityName: '用户',
+    onSuccess: () => userTable.refresh()
+  }
+)
 
-function handleCurrentChange(page: number) {
-  currentPage.value = page
-  syncToUrl()
-  fetchUsers()
-}
-
-function showCreateDialog() {
-  isEditing.value = false
-  editingId.value = null
-  form.value = { username: '', chinese_name: '', password: '', email: '', phone: '' }
-  originalForm.value = JSON.stringify(form.value)
-  dialogVisible.value = true
-}
+// ── Detail drawer ──
+const detailVisible = ref(false)
+const selectedUser = ref<User | null>(null)
 
 function showDetail(user: User) {
   selectedUser.value = user
   detailVisible.value = true
 }
 
-function showEditDialog(user: User) {
-  isEditing.value = true
-  editingId.value = user.id
-  form.value = {
-    username: user.username,
-    chinese_name: user.chinese_name || '',
-    password: '',
-    email: user.email || '',
-    phone: user.phone || ''
-  }
-  originalForm.value = JSON.stringify(form.value)
-  dialogVisible.value = true
-}
-
-async function handleSubmit() {
-  if (!formRef.value) return
-
-  await formRef.value.validate(async (valid) => {
-    if (!valid) return
-
-    submitting.value = true
-    try {
-      if (isEditing.value && editingId.value) {
-        await updateUser(editingId.value, {
-          chinese_name: form.value.chinese_name,
-          email: form.value.email,
-          phone: form.value.phone
-        })
-        ElMessage.success('更新成功')
-      } else {
-        await createUser({
-          username: form.value.username,
-          chinese_name: form.value.chinese_name,
-          password: form.value.password,
-          email: form.value.email,
-          phone: form.value.phone
-        })
-        ElMessage.success('创建成功')
-      }
-      dialogVisible.value = false
-      fetchUsers()
-    } catch (error: any) {
-      ElMessage.error(error.message || '操作失败')
-    } finally {
-      submitting.value = false
-    }
-  })
-}
-
-async function handleDelete(user: User) {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除用户 "${user.username}" 吗？`,
-      '确认删除',
-      { type: 'warning' }
-    )
-
-    await deleteUser(user.id)
-    ElMessage.success('删除成功')
-    fetchUsers()
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除失败')
-    }
-  }
-}
-
-async function handleStatusChange(user: User) {
-  try {
-    await updateUserStatus(user.id, user.status)
-    ElMessage.success('状态更新成功')
-  } catch (error: any) {
-    user.status = user.status === 1 ? 0 : 1
-    ElMessage.error(error.message || '状态更新失败')
-  }
-}
-
-async function handleSuperAdminChange(user: User) {
-  try {
-    await ElMessageBox.confirm(
-      user.is_super_admin === 1
-        ? `确定要将 "${user.username}" 设为超管吗？超管可以管理所有系统。`
-        : `确定要取消 "${user.username}" 的超管权限吗？`,
-      '确认操作',
-      { type: 'warning' }
-    )
-    await updateUserSuperAdmin(user.id, user.is_super_admin)
-    ElMessage.success(user.is_super_admin === 1 ? '已设为超管' : '已取消超管')
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      user.is_super_admin = user.is_super_admin === 1 ? 0 : 1
-      ElMessage.error(error.message || '操作失败')
-    } else {
-      user.is_super_admin = user.is_super_admin === 1 ? 0 : 1
-    }
-  }
+// ── Reset password ──
+const resetPasswordVisible = ref(false)
+const resetSubmitting = ref(false)
+const resetPasswordUser = ref<User | null>(null)
+const resetFormRef = ref<FormInstance>()
+const resetForm = ref({ newPassword: '' })
+const resetRules: FormRules = {
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 8, message: '密码长度不能少于 8 位', trigger: 'blur' }
+  ]
 }
 
 function showResetPasswordDialog(user: User) {
   resetPasswordUser.value = user
   resetForm.value = { newPassword: '' }
-  originalResetForm.value = JSON.stringify(resetForm.value)
   resetPasswordVisible.value = true
 }
 
@@ -497,40 +393,51 @@ async function handleResetPassword() {
   })
 }
 
-async function handleDialogClose(done: () => void) {
-  if (formDirty.value) {
-    try {
-      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
-      done()
-    } catch {
-      // 用户取消关闭
-    }
-  } else {
-    done()
-  }
-}
-
 async function handleResetDialogClose(done: () => void) {
-  if (resetFormDirty.value) {
+  if (resetForm.value.newPassword) {
     try {
       await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
       done()
     } catch {
-      // 用户取消关闭
+      // user cancelled
     }
   } else {
     done()
   }
 }
 
-onMounted(() => {
-  restoreFromUrl()
-  fetchUsers()
-})
+// ── Status change ──
+async function handleStatusChange(user: User) {
+  try {
+    await updateUserStatus(user.id, user.status)
+    ElMessage.success('状态更新成功')
+  } catch (error: any) {
+    user.status = user.status === 1 ? 0 : 1
+    ElMessage.error(error.message || '状态更新失败')
+  }
+}
 
-onUnmounted(() => {
-  if (searchTimer) clearTimeout(searchTimer)
-})
+// ── Super admin change ──
+async function handleSuperAdminChange(user: User) {
+  try {
+    await ElMessageBox.confirm(
+      user.is_super_admin === 1
+        ? `确定要将 "${user.username}" 设为超管吗？超管可以管理所有系统。`
+        : `确定要取消 "${user.username}" 的超管权限吗？`,
+      '确认操作',
+      { type: 'warning' }
+    )
+    await updateUserSuperAdmin(user.id, user.is_super_admin)
+    ElMessage.success(user.is_super_admin === 1 ? '已设为超管' : '已取消超管')
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      user.is_super_admin = user.is_super_admin === 1 ? 0 : 1
+      ElMessage.error(error.message || '操作失败')
+    } else {
+      user.is_super_admin = user.is_super_admin === 1 ? 0 : 1
+    }
+  }
+}
 </script>
 
 <style scoped>
