@@ -15,7 +15,7 @@
 
     <div class="filter-bar">
       <el-input
-        v-model="searchKeyword"
+        v-model="urlState.keyword"
         placeholder="搜索权限编码或名称"
         clearable
         style="width: 240px"
@@ -24,7 +24,7 @@
           <el-icon><Search /></el-icon>
         </template>
       </el-input>
-      <el-radio-group v-model="filterMethod" @change="handleMethodChange">
+      <el-radio-group v-model="urlState.method" @change="handleMethodChange">
         <el-radio-button label="">全部</el-radio-button>
         <el-radio-button label="GET">GET</el-radio-button>
         <el-radio-button label="POST">POST</el-radio-button>
@@ -34,7 +34,7 @@
       </el-radio-group>
     </div>
 
-    <el-skeleton :loading="loading" animated :count="5">
+    <el-skeleton :loading="skeleton" animated :count="5">
       <template #template>
         <el-skeleton-item variant="text" style="width: 40%; height: 32px; margin-bottom: 16px;" />
         <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
@@ -50,6 +50,7 @@
       <template #default>
     <el-table
       :data="permissions"
+      v-loading="loading"
       border
       stripe
       @selection-change="handleSelectionChange"
@@ -72,14 +73,14 @@
       <el-table-column label="操作" width="140" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" link @click="showEditDialog(row)">编辑</el-button>
-          <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+          <el-button type="danger" link @click="confirmDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
 
     <div class="pagination">
       <el-pagination
-        v-model:current-page="currentPage"
+        v-model:current-page="page"
         v-model:page-size="pageSize"
         :page-sizes="[10, 20, 50, 100]"
         :total="total"
@@ -98,15 +99,15 @@
       width="500px"
       :before-close="handleDialogClose"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="formRef" :model="formData" :rules="rules" label-width="100px">
         <el-form-item label="权限编码" prop="code">
-          <el-input v-model="form.code" :disabled="isEditing" placeholder="请输入权限编码" :autofocus="!isEditing" />
+          <el-input v-model="formData.code" :disabled="isEditing" placeholder="请输入权限编码" :autofocus="!isEditing" />
         </el-form-item>
         <el-form-item label="权限名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入权限名称" />
+          <el-input v-model="formData.name" placeholder="请输入权限名称" />
         </el-form-item>
         <el-form-item label="请求方法" prop="method">
-          <el-select v-model="form.method" placeholder="请选择请求方法">
+          <el-select v-model="formData.method" placeholder="请选择请求方法">
             <el-option label="GET" value="GET" />
             <el-option label="POST" value="POST" />
             <el-option label="PUT" value="PUT" />
@@ -115,14 +116,14 @@
           </el-select>
         </el-form-item>
         <el-form-item label="请求路径" prop="path">
-          <el-input v-model="form.path" placeholder="请输入请求路径" />
+          <el-input v-model="formData.path" placeholder="请输入请求路径" />
         </el-form-item>
         <el-form-item label="描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="请输入权限描述" />
+          <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入权限描述" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="handleDialogClose(() => { dialogVisible = false })">取消</el-button>
+        <el-button @click="closeDialog">取消</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitting">确定</el-button>
       </template>
     </el-dialog>
@@ -130,13 +131,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { ref, computed, watch, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { getPermissions, createPermission, updatePermission, deletePermission } from '@/api/permission'
 import { formatDate } from '@/utils/format'
+import { useUrlState, useTable, useFormDialog, useConfirmDelete } from '@/composables'
+
+defineOptions({ name: 'PermissionView' })
 
 interface Permission {
   id: number
@@ -148,61 +152,57 @@ interface Permission {
   created_at: string
 }
 
+interface PermissionForm {
+  code: string
+  name: string
+  method: string
+  path: string
+  description: string
+}
+
 const route = useRoute()
-const router = useRouter()
 const systemId = computed(() => Number(route.params.id))
 
-const permissions = ref<Permission[]>([])
-const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
-const searchKeyword = ref('')
-const filterMethod = ref('')
-const selectedIds = ref<number[]>([])
-
-const isRestoring = ref(false)
-
-function restoreFromUrl() {
-  isRestoring.value = true
-  const q = route.query
-  if (q.keyword) searchKeyword.value = String(q.keyword)
-  if (q.page) currentPage.value = Number(q.page) || 1
-  if (q.pageSize) pageSize.value = Number(q.pageSize) || 20
-  if (q.method) filterMethod.value = String(q.method)
-  nextTick(() => { isRestoring.value = false })
-}
-
-function syncToUrl() {
-  const query: Record<string, string> = {}
-  if (searchKeyword.value) query.keyword = searchKeyword.value
-  if (currentPage.value > 1) query.page = String(currentPage.value)
-  if (pageSize.value !== 20) query.pageSize = String(pageSize.value)
-  if (filterMethod.value) query.method = filterMethod.value
-  router.replace({ query })
-}
-
-let searchTimer: ReturnType<typeof setTimeout> | null = null
-watch(searchKeyword, () => {
-  if (isRestoring.value) return
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    currentPage.value = 1
-    syncToUrl()
-    fetchPermissions()
-  }, 300)
+// --- URL state ---
+const { state: urlState } = useUrlState({
+  keyword: '',
+  page: 1,
+  pageSize: 20,
+  method: ''
 })
 
-const dialogVisible = ref(false)
-const isEditing = ref(false)
-const submitting = ref(false)
-const editingId = ref<number | null>(null)
+// --- Table ---
+const table = useTable<Permission>(
+  async (params) => {
+    const data: any = await getPermissions(systemId.value, {
+      ...params,
+      keyword: urlState.keyword || undefined,
+      method: urlState.method || undefined
+    })
+    return { list: data.list || [], total: data.total || 0 }
+  },
+  { defaultPageSize: urlState.pageSize }
+)
 
+const { data: permissions, total, loading, skeleton, page, pageSize, refresh, handleSizeChange, handleCurrentChange } = table
+
+// --- Sync URL state to table ---
+watch(() => urlState.page, (val) => {
+  if (page.value !== val) {
+    page.value = val
+    refresh()
+  }
+})
+
+watch(() => urlState.pageSize, (val) => {
+  if (pageSize.value !== val) {
+    pageSize.value = val
+    refresh()
+  }
+})
+
+// --- Form dialog ---
 const formRef = ref<FormInstance>()
-const form = ref({ code: '', name: '', method: 'GET', path: '', description: '' })
-const originalForm = ref<string>('')
-const formDirty = computed(() => JSON.stringify(form.value) !== originalForm.value)
-
 const rules: FormRules = {
   code: [{ required: true, message: '请输入权限编码', trigger: 'blur' }],
   name: [{ required: true, message: '请输入权限名称', trigger: 'blur' }],
@@ -210,65 +210,80 @@ const rules: FormRules = {
   path: [{ required: true, message: '请输入请求路径', trigger: 'blur' }]
 }
 
+async function submitPermission(data: PermissionForm & { id?: number }) {
+  if (data.id) {
+    await updatePermission(systemId.value, data.id, {
+      name: data.name,
+      method: data.method,
+      path: data.path,
+      description: data.description
+    })
+    ElMessage.success('更新成功')
+  } else {
+    await createPermission(systemId.value, {
+      code: data.code,
+      name: data.name,
+      method: data.method,
+      path: data.path,
+      description: data.description
+    })
+    ElMessage.success('创建成功')
+  }
+}
+
+const {
+  visible: dialogVisible,
+  isEditing,
+  formData,
+  submitting,
+  open: openDialog,
+  close: closeDialog,
+  submit: submitForm
+} = useFormDialog<PermissionForm>(submitPermission, { onSuccess: refresh })
+
+// --- Delete ---
+const { confirmDelete, batchDelete } = useConfirmDelete(
+  (id) => deletePermission(systemId.value, id),
+  { onSuccess: refresh, entityName: '权限' }
+)
+
+// --- Selected IDs ---
+const selectedIds = ref<number[]>([])
+
+function handleSelectionChange(selection: Permission[]) {
+  selectedIds.value = selection.map(p => p.id)
+}
+
+function handleBatchDelete() {
+  batchDelete(selectedIds.value, {
+    onComplete: () => { selectedIds.value = [] }
+  })
+}
+
+// --- Helpers ---
 function getMethodTagType(method: string) {
   const types: Record<string, string> = { GET: 'success', POST: 'primary', PUT: 'warning', DELETE: 'danger', PATCH: 'info' }
   return types[method] || ''
 }
 
 function handleMethodChange() {
-  currentPage.value = 1
-  syncToUrl()
-  fetchPermissions()
-}
-
-async function fetchPermissions() {
-  if (!systemId.value) return
-  loading.value = true
-  try {
-    const params: any = { page: currentPage.value, page_size: pageSize.value }
-    if (searchKeyword.value) params.keyword = searchKeyword.value
-    if (filterMethod.value) params.method = filterMethod.value
-    const data: any = await getPermissions(systemId.value, params)
-    permissions.value = data.list || []
-    total.value = data.total || 0
-  } catch (error: any) {
-    ElMessage.error(error.message || '获取权限列表失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-function handleSelectionChange(selection: Permission[]) {
-  selectedIds.value = selection.map(p => p.id)
-}
-
-function handleSizeChange(size: number) {
-  pageSize.value = size
-  currentPage.value = 1
-  syncToUrl()
-  fetchPermissions()
-}
-
-function handleCurrentChange(page: number) {
-  currentPage.value = page
-  syncToUrl()
-  fetchPermissions()
+  page.value = 1
+  refresh()
 }
 
 function showCreateDialog() {
-  isEditing.value = false
-  editingId.value = null
-  form.value = { code: '', name: '', method: 'GET', path: '', description: '' }
-  originalForm.value = JSON.stringify(form.value)
-  dialogVisible.value = true
+  openDialog({ code: '', name: '', method: 'GET', path: '', description: '' })
 }
 
 function showEditDialog(p: Permission) {
-  isEditing.value = true
-  editingId.value = p.id
-  form.value = { code: p.code, name: p.name, method: p.method, path: p.path, description: p.description || '' }
-  originalForm.value = JSON.stringify(form.value)
-  dialogVisible.value = true
+  openDialog({
+    id: p.id,
+    code: p.code,
+    name: p.name,
+    method: p.method,
+    path: p.path,
+    description: p.description || ''
+  })
 }
 
 async function handleSubmit() {
@@ -278,74 +293,26 @@ async function handleSubmit() {
   } catch {
     return
   }
-  submitting.value = true
   try {
-    if (isEditing.value && editingId.value) {
-      await updatePermission(systemId.value, editingId.value, {
-        name: form.value.name, method: form.value.method, path: form.value.path, description: form.value.description
-      })
-      ElMessage.success('更新成功')
-    } else {
-      await createPermission(systemId.value, {
-        code: form.value.code, name: form.value.name, method: form.value.method, path: form.value.path, description: form.value.description
-      })
-      ElMessage.success('创建成功')
-    }
-    dialogVisible.value = false
-    fetchPermissions()
+    await submitForm()
   } catch (error: any) {
     ElMessage.error(error.message || '操作失败')
-  } finally {
-    submitting.value = false
   }
 }
 
-async function handleDelete(p: Permission) {
-  try {
-    await ElMessageBox.confirm(`确定要删除权限 "${p.name}" 吗？`, '确认删除', { type: 'warning' })
-    await deletePermission(systemId.value, p.id)
-    ElMessage.success('删除成功')
-    fetchPermissions()
-  } catch (error: any) {
-    if (error !== 'cancel') ElMessage.error(error.message || '删除失败')
-  }
-}
-
-async function handleBatchDelete() {
-  try {
-    await ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 个权限吗？`, '批量删除', { type: 'warning' })
-    const results = await Promise.allSettled(selectedIds.value.map(id => deletePermission(systemId.value, id)))
-    const successCount = results.filter(r => r.status === 'fulfilled').length
-    const failCount = results.filter(r => r.status === 'rejected').length
-    if (failCount === 0) {
-      ElNotification.success({ title: '批量删除成功', message: `成功删除 ${successCount} 个权限` })
-    } else {
-      ElNotification.warning({ title: '批量删除完成', message: `成功 ${successCount} 个，失败 ${failCount} 个` })
-    }
-    selectedIds.value = []
-    fetchPermissions()
-  } catch (error: any) {
-    if (error !== 'cancel') ElMessage.error(error.message || '批量删除失败')
-  }
-}
-
-async function handleDialogClose(done: () => void) {
-  if (formDirty.value) {
-    try {
-      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
-      done()
-    } catch {
-      // 用户取消关闭
-    }
-  } else {
-    done()
-  }
-}
-
-onMounted(() => {
-  restoreFromUrl()
-  fetchPermissions()
+// --- Keyword debounce ---
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(() => urlState.keyword, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    page.value = 1
+    refresh()
+  }, 300)
 })
+
+function handleDialogClose(done: () => void) {
+  closeDialog()
+}
 
 onUnmounted(() => {
   if (searchTimer) clearTimeout(searchTimer)
