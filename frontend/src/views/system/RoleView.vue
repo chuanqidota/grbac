@@ -10,10 +10,6 @@
           <el-icon><Plus /></el-icon>
           创建角色
         </el-button>
-        <el-button type="success" @click="showWizardDrawer">
-          <el-icon><Plus /></el-icon>
-          快速创建
-        </el-button>
       </div>
     </div>
 
@@ -313,11 +309,6 @@ const selectedRole = ref<Role | null>(null)
 
 function showAssignDrawer(role: Role) {
   selectedRole.value = role
-  drawerVisible.value = true
-}
-
-function showWizardDrawer() {
-  selectedRole.value = { id: 0, name: '', code: '' } as any
   drawerVisible.value = true
 }
 
