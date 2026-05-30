@@ -18,6 +18,7 @@
             type="password"
             show-password
             placeholder="请输入旧密码"
+            autofocus
           />
         </el-form-item>
         <el-form-item label="新密码" prop="new_password">

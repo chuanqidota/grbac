@@ -67,10 +67,11 @@
       v-model="dialogVisible"
       :title="isEditing ? '编辑 Webhook' : '创建 Webhook'"
       width="500px"
+      :before-close="handleDialogClose"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="Webhook URL" prop="url">
-          <el-input v-model="form.url" placeholder="请输入 Webhook URL" />
+          <el-input v-model="form.url" placeholder="请输入 Webhook URL" autofocus />
         </el-form-item>
         <el-form-item label="触发事件" prop="events">
           <el-checkbox-group v-model="form.events">
@@ -125,6 +126,8 @@ const editingId = ref<number | null>(null)
 
 const formRef = ref<FormInstance>()
 const form = ref({ url: '', events: [] as string[] })
+const originalForm = ref<string>('')
+const formDirty = computed(() => JSON.stringify(form.value) !== originalForm.value)
 
 const rules: FormRules = {
   url: [
@@ -204,6 +207,7 @@ function showCreateDialog() {
   isEditing.value = false
   editingId.value = null
   form.value = { url: '', events: [] }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -211,6 +215,7 @@ function showEditDialog(webhook: Webhook) {
   isEditing.value = true
   editingId.value = webhook.id
   form.value = { url: webhook.url, events: parseEvents(webhook.events) }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -258,6 +263,19 @@ async function handleStatusChange(webhook: Webhook) {
   } catch (error: any) {
     webhook.status = webhook.status === 1 ? 0 : 1
     ElMessage.error(error.message || '状态更新失败')
+  }
+}
+
+async function handleDialogClose(done: () => void) {
+  if (formDirty.value) {
+    try {
+      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
+      done()
+    } catch {
+      // 用户取消关闭
+    }
+  } else {
+    done()
   }
 }
 

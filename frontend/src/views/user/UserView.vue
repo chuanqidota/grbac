@@ -101,6 +101,7 @@
       v-model="dialogVisible"
       :title="isEditing ? '编辑用户' : '创建用户'"
       width="500px"
+      :before-close="handleDialogClose"
     >
       <el-form
         ref="formRef"
@@ -113,6 +114,7 @@
             v-model="form.username"
             :disabled="isEditing"
             placeholder="请输入用户名（英文名）"
+            autofocus
           />
         </el-form-item>
         <el-form-item label="中文名" prop="chinese_name">
@@ -150,6 +152,7 @@
       v-model="resetPasswordVisible"
       title="重置密码"
       width="450px"
+      :before-close="handleResetDialogClose"
     >
       <el-form
         ref="resetFormRef"
@@ -166,6 +169,7 @@
             type="password"
             show-password
             placeholder="请输入新密码"
+            autofocus
           />
         </el-form-item>
       </el-form>
@@ -186,7 +190,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
@@ -226,6 +230,8 @@ const resetSubmitting = ref(false)
 const resetPasswordUser = ref<User | null>(null)
 const resetFormRef = ref<FormInstance>()
 const resetForm = ref({ newPassword: '' })
+const originalResetForm = ref<string>('')
+const resetFormDirty = computed(() => JSON.stringify(resetForm.value) !== originalResetForm.value)
 const resetRules: FormRules = {
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
@@ -241,6 +247,8 @@ const form = ref({
   email: '',
   phone: ''
 })
+const originalForm = ref<string>('')
+const formDirty = computed(() => JSON.stringify(form.value) !== originalForm.value)
 
 const rules: FormRules = {
   username: [
@@ -296,6 +304,7 @@ function showCreateDialog() {
   isEditing.value = false
   editingId.value = null
   form.value = { username: '', chinese_name: '', password: '', email: '', phone: '' }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -314,6 +323,7 @@ function showEditDialog(user: User) {
     email: user.email || '',
     phone: user.phone || ''
   }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -404,6 +414,7 @@ async function handleSuperAdminChange(user: User) {
 function showResetPasswordDialog(user: User) {
   resetPasswordUser.value = user
   resetForm.value = { newPassword: '' }
+  originalResetForm.value = JSON.stringify(resetForm.value)
   resetPasswordVisible.value = true
 }
 
@@ -424,6 +435,32 @@ async function handleResetPassword() {
       resetSubmitting.value = false
     }
   })
+}
+
+async function handleDialogClose(done: () => void) {
+  if (formDirty.value) {
+    try {
+      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
+      done()
+    } catch {
+      // 用户取消关闭
+    }
+  } else {
+    done()
+  }
+}
+
+async function handleResetDialogClose(done: () => void) {
+  if (resetFormDirty.value) {
+    try {
+      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
+      done()
+    } catch {
+      // 用户取消关闭
+    }
+  } else {
+    done()
+  }
 }
 
 onMounted(() => {

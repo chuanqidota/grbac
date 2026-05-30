@@ -98,6 +98,7 @@
       v-model="dialogVisible"
       :title="isEditing ? '编辑系统' : '创建系统'"
       width="500px"
+      :before-close="handleDialogClose"
     >
       <el-form
         ref="formRef"
@@ -106,7 +107,7 @@
         label-width="100px"
       >
         <el-form-item label="系统名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入系统名称" />
+          <el-input v-model="form.name" placeholder="请输入系统名称" autofocus />
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input
@@ -204,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Monitor, User, Edit, Delete } from '@element-plus/icons-vue'
@@ -257,6 +258,8 @@ const form = ref({
   name: '',
   description: ''
 })
+const originalForm = ref<string>('')
+const formDirty = computed(() => JSON.stringify(form.value) !== originalForm.value)
 
 const rules: FormRules = {
   name: [
@@ -297,6 +300,7 @@ function showCreateDialog() {
   isEditing.value = false
   editingId.value = null
   form.value = { name: '', description: '' }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -307,6 +311,7 @@ function showEditDialog(system: System) {
     name: system.name,
     description: system.description || ''
   }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -437,6 +442,19 @@ async function handleRemoveAdmin(admin: AdminInfo) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '移除管理员失败')
     }
+  }
+}
+
+async function handleDialogClose(done: () => void) {
+  if (formDirty.value) {
+    try {
+      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
+      done()
+    } catch {
+      // 用户取消关闭
+    }
+  } else {
+    done()
   }
 }
 

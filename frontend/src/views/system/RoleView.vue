@@ -83,6 +83,7 @@
       v-model="dialogVisible"
       :title="isEditing ? '编辑角色' : '创建角色'"
       width="500px"
+      :before-close="handleDialogClose"
     >
       <el-form
         ref="formRef"
@@ -91,7 +92,7 @@
         label-width="100px"
       >
         <el-form-item label="角色名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入角色名称" />
+          <el-input v-model="form.name" placeholder="请输入角色名称" autofocus />
         </el-form-item>
         <el-form-item label="角色编码" prop="code">
           <el-input
@@ -172,6 +173,8 @@ const form = ref({
   description: '',
   is_default: false
 })
+const originalForm = ref<string>('')
+const formDirty = computed(() => JSON.stringify(form.value) !== originalForm.value)
 
 const rules: FormRules = {
   name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
@@ -211,6 +214,7 @@ function showCreateDialog() {
   isEditing.value = false
   editingId.value = null
   form.value = { name: '', code: '', description: '', is_default: false }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -223,6 +227,7 @@ function showEditDialog(role: Role) {
     description: role.description || '',
     is_default: role.is_default === 1
   }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -284,6 +289,19 @@ async function handleBatchDelete() {
     fetchRoles()
   } catch (error: any) {
     if (error !== 'cancel') ElMessage.error(error.message || '批量删除失败')
+  }
+}
+
+async function handleDialogClose(done: () => void) {
+  if (formDirty.value) {
+    try {
+      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
+      done()
+    } catch {
+      // 用户取消关闭
+    }
+  } else {
+    done()
   }
 }
 

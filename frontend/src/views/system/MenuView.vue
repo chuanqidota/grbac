@@ -57,6 +57,7 @@
       v-model="dialogVisible"
       :title="isEditing ? '编辑菜单' : '创建菜单'"
       width="500px"
+      :before-close="handleDialogClose"
     >
       <el-form
         ref="formRef"
@@ -75,7 +76,7 @@
           />
         </el-form-item>
         <el-form-item label="菜单名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入菜单名称" />
+          <el-input v-model="form.name" placeholder="请输入菜单名称" autofocus />
         </el-form-item>
         <el-form-item label="路径" prop="path">
           <el-input v-model="form.path" placeholder="请输入路径" />
@@ -136,6 +137,8 @@ const form = ref({
   icon: '',
   sort_order: 0
 })
+const originalForm = ref<string>('')
+const formDirty = computed(() => JSON.stringify(form.value) !== originalForm.value)
 
 const rules: FormRules = {
   name: [{ required: true, message: '请输入菜单名称', trigger: 'blur' }]
@@ -187,6 +190,7 @@ function showCreateDialog(parentId?: number) {
   isEditing.value = false
   editingId.value = null
   form.value = { parent_id: parentId ? [parentId] : null, name: '', path: '', icon: '', sort_order: 0 }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -200,6 +204,7 @@ function showEditDialog(menu: Menu) {
     icon: menu.icon || '',
     sort_order: menu.sort_order || 0
   }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -245,6 +250,19 @@ async function handleDelete(menu: Menu) {
     fetchMenus()
   } catch (error: any) {
     if (error !== 'cancel') ElMessage.error(error.message || '删除失败')
+  }
+}
+
+async function handleDialogClose(done: () => void) {
+  if (formDirty.value) {
+    try {
+      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
+      done()
+    } catch {
+      // 用户取消关闭
+    }
+  } else {
+    done()
   }
 }
 

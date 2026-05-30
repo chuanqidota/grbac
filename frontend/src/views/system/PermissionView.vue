@@ -98,10 +98,11 @@
       v-model="dialogVisible"
       :title="isEditing ? '编辑权限' : '创建权限'"
       width="500px"
+      :before-close="handleDialogClose"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="权限编码" prop="code">
-          <el-input v-model="form.code" :disabled="isEditing" placeholder="请输入权限编码" />
+          <el-input v-model="form.code" :disabled="isEditing" placeholder="请输入权限编码" autofocus />
         </el-form-item>
         <el-form-item label="权限名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入权限名称" />
@@ -168,6 +169,8 @@ const editingId = ref<number | null>(null)
 
 const formRef = ref<FormInstance>()
 const form = ref({ code: '', name: '', method: 'GET', path: '', description: '' })
+const originalForm = ref<string>('')
+const formDirty = computed(() => JSON.stringify(form.value) !== originalForm.value)
 
 const rules: FormRules = {
   code: [{ required: true, message: '请输入权限编码', trigger: 'blur' }],
@@ -227,6 +230,7 @@ function showCreateDialog() {
   isEditing.value = false
   editingId.value = null
   form.value = { code: '', name: '', method: 'GET', path: '', description: '' }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -234,6 +238,7 @@ function showEditDialog(p: Permission) {
   isEditing.value = true
   editingId.value = p.id
   form.value = { code: p.code, name: p.name, method: p.method, path: p.path, description: p.description || '' }
+  originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }
 
@@ -286,6 +291,19 @@ async function handleBatchDelete() {
     fetchPermissions()
   } catch (error: any) {
     if (error !== 'cancel') ElMessage.error(error.message || '批量删除失败')
+  }
+}
+
+async function handleDialogClose(done: () => void) {
+  if (formDirty.value) {
+    try {
+      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
+      done()
+    } catch {
+      // 用户取消关闭
+    }
+  } else {
+    done()
   }
 }
 

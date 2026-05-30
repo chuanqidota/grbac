@@ -45,7 +45,7 @@
     />
 
     <!-- Assign Role Dialog -->
-    <el-dialog v-model="assignDialogVisible" title="分配角色" width="500px">
+    <el-dialog v-model="assignDialogVisible" title="分配角色" width="500px" :before-close="handleAssignDialogClose">
       <el-form ref="assignFormRef" :model="assignForm" :rules="assignRules" label-width="100px">
         <el-form-item label="选择用户" prop="user_id">
           <el-select
@@ -142,6 +142,8 @@ const assignForm = ref<{ user_id: number | null; role_ids: number[]; _fixedUser?
   role_ids: [],
   _fixedUser: false
 })
+const originalAssignForm = ref<string>('')
+const assignFormDirty = computed(() => JSON.stringify(assignForm.value) !== originalAssignForm.value)
 
 const assignRules: FormRules = {
   user_id: [{ required: true, message: '请选择用户', trigger: 'change' }],
@@ -200,6 +202,7 @@ function showDetail(member: MemberUser) {
 function showAssignDialog() {
   assignForm.value = { user_id: null, role_ids: [], _fixedUser: false }
   availableUsers.value = []
+  originalAssignForm.value = JSON.stringify(assignForm.value)
   assignDialogVisible.value = true
 }
 
@@ -243,6 +246,19 @@ async function handleRemoveRole(member: MemberUser, role: Role) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '角色移除失败')
     }
+  }
+}
+
+async function handleAssignDialogClose(done: () => void) {
+  if (assignFormDirty.value) {
+    try {
+      await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
+      done()
+    } catch {
+      // 用户取消关闭
+    }
+  } else {
+    done()
   }
 }
 
