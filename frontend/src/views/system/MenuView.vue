@@ -111,6 +111,8 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import { getMenus, createMenu, updateMenu, deleteMenu } from '@/api/menu'
 import { formatDate } from '@/utils/format'
 
+defineOptions({ name: 'MenuView' })
+
 interface Menu {
   id: number
   name: string
@@ -214,7 +216,15 @@ async function fetchMenus() {
 function showCreateDialog(parentId?: number) {
   isEditing.value = false
   editingId.value = null
-  form.value = { parent_id: parentId ? [parentId] : null, name: '', path: '', icon: '', sort_order: 0 }
+  // Compute smart default sort_order: max of sibling items + 10
+  let maxSort = 0
+  const siblings = parentId
+    ? menus.value.find(m => m.id === parentId)?.children || []
+    : menus.value
+  for (const item of siblings) {
+    if ((item.sort_order || 0) > maxSort) maxSort = item.sort_order || 0
+  }
+  form.value = { parent_id: parentId ? [parentId] : null, name: '', path: '', icon: '', sort_order: maxSort + 10 }
   originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }

@@ -121,6 +121,8 @@ import { Plus } from '@element-plus/icons-vue'
 import { getWebhooks, createWebhook, updateWebhook, deleteWebhook } from '@/api/webhook'
 import { formatDate } from '@/utils/format'
 
+defineOptions({ name: 'WebhookView' })
+
 interface Webhook {
   id: number
   url: string
@@ -223,7 +225,7 @@ async function fetchWebhooks() {
 function showCreateDialog() {
   isEditing.value = false
   editingId.value = null
-  form.value = { url: '', events: [] }
+  form.value = { url: '', events: ['role.created', 'role.updated'] }
   originalForm.value = JSON.stringify(form.value)
   dialogVisible.value = true
 }

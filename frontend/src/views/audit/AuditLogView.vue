@@ -36,7 +36,7 @@
         </div>
       </template>
       <template #default>
-        <el-table v-if="logs.length > 0" :data="logs" border stripe>
+        <el-table v-if="logs.length > 0" :data="logs" border stripe @sort-change="handleSortChange">
           <el-table-column prop="id" label="ID" width="80" />
           <el-table-column label="系统" min-width="120">
             <template #default="{ row }">
@@ -54,7 +54,7 @@
           <el-table-column prop="resource" label="资源类型" min-width="100" />
           <el-table-column prop="resource_id" label="资源ID" width="100" />
           <el-table-column prop="ip" label="IP地址" min-width="120" />
-          <el-table-column prop="created_at" label="操作时间" min-width="180">
+          <el-table-column prop="created_at" label="操作时间" min-width="180" sortable="custom">
             <template #default="{ row }">
               {{ formatDate(row.created_at) }}
             </template>
@@ -115,6 +115,8 @@ import { ElMessage } from 'element-plus'
 import { getAuditLogs } from '@/api/audit'
 import { getSystems } from '@/api/system'
 import { formatDate } from '@/utils/format'
+
+defineOptions({ name: 'AuditLogView' })
 
 interface AuditLog {
   id: number
@@ -238,6 +240,20 @@ function handleCurrentChange(page: number) {
 function showDetail(log: AuditLog) {
   detailLog.value = log
   detailVisible.value = true
+}
+
+function handleSortChange({ prop, order }: { prop: string; order: string | null }) {
+  if (!prop || !order) return
+  const list = [...logs.value]
+  list.sort((a: any, b: any) => {
+    const va = a[prop]
+    const vb = b[prop]
+    if (va == null) return 1
+    if (vb == null) return -1
+    const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb
+    return order === 'ascending' ? cmp : -cmp
+  })
+  logs.value = list
 }
 
 onMounted(async () => {

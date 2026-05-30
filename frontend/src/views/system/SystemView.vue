@@ -217,6 +217,8 @@ import { useSystemStore } from '@/stores/system'
 const userStore = useUserStore()
 const systemStore = useSystemStore()
 
+defineOptions({ name: 'SystemView' })
+
 interface AdminInfo {
   user_id: number
   username: string

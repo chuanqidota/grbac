@@ -117,6 +117,8 @@ import { getRoles, assignUsers, removeRoleUser } from '@/api/role'
 import { getUsers } from '@/api/user'
 import MemberDetailDrawer from './MemberDetailDrawer.vue'
 
+defineOptions({ name: 'MemberView' })
+
 interface Role {
   id: number
   name: string

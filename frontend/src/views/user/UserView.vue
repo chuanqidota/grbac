@@ -46,10 +46,10 @@
         </div>
       </template>
       <template #default>
-        <el-table v-if="userTable.data.value.length > 0" :data="userTable.data.value" border stripe>
+        <el-table v-if="userTable.data.value.length > 0" :data="userTable.data.value" border stripe @sort-change="handleSortChange">
           <el-table-column prop="id" label="ID" width="80" />
-          <el-table-column prop="username" label="用户名" min-width="120" />
-          <el-table-column prop="chinese_name" label="中文名" min-width="100" />
+          <el-table-column prop="username" label="用户名" min-width="120" sortable="custom" />
+          <el-table-column prop="chinese_name" label="中文名" min-width="100" sortable="custom" />
           <el-table-column prop="email" label="邮箱" min-width="180" />
           <el-table-column prop="phone" label="手机号" min-width="120" />
           <el-table-column label="状态" width="100">
@@ -74,7 +74,7 @@
               />
             </template>
           </el-table-column>
-          <el-table-column prop="created_at" label="创建时间" min-width="180">
+          <el-table-column prop="created_at" label="创建时间" min-width="180" sortable="custom">
             <template #default="{ row }">
               {{ formatDate(row.created_at) }}
             </template>
@@ -283,6 +283,20 @@ function handleCurrentChange(page: number) {
 function handleFilterChange() {
   userTable.page.value = 1
   userTable.refresh()
+}
+
+function handleSortChange({ prop, order }: { prop: string; order: string | null }) {
+  if (!prop || !order) return
+  const list = [...userTable.data.value]
+  list.sort((a: any, b: any) => {
+    const va = a[prop]
+    const vb = b[prop]
+    if (va == null) return 1
+    if (vb == null) return -1
+    const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb
+    return order === 'ascending' ? cmp : -cmp
+  })
+  userTable.data.value = list
 }
 
 // ── Create / Edit dialog ──

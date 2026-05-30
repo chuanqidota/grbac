@@ -137,7 +137,11 @@
         </el-breadcrumb>
       </div>
       <el-main class="layout-main">
-        <router-view :key="route.fullPath" />
+        <router-view v-slot="{ Component, route: currentRoute }">
+          <keep-alive :include="cachedViews">
+            <component :is="Component" :key="currentRoute.fullPath" />
+          </keep-alive>
+        </router-view>
       </el-main>
     </el-container>
   </el-container>
@@ -150,12 +154,19 @@ import { HomeFilled, Fold, Expand, UserFilled, ArrowDown, SwitchButton, User, Mo
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import { useSystemStore } from '@/stores/system'
+import { useKeyboard } from '@/composables/useKeyboard'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const userStore = useUserStore()
 const systemStore = useSystemStore()
+
+// Keyboard shortcuts
+useKeyboard({})
+
+// Keep-alive: component names to cache
+const cachedViews = ref(['UserView', 'RoleView', 'MenuView', 'PermissionView', 'WebhookView', 'MemberView', 'AuditLogView', 'SystemView'])
 
 const isCollapsed = ref(false)
 const activeMenu = computed(() => route.path)
@@ -173,7 +184,7 @@ const breadcrumbs = computed(() => {
     items.push({ title: '系统管理', path: '/systems' })
     const sys = systemStore.systems.find(s => s.id === Number(sysMatch[1]))
     if (sys) {
-      items.push({ title: sys.name })
+      items.push({ title: sys.name, path: `/systems/${sysMatch[1]}/roles` })
     }
     if (sysMatch[2] && route.meta.title) {
       items.push({ title: route.meta.title as string })

@@ -41,15 +41,16 @@
       </template>
       <template #default>
     <el-table
-      :data="filteredRoles"
+      :data="displayRoles"
       border
       stripe
       @selection-change="handleSelectionChange"
+      @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="50" />
       <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="name" label="角色名称" min-width="120" />
-      <el-table-column prop="code" label="角色编码" min-width="120">
+      <el-table-column prop="name" label="角色名称" min-width="120" sortable="custom" />
+      <el-table-column prop="code" label="角色编码" min-width="120" sortable="custom">
         <template #default="{ row }">
           <el-tag>{{ row.code }}</el-tag>
         </template>
@@ -134,7 +135,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -260,16 +261,35 @@ async function handleBeforeClose(done: () => void) {
   }
 }
 
-// --- Filtered roles ---
-const filteredRoles = computed(() => {
+// --- Filtered roles (mutable ref for sorting) ---
+function applyFilter(): Role[] {
   const kw = urlState.keyword.toLowerCase().trim()
-  if (!kw) return roles.value
+  if (!kw) return [...roles.value]
   return roles.value.filter(r =>
     r.name.toLowerCase().includes(kw) ||
     r.code.toLowerCase().includes(kw) ||
     (r.description && r.description.toLowerCase().includes(kw))
   )
-})
+}
+
+const displayRoles = ref<Role[]>([])
+watch([roles, () => urlState.keyword], () => {
+  displayRoles.value = applyFilter()
+}, { immediate: true })
+
+function handleSortChange({ prop, order }: { prop: string; order: string | null }) {
+  if (!prop || !order) return
+  const list = [...displayRoles.value]
+  list.sort((a: any, b: any) => {
+    const va = a[prop]
+    const vb = b[prop]
+    if (va == null) return 1
+    if (vb == null) return -1
+    const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb
+    return order === 'ascending' ? cmp : -cmp
+  })
+  displayRoles.value = list
+}
 
 // --- Delete ---
 const { confirmDelete, batchDelete } = useConfirmDelete(

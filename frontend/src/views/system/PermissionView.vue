@@ -54,12 +54,13 @@
       border
       stripe
       @selection-change="handleSelectionChange"
+      @sort-change="handleSortChange"
     >
       <el-table-column type="selection" width="50" />
       <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="code" label="权限编码" min-width="150" />
-      <el-table-column prop="name" label="权限名称" min-width="150" />
-      <el-table-column prop="method" label="请求方法" width="100">
+      <el-table-column prop="code" label="权限编码" min-width="150" sortable="custom" />
+      <el-table-column prop="name" label="权限名称" min-width="150" sortable="custom" />
+      <el-table-column prop="method" label="请求方法" width="100" sortable="custom">
         <template #default="{ row }">
           <el-tag :type="getMethodTagType(row.method)">{{ row.method }}</el-tag>
         </template>
@@ -269,6 +270,20 @@ function getMethodTagType(method: string) {
 function handleMethodChange() {
   page.value = 1
   refresh()
+}
+
+function handleSortChange({ prop, order }: { prop: string; order: string | null }) {
+  if (!prop || !order) return
+  const list = [...permissions.value]
+  list.sort((a: any, b: any) => {
+    const va = a[prop]
+    const vb = b[prop]
+    if (va == null) return 1
+    if (vb == null) return -1
+    const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb
+    return order === 'ascending' ? cmp : -cmp
+  })
+  permissions.value = list
 }
 
 function showCreateDialog() {
