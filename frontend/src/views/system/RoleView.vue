@@ -136,7 +136,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { getRoles, createRole, updateRole, deleteRole } from '@/api/role'
@@ -303,8 +303,14 @@ async function handleDelete(role: Role) {
 async function handleBatchDelete() {
   try {
     await ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 个角色吗？`, '批量删除', { type: 'warning' })
-    await Promise.all(selectedIds.value.map(id => deleteRole(systemId.value, id)))
-    ElMessage.success('批量删除成功')
+    const results = await Promise.allSettled(selectedIds.value.map(id => deleteRole(systemId.value, id)))
+    const successCount = results.filter(r => r.status === 'fulfilled').length
+    const failCount = results.filter(r => r.status === 'rejected').length
+    if (failCount === 0) {
+      ElNotification.success({ title: '批量删除成功', message: `成功删除 ${successCount} 个角色` })
+    } else {
+      ElNotification.warning({ title: '批量删除完成', message: `成功 ${successCount} 个，失败 ${failCount} 个` })
+    }
     selectedIds.value = []
     fetchRoles()
   } catch (error: any) {

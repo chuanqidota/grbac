@@ -11,27 +11,39 @@
         <div class="assign-container">
           <div class="assign-section">
             <h4>已分配角色</h4>
-            <el-table :data="memberRoles" v-loading="loadingRoles" border size="small">
-              <el-table-column prop="name" label="角色名称" min-width="120">
-                <template #default="{ row }">
-                  <el-tag type="primary">{{ row.name }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="code" label="角色编码" min-width="120">
-                <template #default="{ row }">
-                  <el-tag>{{ row.code }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="description" label="描述" min-width="180" />
-              <el-table-column label="操作" width="100">
-                <template #default="{ row }">
-                  <el-button type="danger" link @click="handleRemoveRole(row)">
-                    移除
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-            <el-empty v-if="!loadingRoles && memberRoles.length === 0" description="暂无角色分配" />
+            <el-skeleton :loading="loadingRoles" animated :count="3">
+              <template #template>
+                <div v-for="i in 3" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
+                  <el-skeleton-item variant="text" style="width: 25%;" />
+                  <el-skeleton-item variant="text" style="width: 25%;" />
+                  <el-skeleton-item variant="text" style="width: 30%;" />
+                  <el-skeleton-item variant="text" style="width: 15%;" />
+                </div>
+              </template>
+              <template #default>
+                <el-table v-if="memberRoles.length > 0" :data="memberRoles" border size="small">
+                  <el-table-column prop="name" label="角色名称" min-width="120">
+                    <template #default="{ row }">
+                      <el-tag type="primary">{{ row.name }}</el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="code" label="角色编码" min-width="120">
+                    <template #default="{ row }">
+                      <el-tag>{{ row.code }}</el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="description" label="描述" min-width="180" />
+                  <el-table-column label="操作" width="100">
+                    <template #default="{ row }">
+                      <el-button type="danger" link @click="handleRemoveRole(row)">
+                        移除
+                      </el-button>
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <el-empty v-else description="暂无角色分配" />
+              </template>
+            </el-skeleton>
           </div>
           <div class="assign-section">
             <h4>添加角色</h4>

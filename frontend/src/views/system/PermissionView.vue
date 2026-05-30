@@ -132,7 +132,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { getPermissions, createPermission, updatePermission, deletePermission } from '@/api/permission'
@@ -314,8 +314,14 @@ async function handleDelete(p: Permission) {
 async function handleBatchDelete() {
   try {
     await ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 个权限吗？`, '批量删除', { type: 'warning' })
-    await Promise.all(selectedIds.value.map(id => deletePermission(systemId.value, id)))
-    ElMessage.success('批量删除成功')
+    const results = await Promise.allSettled(selectedIds.value.map(id => deletePermission(systemId.value, id)))
+    const successCount = results.filter(r => r.status === 'fulfilled').length
+    const failCount = results.filter(r => r.status === 'rejected').length
+    if (failCount === 0) {
+      ElNotification.success({ title: '批量删除成功', message: `成功删除 ${successCount} 个权限` })
+    } else {
+      ElNotification.warning({ title: '批量删除完成', message: `成功 ${successCount} 个，失败 ${failCount} 个` })
+    }
     selectedIds.value = []
     fetchPermissions()
   } catch (error: any) {

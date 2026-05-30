@@ -8,34 +8,50 @@
       </el-button>
     </div>
 
-    <el-table :data="members" v-loading="loading" border stripe>
-      <el-table-column prop="user_id" label="ID" width="80" />
-      <el-table-column label="用户" min-width="160">
-        <template #default="{ row }">
-          {{ row.chinese_name ? `${row.chinese_name}(${row.username})` : row.username }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="email" label="邮箱" min-width="180" />
-      <el-table-column label="已分配角色" min-width="200">
-        <template #default="{ row }">
-          <el-tag
-            v-for="role in row.roles"
-            :key="role.id"
-            style="margin: 2px 4px 2px 0;"
-            closable
-            @close="handleRemoveRole(row, role)"
-          >
-            {{ role.name }}
-          </el-tag>
-          <span v-if="!row.roles || row.roles.length === 0" style="color: #999;">-</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="100" fixed="right">
-        <template #default="{ row }">
-          <el-button type="primary" link @click="showDetail(row)">授权</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-skeleton :loading="loading" animated :count="5">
+      <template #template>
+        <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
+          <el-skeleton-item variant="text" style="width: 8%;" />
+          <el-skeleton-item variant="text" style="width: 16%;" />
+          <el-skeleton-item variant="text" style="width: 18%;" />
+          <el-skeleton-item variant="text" style="width: 20%;" />
+          <el-skeleton-item variant="text" style="width: 10%;" />
+        </div>
+      </template>
+      <template #default>
+        <el-table v-if="members.length > 0" :data="members" border stripe>
+          <el-table-column prop="user_id" label="ID" width="80" />
+          <el-table-column label="用户" min-width="160">
+            <template #default="{ row }">
+              {{ row.chinese_name ? `${row.chinese_name}(${row.username})` : row.username }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="email" label="邮箱" min-width="180" />
+          <el-table-column label="已分配角色" min-width="200">
+            <template #default="{ row }">
+              <el-tag
+                v-for="role in row.roles"
+                :key="role.id"
+                style="margin: 2px 4px 2px 0;"
+                closable
+                @close="handleRemoveRole(row, role)"
+              >
+                {{ role.name }}
+              </el-tag>
+              <span v-if="!row.roles || row.roles.length === 0" style="color: #999;">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="100" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" link @click="showDetail(row)">授权</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-empty v-else description="暂无成员">
+          <el-button type="primary" @click="showAssignDialog">分配角色</el-button>
+        </el-empty>
+      </template>
+    </el-skeleton>
 
     <MemberDetailDrawer
       v-model="detailDrawerVisible"

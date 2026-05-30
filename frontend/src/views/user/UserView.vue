@@ -31,56 +31,76 @@
       </el-select>
     </div>
 
-    <el-table :data="users" v-loading="loading" border stripe>
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="username" label="用户名" min-width="120" />
-      <el-table-column prop="chinese_name" label="中文名" min-width="100" />
-      <el-table-column prop="email" label="邮箱" min-width="180" />
-      <el-table-column prop="phone" label="手机号" min-width="120" />
-      <el-table-column label="状态" width="100">
-        <template #default="{ row }">
-          <el-switch
-            v-model="row.status"
-            :active-value="1"
-            :inactive-value="0"
-            @change="handleStatusChange(row)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="超管" width="100">
-        <template #default="{ row }">
-          <el-switch
-            v-model="row.is_super_admin"
-            :active-value="1"
-            :inactive-value="0"
-            active-text="是"
-            inactive-text="否"
-            @change="handleSuperAdminChange(row)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column prop="created_at" label="创建时间" min-width="180">
-        <template #default="{ row }">
-          {{ formatDate(row.created_at) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="300" fixed="right">
-        <template #default="{ row }">
-          <el-button type="primary" link @click="showDetail(row)">
-            详情
-          </el-button>
-          <el-button type="primary" link @click="showEditDialog(row)">
-            编辑
-          </el-button>
-          <el-button type="warning" link @click="showResetPasswordDialog(row)">
-            重置密码
-          </el-button>
-          <el-button type="danger" link @click="handleDelete(row)">
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-skeleton :loading="loading" animated :count="5">
+      <template #template>
+        <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
+          <el-skeleton-item variant="text" style="width: 5%;" />
+          <el-skeleton-item variant="text" style="width: 10%;" />
+          <el-skeleton-item variant="text" style="width: 10%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+          <el-skeleton-item variant="text" style="width: 10%;" />
+          <el-skeleton-item variant="text" style="width: 8%;" />
+          <el-skeleton-item variant="text" style="width: 8%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+        </div>
+      </template>
+      <template #default>
+        <el-table v-if="users.length > 0" :data="users" border stripe>
+          <el-table-column prop="id" label="ID" width="80" />
+          <el-table-column prop="username" label="用户名" min-width="120" />
+          <el-table-column prop="chinese_name" label="中文名" min-width="100" />
+          <el-table-column prop="email" label="邮箱" min-width="180" />
+          <el-table-column prop="phone" label="手机号" min-width="120" />
+          <el-table-column label="状态" width="100">
+            <template #default="{ row }">
+              <el-switch
+                v-model="row.status"
+                :active-value="1"
+                :inactive-value="0"
+                @change="handleStatusChange(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="超管" width="100">
+            <template #default="{ row }">
+              <el-switch
+                v-model="row.is_super_admin"
+                :active-value="1"
+                :inactive-value="0"
+                active-text="是"
+                inactive-text="否"
+                @change="handleSuperAdminChange(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="created_at" label="创建时间" min-width="180">
+            <template #default="{ row }">
+              {{ formatDate(row.created_at) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="300" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" link @click="showDetail(row)">
+                详情
+              </el-button>
+              <el-button type="primary" link @click="showEditDialog(row)">
+                编辑
+              </el-button>
+              <el-button type="warning" link @click="showResetPasswordDialog(row)">
+                重置密码
+              </el-button>
+              <el-button type="danger" link @click="handleDelete(row)">
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-empty v-else description="暂无用户">
+          <el-button type="primary" @click="showCreateDialog">创建用户</el-button>
+        </el-empty>
+      </template>
+    </el-skeleton>
 
     <div class="pagination">
       <el-pagination

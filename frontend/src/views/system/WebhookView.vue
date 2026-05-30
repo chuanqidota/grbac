@@ -8,38 +8,55 @@
       </el-button>
     </div>
 
-    <el-table :data="webhooks" v-loading="loading" border stripe>
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="url" label="Webhook URL" min-width="250" show-overflow-tooltip />
-      <el-table-column prop="events" label="事件" min-width="200">
-        <template #default="{ row }">
-          <el-tag v-for="event in parseEvents(row.events)" :key="event" size="small" style="margin-right: 4px; margin-bottom: 2px;">
-            {{ event }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" width="100">
-        <template #default="{ row }">
-          <el-switch
-            v-model="row.status"
-            :active-value="1"
-            :inactive-value="0"
-            @change="handleStatusChange(row)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column prop="created_at" label="创建时间" min-width="180">
-        <template #default="{ row }">
-          {{ formatDate(row.created_at) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="140" fixed="right">
-        <template #default="{ row }">
-          <el-button type="primary" link @click="showEditDialog(row)">编辑</el-button>
-          <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-skeleton :loading="loading" animated :count="5">
+      <template #template>
+        <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
+          <el-skeleton-item variant="text" style="width: 5%;" />
+          <el-skeleton-item variant="text" style="width: 25%;" />
+          <el-skeleton-item variant="text" style="width: 20%;" />
+          <el-skeleton-item variant="text" style="width: 8%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+          <el-skeleton-item variant="text" style="width: 12%;" />
+        </div>
+      </template>
+      <template #default>
+        <el-table v-if="webhooks.length > 0" :data="webhooks" border stripe>
+          <el-table-column prop="id" label="ID" width="80" />
+          <el-table-column prop="url" label="Webhook URL" min-width="250" show-overflow-tooltip />
+          <el-table-column prop="events" label="事件" min-width="200">
+            <template #default="{ row }">
+              <el-tag v-for="event in parseEvents(row.events)" :key="event" size="small" style="margin-right: 4px; margin-bottom: 2px;">
+                {{ event }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="100">
+            <template #default="{ row }">
+              <el-switch
+                v-model="row.status"
+                :active-value="1"
+                :inactive-value="0"
+                @change="handleStatusChange(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="created_at" label="创建时间" min-width="180">
+            <template #default="{ row }">
+              {{ formatDate(row.created_at) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="140" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" link @click="showEditDialog(row)">编辑</el-button>
+              <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-empty v-else description="暂无 Webhook">
+          <el-button type="primary" @click="showCreateDialog">添加 Webhook</el-button>
+        </el-empty>
+      </template>
+    </el-skeleton>
 
     <!-- Payload Demo Section -->
     <div class="demo-section">

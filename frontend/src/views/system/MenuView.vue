@@ -22,6 +22,7 @@
     </div>
 
     <el-table
+      v-if="filteredMenus.length > 0"
       :data="filteredMenus"
       v-loading="loading"
       border
@@ -51,6 +52,9 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-empty v-else description="暂无菜单">
+      <el-button type="primary" @click="showCreateDialog()">添加菜单</el-button>
+    </el-empty>
 
     <!-- Create/Edit Dialog -->
     <el-dialog

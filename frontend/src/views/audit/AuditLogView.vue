@@ -21,37 +21,55 @@
       </el-select>
     </div>
 
-    <el-table :data="logs" v-loading="loading" border stripe>
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column label="系统" min-width="120">
-        <template #default="{ row }">
-          {{ getSystemName(row.system_id) }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="username" label="操作人" min-width="100" />
-      <el-table-column prop="action" label="操作" min-width="120">
-        <template #default="{ row }">
-          <el-tag :type="getActionTagType(row.action)">
-            {{ row.action }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="resource" label="资源类型" min-width="100" />
-      <el-table-column prop="resource_id" label="资源ID" width="100" />
-      <el-table-column prop="ip" label="IP地址" min-width="120" />
-      <el-table-column prop="created_at" label="操作时间" min-width="180">
-        <template #default="{ row }">
-          {{ formatDate(row.created_at) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="详情" width="80">
-        <template #default="{ row }">
-          <el-button type="primary" link @click="showDetail(row)">
-            查看
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-skeleton :loading="loading" animated :count="5">
+      <template #template>
+        <div v-for="i in 5" :key="i" style="display: flex; gap: 16px; margin-bottom: 12px;">
+          <el-skeleton-item variant="text" style="width: 5%;" />
+          <el-skeleton-item variant="text" style="width: 12%;" />
+          <el-skeleton-item variant="text" style="width: 10%;" />
+          <el-skeleton-item variant="text" style="width: 12%;" />
+          <el-skeleton-item variant="text" style="width: 10%;" />
+          <el-skeleton-item variant="text" style="width: 8%;" />
+          <el-skeleton-item variant="text" style="width: 12%;" />
+          <el-skeleton-item variant="text" style="width: 15%;" />
+          <el-skeleton-item variant="text" style="width: 8%;" />
+        </div>
+      </template>
+      <template #default>
+        <el-table v-if="logs.length > 0" :data="logs" border stripe>
+          <el-table-column prop="id" label="ID" width="80" />
+          <el-table-column label="系统" min-width="120">
+            <template #default="{ row }">
+              {{ getSystemName(row.system_id) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="username" label="操作人" min-width="100" />
+          <el-table-column prop="action" label="操作" min-width="120">
+            <template #default="{ row }">
+              <el-tag :type="getActionTagType(row.action)">
+                {{ row.action }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="resource" label="资源类型" min-width="100" />
+          <el-table-column prop="resource_id" label="资源ID" width="100" />
+          <el-table-column prop="ip" label="IP地址" min-width="120" />
+          <el-table-column prop="created_at" label="操作时间" min-width="180">
+            <template #default="{ row }">
+              {{ formatDate(row.created_at) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="详情" width="80">
+            <template #default="{ row }">
+              <el-button type="primary" link @click="showDetail(row)">
+                查看
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-empty v-else description="暂无日志" />
+      </template>
+    </el-skeleton>
 
     <div class="pagination">
       <el-pagination
