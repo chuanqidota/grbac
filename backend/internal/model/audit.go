@@ -5,7 +5,7 @@ import "time"
 // AuditLog records an administrative action performed by a user.
 type AuditLog struct {
 	ID           int64     `json:"id"            gorm:"column:id;primaryKey;autoIncrement"`
-	UserID       int64     `json:"user_id"       gorm:"column:user_id;not null"`
+	UserID       int64     `json:"user_id"       gorm:"column:user_id;not null;index"`
 	Username     string    `json:"username"      gorm:"column:username;size:50;not null"`
 	SystemID     *int64    `json:"system_id"     gorm:"column:system_id;index"`
 	Action       string    `json:"action"        gorm:"column:action;size:50;not null"`       // create/update/delete/assign

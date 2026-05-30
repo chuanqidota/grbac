@@ -6,7 +6,7 @@ import "time"
 type Permission struct {
 	ID          int64     `json:"id"          gorm:"column:id;primaryKey;autoIncrement"`
 	SystemID    int64     `json:"system_id"   gorm:"column:system_id;not null;uniqueIndex:uk_system_method_path"`
-	Code        string    `json:"code"        gorm:"column:code;size:100;not null"`
+	Code        string    `json:"code"        gorm:"column:code;size:100;not null;uniqueIndex:uk_system_code"`
 	Name        string    `json:"name"        gorm:"column:name;size:100;not null"`
 	Method      string    `json:"method"      gorm:"column:method;size:10;not null;uniqueIndex:uk_system_method_path"` // GET/POST/PUT/DELETE
 	Path        string    `json:"path"        gorm:"column:path;size:200;not null;uniqueIndex:uk_system_method_path"`

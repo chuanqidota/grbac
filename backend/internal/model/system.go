@@ -22,7 +22,9 @@ type SystemMember struct {
 	ID        int64     `json:"id"         gorm:"column:id;primaryKey;autoIncrement"`
 	SystemID  int64     `json:"system_id"  gorm:"column:system_id;not null;uniqueIndex:uk_system_user"`
 	UserID    int64     `json:"user_id"    gorm:"column:user_id;not null;uniqueIndex:uk_system_user"`
-	Role      string    `json:"role"       gorm:"column:role;size:20;not null"` // admin / member
+	// Role is the system-level membership role.
+	// Valid values: "admin" (can manage system config), "member" (regular member).
+	Role      string    `json:"role"       gorm:"column:role;size:20;not null"`
 	CreatedAt time.Time `json:"created_at" gorm:"column:created_at;autoCreateTime"`
 }
 
