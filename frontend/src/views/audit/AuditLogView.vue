@@ -92,6 +92,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getAuditLogs } from '@/api/audit'
 import { getSystems } from '@/api/system'
@@ -122,6 +123,24 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
 const filterSystemId = ref<number | null>(null)
+
+const route = useRoute()
+const router = useRouter()
+
+function restoreFromUrl() {
+  const q = route.query
+  if (q.page) currentPage.value = Number(q.page) || 1
+  if (q.pageSize) pageSize.value = Number(q.pageSize) || 20
+  if (q.systemId !== undefined && q.systemId !== '') filterSystemId.value = Number(q.systemId)
+}
+
+function syncToUrl() {
+  const query: Record<string, string> = {}
+  if (currentPage.value > 1) query.page = String(currentPage.value)
+  if (pageSize.value !== 20) query.pageSize = String(pageSize.value)
+  if (filterSystemId.value !== null) query.systemId = String(filterSystemId.value)
+  router.replace({ query })
+}
 
 const detailVisible = ref(false)
 const detailLog = ref<AuditLog | null>(null)
@@ -178,17 +197,20 @@ async function fetchLogs() {
 
 function handleFilter() {
   currentPage.value = 1
+  syncToUrl()
   fetchLogs()
 }
 
 function handleSizeChange(size: number) {
   pageSize.value = size
   currentPage.value = 1
+  syncToUrl()
   fetchLogs()
 }
 
 function handleCurrentChange(page: number) {
   currentPage.value = page
+  syncToUrl()
   fetchLogs()
 }
 
@@ -198,6 +220,7 @@ function showDetail(log: AuditLog) {
 }
 
 onMounted(async () => {
+  restoreFromUrl()
   await fetchSystems()
   fetchLogs()
 })

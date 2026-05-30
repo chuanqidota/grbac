@@ -99,8 +99,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
@@ -119,11 +119,28 @@ interface Menu {
 }
 
 const route = useRoute()
+const router = useRouter()
 const systemId = computed(() => Number(route.params.id))
 
 const menus = ref<Menu[]>([])
 const loading = ref(false)
 const searchKeyword = ref('')
+
+function restoreFromUrl() {
+  const q = route.query
+  if (q.keyword) searchKeyword.value = String(q.keyword)
+}
+
+function syncToUrl() {
+  const query: Record<string, string> = {}
+  if (searchKeyword.value) query.keyword = searchKeyword.value
+  router.replace({ query })
+}
+
+watch(searchKeyword, () => {
+  syncToUrl()
+})
+
 const dialogVisible = ref(false)
 const isEditing = ref(false)
 const submitting = ref(false)
@@ -267,6 +284,7 @@ async function handleDialogClose(done: () => void) {
 }
 
 onMounted(() => {
+  restoreFromUrl()
   fetchMenus()
 })
 </script>

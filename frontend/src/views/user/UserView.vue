@@ -14,8 +14,6 @@
         placeholder="搜索用户名"
         clearable
         style="width: 300px"
-        @clear="handleSearch"
-        @keyup.enter="handleSearch"
       >
         <template #prefix>
           <el-icon><Search /></el-icon>
@@ -26,7 +24,7 @@
         placeholder="超管筛选"
         clearable
         style="width: 150px"
-        @change="handleSearch"
+        @change="handleFilterSuperAdmin"
       >
         <el-option label="仅超管" :value="1" />
         <el-option label="非超管" :value="0" />
@@ -190,7 +188,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
@@ -216,6 +215,42 @@ const pageSize = ref(20)
 const total = ref(0)
 const searchUsername = ref('')
 const filterSuperAdmin = ref<number | null>(null)
+
+const route = useRoute()
+const router = useRouter()
+
+function restoreFromUrl() {
+  const q = route.query
+  if (q.keyword) searchUsername.value = String(q.keyword)
+  if (q.page) currentPage.value = Number(q.page) || 1
+  if (q.pageSize) pageSize.value = Number(q.pageSize) || 20
+  if (q.superAdmin !== undefined && q.superAdmin !== '') filterSuperAdmin.value = Number(q.superAdmin)
+}
+
+function syncToUrl() {
+  const query: Record<string, string> = {}
+  if (searchUsername.value) query.keyword = searchUsername.value
+  if (currentPage.value > 1) query.page = String(currentPage.value)
+  if (pageSize.value !== 20) query.pageSize = String(pageSize.value)
+  if (filterSuperAdmin.value !== null) query.superAdmin = String(filterSuperAdmin.value)
+  router.replace({ query })
+}
+
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(searchUsername, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    currentPage.value = 1
+    syncToUrl()
+    fetchUsers()
+  }, 300)
+})
+
+function handleFilterSuperAdmin() {
+  currentPage.value = 1
+  syncToUrl()
+  fetchUsers()
+}
 
 const dialogVisible = ref(false)
 const isEditing = ref(false)
@@ -286,17 +321,20 @@ async function fetchUsers() {
 
 function handleSearch() {
   currentPage.value = 1
+  syncToUrl()
   fetchUsers()
 }
 
 function handleSizeChange(size: number) {
   pageSize.value = size
   currentPage.value = 1
+  syncToUrl()
   fetchUsers()
 }
 
 function handleCurrentChange(page: number) {
   currentPage.value = page
+  syncToUrl()
   fetchUsers()
 }
 
@@ -464,6 +502,7 @@ async function handleResetDialogClose(done: () => void) {
 }
 
 onMounted(() => {
+  restoreFromUrl()
   fetchUsers()
 })
 </script>

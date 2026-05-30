@@ -19,8 +19,6 @@
         placeholder="搜索权限编码或名称"
         clearable
         style="width: 240px"
-        @clear="handleSearch"
-        @keyup.enter="handleSearch"
       >
         <template #prefix>
           <el-icon><Search /></el-icon>
@@ -132,8 +130,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
@@ -151,6 +149,7 @@ interface Permission {
 }
 
 const route = useRoute()
+const router = useRouter()
 const systemId = computed(() => Number(route.params.id))
 
 const permissions = ref<Permission[]>([])
@@ -161,6 +160,33 @@ const total = ref(0)
 const searchKeyword = ref('')
 const filterMethod = ref('')
 const selectedIds = ref<number[]>([])
+
+function restoreFromUrl() {
+  const q = route.query
+  if (q.keyword) searchKeyword.value = String(q.keyword)
+  if (q.page) currentPage.value = Number(q.page) || 1
+  if (q.pageSize) pageSize.value = Number(q.pageSize) || 20
+  if (q.method) filterMethod.value = String(q.method)
+}
+
+function syncToUrl() {
+  const query: Record<string, string> = {}
+  if (searchKeyword.value) query.keyword = searchKeyword.value
+  if (currentPage.value > 1) query.page = String(currentPage.value)
+  if (pageSize.value !== 20) query.pageSize = String(pageSize.value)
+  if (filterMethod.value) query.method = filterMethod.value
+  router.replace({ query })
+}
+
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(searchKeyword, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    currentPage.value = 1
+    syncToUrl()
+    fetchPermissions()
+  }, 300)
+})
 
 const dialogVisible = ref(false)
 const isEditing = ref(false)
@@ -186,11 +212,13 @@ function getMethodTagType(method: string) {
 
 function handleSearch() {
   currentPage.value = 1
+  syncToUrl()
   fetchPermissions()
 }
 
 function handleMethodChange() {
   currentPage.value = 1
+  syncToUrl()
   fetchPermissions()
 }
 
@@ -218,11 +246,13 @@ function handleSelectionChange(selection: Permission[]) {
 function handleSizeChange(size: number) {
   pageSize.value = size
   currentPage.value = 1
+  syncToUrl()
   fetchPermissions()
 }
 
 function handleCurrentChange(page: number) {
   currentPage.value = page
+  syncToUrl()
   fetchPermissions()
 }
 
@@ -308,6 +338,7 @@ async function handleDialogClose(done: () => void) {
 }
 
 onMounted(() => {
+  restoreFromUrl()
   fetchPermissions()
 })
 </script>
