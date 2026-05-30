@@ -3,6 +3,7 @@ import { getToken, getRefreshToken, setToken, setRefreshToken, removeToken, remo
 import router from '@/router'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
+import { ElNotification } from 'element-plus'
 
 NProgress.configure({ showSpinner: false, minimum: 0.2 })
 
@@ -136,6 +137,19 @@ request.interceptors.response.use(
       doneProgress()
       return Promise.reject(new Error(data?.message || `请求失败 (${status})`))
     }
+
+    // Network errors (timeout, disconnected)
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      doneProgress()
+      ElNotification.error({ title: '请求超时', message: '网络连接超时，请检查网络后重试' })
+      return Promise.reject(new Error('请求超时'))
+    }
+    if (!error.response && error.request) {
+      doneProgress()
+      ElNotification.error({ title: '网络错误', message: '无法连接到服务器，请检查网络连接' })
+      return Promise.reject(new Error('网络连接失败'))
+    }
+
     doneProgress()
     return Promise.reject(error)
   }
