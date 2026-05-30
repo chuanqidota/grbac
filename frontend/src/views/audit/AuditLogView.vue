@@ -131,7 +131,10 @@ function restoreFromUrl() {
   const q = route.query
   if (q.page) currentPage.value = Number(q.page) || 1
   if (q.pageSize) pageSize.value = Number(q.pageSize) || 20
-  if (q.systemId !== undefined && q.systemId !== '') filterSystemId.value = Number(q.systemId)
+  if (q.systemId !== undefined && q.systemId !== '') {
+    const val = Number(q.systemId)
+    if (!isNaN(val)) filterSystemId.value = val
+  }
 }
 
 function syncToUrl() {

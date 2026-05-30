@@ -99,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -137,8 +137,12 @@ function syncToUrl() {
   router.replace({ query })
 }
 
+let searchTimer: ReturnType<typeof setTimeout> | null = null
 watch(searchKeyword, () => {
-  syncToUrl()
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    syncToUrl()
+  }, 300)
 })
 
 const dialogVisible = ref(false)
@@ -286,6 +290,10 @@ async function handleDialogClose(done: () => void) {
 onMounted(() => {
   restoreFromUrl()
   fetchMenus()
+})
+
+onUnmounted(() => {
+  if (searchTimer) clearTimeout(searchTimer)
 })
 </script>
 

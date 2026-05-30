@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -161,12 +161,16 @@ const searchKeyword = ref('')
 const filterMethod = ref('')
 const selectedIds = ref<number[]>([])
 
+const isRestoring = ref(false)
+
 function restoreFromUrl() {
+  isRestoring.value = true
   const q = route.query
   if (q.keyword) searchKeyword.value = String(q.keyword)
   if (q.page) currentPage.value = Number(q.page) || 1
   if (q.pageSize) pageSize.value = Number(q.pageSize) || 20
   if (q.method) filterMethod.value = String(q.method)
+  nextTick(() => { isRestoring.value = false })
 }
 
 function syncToUrl() {
@@ -180,6 +184,7 @@ function syncToUrl() {
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 watch(searchKeyword, () => {
+  if (isRestoring.value) return
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
     currentPage.value = 1
@@ -208,12 +213,6 @@ const rules: FormRules = {
 function getMethodTagType(method: string) {
   const types: Record<string, string> = { GET: 'success', POST: 'primary', PUT: 'warning', DELETE: 'danger', PATCH: 'info' }
   return types[method] || ''
-}
-
-function handleSearch() {
-  currentPage.value = 1
-  syncToUrl()
-  fetchPermissions()
 }
 
 function handleMethodChange() {
@@ -340,6 +339,10 @@ async function handleDialogClose(done: () => void) {
 onMounted(() => {
   restoreFromUrl()
   fetchPermissions()
+})
+
+onUnmounted(() => {
+  if (searchTimer) clearTimeout(searchTimer)
 })
 </script>
 

@@ -188,7 +188,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -219,12 +219,19 @@ const filterSuperAdmin = ref<number | null>(null)
 const route = useRoute()
 const router = useRouter()
 
+const isRestoring = ref(false)
+
 function restoreFromUrl() {
+  isRestoring.value = true
   const q = route.query
   if (q.keyword) searchUsername.value = String(q.keyword)
   if (q.page) currentPage.value = Number(q.page) || 1
   if (q.pageSize) pageSize.value = Number(q.pageSize) || 20
-  if (q.superAdmin !== undefined && q.superAdmin !== '') filterSuperAdmin.value = Number(q.superAdmin)
+  if (q.superAdmin !== undefined && q.superAdmin !== '') {
+    const val = Number(q.superAdmin)
+    if (!isNaN(val)) filterSuperAdmin.value = val
+  }
+  nextTick(() => { isRestoring.value = false })
 }
 
 function syncToUrl() {
@@ -238,6 +245,7 @@ function syncToUrl() {
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 watch(searchUsername, () => {
+  if (isRestoring.value) return
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
     currentPage.value = 1
@@ -317,12 +325,6 @@ async function fetchUsers() {
   } finally {
     loading.value = false
   }
-}
-
-function handleSearch() {
-  currentPage.value = 1
-  syncToUrl()
-  fetchUsers()
 }
 
 function handleSizeChange(size: number) {
@@ -504,6 +506,10 @@ async function handleResetDialogClose(done: () => void) {
 onMounted(() => {
   restoreFromUrl()
   fetchUsers()
+})
+
+onUnmounted(() => {
+  if (searchTimer) clearTimeout(searchTimer)
 })
 </script>
 
