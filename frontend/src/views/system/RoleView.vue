@@ -15,7 +15,7 @@
 
     <div class="search-bar">
       <el-input
-        v-model="searchKeyword"
+        v-model="urlState.keyword"
         placeholder="搜索角色名称或编码"
         clearable
         style="width: 300px"
@@ -69,7 +69,7 @@
           <el-button type="primary" link @click="showEditDialog(row)">
             编辑
           </el-button>
-          <el-button type="danger" link @click="handleDelete(row)" :disabled="row.is_default === 1">
+          <el-button type="danger" link @click="confirmDelete(row)" :disabled="row.is_default === 1">
             删除
           </el-button>
         </template>
@@ -83,39 +83,39 @@
       v-model="dialogVisible"
       :title="isEditing ? '编辑角色' : '创建角色'"
       width="500px"
-      :before-close="handleDialogClose"
+      :before-close="handleBeforeClose"
     >
       <el-form
         ref="formRef"
-        :model="form"
+        :model="formData"
         :rules="rules"
         label-width="100px"
       >
         <el-form-item label="角色名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入角色名称" autofocus />
+          <el-input v-model="formData.name" placeholder="请输入角色名称" autofocus />
         </el-form-item>
         <el-form-item label="角色编码" prop="code">
           <el-input
-            v-model="form.code"
+            v-model="formData.code"
             :disabled="isEditing"
             placeholder="请输入角色编码"
           />
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input
-            v-model="form.description"
+            v-model="formData.description"
             type="textarea"
             :rows="3"
             placeholder="请输入角色描述"
           />
         </el-form-item>
         <el-form-item v-if="!isEditing" label="默认角色">
-          <el-switch v-model="form.is_default" />
+          <el-switch v-model="formData.is_default" />
           <span class="form-tip">开启后，该角色的菜单和接口权限自动对系统内所有用户生效</span>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="handleDialogClose(() => { dialogVisible = false })">取消</el-button>
+        <el-button @click="closeDialog">取消</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitting">
           确定
         </el-button>
@@ -134,13 +134,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { getRoles, createRole, updateRole, deleteRole } from '@/api/role'
+import { useUrlState, useFormDialog, useConfirmDelete } from '@/composables'
 import RoleAssignDrawer from './RoleAssignDrawer.vue'
+
+defineOptions({ name: 'RoleView' })
 
 interface Role {
   id: number
@@ -151,69 +154,24 @@ interface Role {
   created_at: string
 }
 
+interface RoleForm {
+  name: string
+  code: string
+  description: string
+  is_default: boolean
+}
+
 const route = useRoute()
-const router = useRouter()
 const systemId = computed(() => Number(route.params.id))
 
 const roles = ref<Role[]>([])
 const loading = ref(false)
-const searchKeyword = ref('')
 const selectedIds = ref<number[]>([])
 
-function restoreFromUrl() {
-  const q = route.query
-  if (q.keyword) searchKeyword.value = String(q.keyword)
-}
+// --- URL state (search keyword) ---
+const { state: urlState } = useUrlState({ keyword: '' })
 
-function syncToUrl() {
-  const query: Record<string, string> = {}
-  if (searchKeyword.value) query.keyword = searchKeyword.value
-  router.replace({ query })
-}
-
-let searchTimer: ReturnType<typeof setTimeout> | null = null
-watch(searchKeyword, () => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    syncToUrl()
-  }, 300)
-})
-
-const dialogVisible = ref(false)
-const isEditing = ref(false)
-const submitting = ref(false)
-const editingId = ref<number | null>(null)
-const drawerVisible = ref(false)
-const selectedRole = ref<Role | null>(null)
-
-const formRef = ref<FormInstance>()
-const form = ref({
-  name: '',
-  code: '',
-  description: '',
-  is_default: false
-})
-const originalForm = ref<string>('')
-const formDirty = computed(() => JSON.stringify(form.value) !== originalForm.value)
-
-const rules: FormRules = {
-  name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
-  code: [
-    { required: true, message: '请输入角色编码', trigger: 'blur' },
-    { pattern: /^[a-zA-Z][a-zA-Z0-9_-]*$/, message: '编码只能包含字母、数字、下划线和连字符，且以字母开头', trigger: 'blur' }
-  ]
-}
-
-const filteredRoles = computed(() => {
-  const kw = searchKeyword.value.toLowerCase().trim()
-  if (!kw) return roles.value
-  return roles.value.filter(r =>
-    r.name.toLowerCase().includes(kw) ||
-    r.code.toLowerCase().includes(kw) ||
-    (r.description && r.description.toLowerCase().includes(kw))
-  )
-})
-
+// --- Fetch roles ---
 async function fetchRoles() {
   loading.value = true
   try {
@@ -226,34 +184,57 @@ async function fetchRoles() {
   }
 }
 
-function handleSelectionChange(selection: Role[]) {
-  selectedIds.value = selection.map(r => r.id)
+// --- Form dialog ---
+const formRef = ref<FormInstance>()
+const rules: FormRules = {
+  name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
+  code: [
+    { required: true, message: '请输入角色编码', trigger: 'blur' },
+    { pattern: /^[a-zA-Z][a-zA-Z0-9_-]*$/, message: '编码只能包含字母、数字、下划线和连字符，且以字母开头', trigger: 'blur' }
+  ]
 }
 
+async function submitRole(data: RoleForm & { id?: number }) {
+  if (data.id) {
+    await updateRole(systemId.value, data.id, {
+      name: data.name,
+      description: data.description
+    })
+    ElMessage.success('更新成功')
+  } else {
+    await createRole(systemId.value, {
+      name: data.name,
+      code: data.code,
+      description: data.description,
+      is_default: data.is_default ? 1 : 0
+    })
+    ElMessage.success('创建成功')
+  }
+}
+
+const {
+  visible: dialogVisible,
+  isEditing,
+  formData,
+  formChanged,
+  submitting,
+  open: openDialog,
+  close: closeDialog,
+  submit: submitForm
+} = useFormDialog<RoleForm>(submitRole, { onSuccess: fetchRoles })
+
 function showCreateDialog() {
-  isEditing.value = false
-  editingId.value = null
-  form.value = { name: '', code: '', description: '', is_default: false }
-  originalForm.value = JSON.stringify(form.value)
-  dialogVisible.value = true
+  openDialog({ name: '', code: '', description: '', is_default: false })
 }
 
 function showEditDialog(role: Role) {
-  isEditing.value = true
-  editingId.value = role.id
-  form.value = {
+  openDialog({
+    id: role.id,
     name: role.name,
     code: role.code,
     description: role.description || '',
     is_default: role.is_default === 1
-  }
-  originalForm.value = JSON.stringify(form.value)
-  dialogVisible.value = true
-}
-
-function showAssignDrawer(role: Role) {
-  selectedRole.value = role
-  drawerVisible.value = true
+  })
 }
 
 async function handleSubmit() {
@@ -263,81 +244,61 @@ async function handleSubmit() {
   } catch {
     return
   }
-  submitting.value = true
-  try {
-    if (isEditing.value && editingId.value) {
-      await updateRole(systemId.value, editingId.value, {
-        name: form.value.name,
-        description: form.value.description
-      })
-      ElMessage.success('更新成功')
-    } else {
-      await createRole(systemId.value, {
-        name: form.value.name,
-        code: form.value.code,
-        description: form.value.description,
-        is_default: form.value.is_default ? 1 : 0
-      })
-      ElMessage.success('创建成功')
-    }
-    dialogVisible.value = false
-    fetchRoles()
-  } catch (error: any) {
-    ElMessage.error(error.message || '操作失败')
-  } finally {
-    submitting.value = false
-  }
+  await submitForm()
 }
 
-async function handleDelete(role: Role) {
-  try {
-    await ElMessageBox.confirm(`确定要删除角色 "${role.name}" 吗？`, '确认删除', { type: 'warning' })
-    await deleteRole(systemId.value, role.id)
-    ElMessage.success('删除成功')
-    fetchRoles()
-  } catch (error: any) {
-    if (error !== 'cancel') ElMessage.error(error.message || '删除失败')
-  }
-}
-
-async function handleBatchDelete() {
-  try {
-    await ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 个角色吗？`, '批量删除', { type: 'warning' })
-    const results = await Promise.allSettled(selectedIds.value.map(id => deleteRole(systemId.value, id)))
-    const successCount = results.filter(r => r.status === 'fulfilled').length
-    const failCount = results.filter(r => r.status === 'rejected').length
-    if (failCount === 0) {
-      ElNotification.success({ title: '批量删除成功', message: `成功删除 ${successCount} 个角色` })
-    } else {
-      ElNotification.warning({ title: '批量删除完成', message: `成功 ${successCount} 个，失败 ${failCount} 个` })
-    }
-    selectedIds.value = []
-    fetchRoles()
-  } catch (error: any) {
-    if (error !== 'cancel') ElMessage.error(error.message || '批量删除失败')
-  }
-}
-
-async function handleDialogClose(done: () => void) {
-  if (formDirty.value) {
+async function handleBeforeClose(done: () => void) {
+  if (formChanged.value) {
     try {
       await ElMessageBox.confirm('表单已修改，确认放弃更改？', '提示', { type: 'warning' })
       done()
     } catch {
-      // 用户取消关闭
+      // user cancelled close
     }
   } else {
     done()
   }
 }
 
-onMounted(() => {
-  restoreFromUrl()
-  fetchRoles()
+// --- Filtered roles ---
+const filteredRoles = computed(() => {
+  const kw = urlState.keyword.toLowerCase().trim()
+  if (!kw) return roles.value
+  return roles.value.filter(r =>
+    r.name.toLowerCase().includes(kw) ||
+    r.code.toLowerCase().includes(kw) ||
+    (r.description && r.description.toLowerCase().includes(kw))
+  )
 })
 
-onUnmounted(() => {
-  if (searchTimer) clearTimeout(searchTimer)
+// --- Delete ---
+const { confirmDelete, batchDelete } = useConfirmDelete(
+  (id) => deleteRole(systemId.value, id),
+  { onSuccess: fetchRoles, entityName: '角色' }
+)
+
+function handleBatchDelete() {
+  batchDelete(selectedIds.value, {
+    onComplete: () => { selectedIds.value = [] }
+  })
+}
+
+// --- Assign drawer ---
+const drawerVisible = ref(false)
+const selectedRole = ref<Role | null>(null)
+
+function showAssignDrawer(role: Role) {
+  selectedRole.value = role
+  drawerVisible.value = true
+}
+
+function handleSelectionChange(selection: Role[]) {
+  selectedIds.value = selection.map(r => r.id)
+}
+
+// --- Lifecycle ---
+onMounted(() => {
+  fetchRoles()
 })
 </script>
 
