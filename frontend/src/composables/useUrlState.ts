@@ -72,5 +72,5 @@ export function useUrlState<T extends Record<string, any>>(
     router.replace({ query: {} })
   }
 
-  return { state, reset }
+  return { state: state as UnwrapNestedRefs<T>, reset }
 }

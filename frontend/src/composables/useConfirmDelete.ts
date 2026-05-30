@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { ElMessageBox, ElNotification, ElMessage } from 'element-plus'
 
 export function useConfirmDelete(
@@ -51,8 +51,10 @@ export function useConfirmDelete(
     let failed = 0
 
     for (let i = 0; i < ids.length; i++) {
+      const id = ids[i]
+      if (id === undefined) { failed++; continue }
       try {
-        await deleteFn(ids[i])
+        await deleteFn(id)
         success++
       } catch {
         failed++

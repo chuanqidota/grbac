@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-export const getPermissions = (systemId: number, params?: { page?: number; page_size?: number }) =>
+export const getPermissions = (systemId: number, params?: { page?: number; page_size?: number; keyword?: string; method?: string }) =>
   request.get(`/systems/${systemId}/permissions`, { params })
 
 export const createPermission = (systemId: number, data: {
