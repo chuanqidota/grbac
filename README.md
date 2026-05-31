@@ -223,22 +223,152 @@ password:
   lock_duration: 1800 # 锁定时长（秒）
 ```
 
-## 权限模型
+## ER 图
 
-```
-系统(System)
-├── 菜单(Menu)
-├── 权限(Permission) - method + path唯一标识API
-└── 角色(Role)
-    ├── 分配菜单 → role_menus
-    ├── 分配权限 → role_permissions
-    └── 分配用户 → user_roles
+```mermaid
+erDiagram
+    users ||--o{ user_roles : "分配角色"
+    users ||--o{ system_members : "加入系统"
+    users ||--o{ audit_logs : "操作记录"
+
+    systems ||--o{ roles : "拥有角色"
+    systems ||--o{ menus : "拥有菜单"
+    systems ||--o{ permissions : "拥有权限"
+    systems ||--o{ webhooks : "订阅事件"
+    systems ||--o{ system_members : "拥有成员"
+
+    roles ||--o{ user_roles : "被分配"
+    roles ||--o{ role_menus : "分配菜单"
+    roles ||--o{ role_permissions : "分配权限"
+
+    menus ||--o{ role_menus : "被分配"
+    menus ||--o{ menus : "父子关系"
+    permissions ||--o{ role_permissions : "被分配"
+
+    users {
+        bigint id PK
+        varchar username UK
+        varchar chinese_name
+        varchar password_hash
+        varchar email
+        varchar phone
+        tinyint is_super_admin
+        tinyint status
+        int login_attempts
+        datetime locked_until
+        datetime created_at
+        datetime updated_at
+    }
+
+    systems {
+        bigint id PK
+        varchar name
+        varchar code UK
+        varchar description
+        tinyint status
+        datetime created_at
+        datetime updated_at
+    }
+
+    roles {
+        bigint id PK
+        bigint system_id FK
+        varchar name
+        varchar code
+        varchar description
+        tinyint is_default
+        int version
+        tinyint status
+        datetime created_at
+        datetime updated_at
+    }
+
+    menus {
+        bigint id PK
+        bigint system_id FK
+        bigint parent_id FK
+        varchar name
+        varchar path
+        varchar icon
+        int sort_order
+        tinyint status
+        datetime created_at
+        datetime updated_at
+    }
+
+    permissions {
+        bigint id PK
+        bigint system_id FK
+        varchar code UK
+        varchar name
+        varchar method
+        varchar path
+        varchar description
+        int version
+        datetime created_at
+        datetime updated_at
+    }
+
+    webhooks {
+        bigint id PK
+        bigint system_id FK
+        varchar url
+        varchar secret
+        varchar events
+        tinyint status
+        datetime created_at
+        datetime updated_at
+    }
+
+    audit_logs {
+        bigint id PK
+        bigint user_id FK
+        varchar username
+        bigint system_id FK
+        varchar action
+        varchar resource
+        bigint resource_id
+        varchar resource_name
+        text detail
+        varchar ip
+        datetime created_at
+    }
+
+    user_roles {
+        bigint id PK
+        bigint user_id FK
+        bigint role_id FK
+        datetime created_at
+    }
+
+    role_menus {
+        bigint id PK
+        bigint role_id FK
+        bigint menu_id FK
+        datetime created_at
+    }
+
+    role_permissions {
+        bigint id PK
+        bigint role_id FK
+        bigint permission_id FK
+        datetime created_at
+    }
+
+    system_members {
+        bigint id PK
+        bigint system_id FK
+        bigint user_id FK
+        varchar role
+        datetime created_at
+    }
 ```
 
 - 每个系统独立管理自己的菜单、权限、角色
 - 用户可跨系统拥有不同角色
 - 超级管理员管理所有系统和用户
 - 系统管理员管理自己系统的配置
+- 菜单通过 `parent_id` 自引用实现树形结构
 
 ## License
 
